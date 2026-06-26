@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'WABot') — WhatsApp SaaS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
+        :root { --sidebar-width: 260px; }
+        .sidebar { width: var(--sidebar-width); transition: transform .3s ease; }
+        @media (max-width: 1023px) {
+            .sidebar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-overlay { display: none; }
+            .sidebar-overlay.show { display: block; }
+        }
+        .nav-group-header { cursor: pointer; user-select: none; }
+        .nav-group-header .chevron { transition: transform .2s ease; }
+        .nav-group-header.open .chevron { transform: rotate(90deg); }
+        .nav-group-body { overflow: hidden; transition: max-height .3s ease; }
+        .nav-link { transition: all .15s ease; }
+        .nav-link:hover { background: rgba(255,255,255,.06); padding-left: 1.25rem; }
+        .nav-link.active { background: rgba(59,130,246,.15); color: #60a5fa; border-left: 3px solid #3b82f6; }
+        .topbar { backdrop-filter: blur(12px) saturate(180%); background: rgba(255,255,255,.8); }
+        .card-lift { transition: transform .25s, box-shadow .25s; }
+        .card-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 24px -8px rgba(0,0,0,.12); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' },
+                        sidebar: { bg: '#1e293b', hover: '#334155', active: '#1e3a5f' },
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen" x-data="{ sidebarOpen: false }">
+
+@auth
+<div class="flex min-h-screen">
+{{-- Mobile Overlay --}}
+<div class="sidebar-overlay fixed inset-0 bg-black/50 z-40 lg:hidden"
+    :class="sidebarOpen && 'show'" @click="sidebarOpen = false"></div>
+
+{{-- Sidebar --}}
+<aside class="sidebar bg-sidebar-bg flex flex-col h-screen fixed lg:sticky top-0 left-0 z-50"
+    :class="sidebarOpen && 'open'">
+    <div class="flex items-center gap-3 px-5 h-16 border-b border-white/10 flex-shrink-0">
+        <i class="fas fa-paper-plane text-brand-400 text-lg"></i>
+        <span class="text-white font-extrabold text-lg tracking-tight">WABot</span>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-3 px-3 space-y-1">
+        {{-- MAIN --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
+            <span>Utama</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 300px;">
+            <a href="{{ route('chat.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('chat*') || request()->is('/') && !request()->is('dashboard*') ? 'active' : '' }}">
+                <i class="fas fa-comments w-4 text-center"></i> Chat
+            </a>
+            <a href="{{ route('dashboard.stats') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('dashboard*') ? 'active' : '' }}">
+                <i class="fas fa-chart-pie w-4 text-center"></i> Dashboard
+            </a>
+        </div>
+
+        {{-- WHATSAPP --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
+            <span>WhatsApp</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 400px;">
+            <a href="{{ route('sessions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sessions*') ? 'active' : '' }}">
+                <i class="fas fa-mobile-alt w-4 text-center"></i> Sesi / Agen
+            </a>
+            <a href="{{ route('contacts.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('contacts*') ? 'active' : '' }}">
+                <i class="fas fa-address-book w-4 text-center"></i> Kontak
+            </a>
+            <a href="{{ route('groups.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('groups*') ? 'active' : '' }}">
+                <i class="fas fa-layer-group w-4 text-center"></i> Grup
+            </a>
+            <a href="{{ route('campaigns.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('campaigns*') ? 'active' : '' }}">
+                <i class="fas fa-bullhorn w-4 text-center"></i> Kampanye
+            </a>
+            <a href="{{ route('recurrings.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('recurrings*') ? 'active' : '' }}">
+                <i class="fas fa-clock w-4 text-center"></i> Jadwal
+            </a>
+            <a href="{{ route('autoreplies.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('autoreplies*') ? 'active' : '' }}">
+                <i class="fas fa-robot w-4 text-center"></i> Auto-Reply
+            </a>
+        </div>
+
+        {{-- SISTEM --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>Sistem</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('servers.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('servers*') ? 'active' : '' }}">
+                <i class="fas fa-server w-4 text-center"></i> Server
+            </a>
+            <a href="{{ route('plans.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('plans*') ? 'active' : '' }}">
+                <i class="fas fa-box w-4 text-center"></i> Paket
+            </a>
+            <a href="{{ route('tokens.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('tokens*') ? 'active' : '' }}">
+                <i class="fas fa-key w-4 text-center"></i> API Token
+            </a>
+            <a href="{{ route('admin.users.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin*') ? 'active' : '' }}">
+                <i class="fas fa-users-cog w-4 text-center"></i> User
+            </a>
+        </div>
+    </nav>
+
+    <div class="p-3 border-t border-white/10 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">
+            {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-white truncate">{{ Auth::user()->name }}</div>
+            <div class="text-[11px] text-gray-500">Online</div>
+        </div>
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button class="text-gray-500 hover:text-red-400 transition"><i class="fas fa-sign-out-alt text-sm"></i></button>
+        </form>
+    </div>
+</aside>
+
+{{-- Main Content --}}
+<div class="flex-1 flex flex-col min-h-screen min-w-0">
+    {{-- Topbar --}}
+    <header class="topbar sticky top-0 z-30 border-b border-gray-200/60">
+        <div class="flex items-center justify-between px-5 h-14">
+            <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition">
+                <i class="fas fa-bars text-gray-600 text-lg"></i>
+            </button>
+            <div class="flex items-center gap-4 ml-auto">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 border border-green-200">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="text-xs font-medium text-green-700">{{ \App\Models\WaSession::where('user_id', Auth::id())->where('status','connected')->count() }} agen online</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {{-- Content --}}
+    <main class="flex-1 p-5 lg:p-6">
+        @if(session('success'))
+            <div class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
+                <i class="fas fa-check-circle text-emerald-500"></i> {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
+                <i class="fas fa-exclamation-circle text-red-500"></i> {{ session('error') }}
+            </div>
+        @endif
+        @if(session('warning'))
+            <div class="mb-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2">
+                <i class="fas fa-exclamation-triangle text-amber-500"></i> {{ session('warning') }}
+            </div>
+        @endif
+        @yield('content')
+    </main>
+</div>
+</div>
+@endauth
+
+@guest
+<main class="min-h-screen flex items-center justify-center p-4">
+    @yield('content')
+</main>
+@endguest
+
+@stack('scripts')
+</body>
+</html>
