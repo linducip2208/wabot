@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WABot — WhatsApp Marketing SaaS</title>
+    <link rel="canonical" href="https://wabot.whitelabel.co.id">
+    <meta property="og:title" content="WABot — WhatsApp Marketing SaaS">
+    <meta property="og:description" content="Auto-Reply, Campaign Bulk, Chat Omni-Channel. Kelola WhatsApp bisnis dalam satu dashboard.">
+    <meta property="og:url" content="https://wabot.whitelabel.co.id">
+    <meta name="description" content="WABot — WhatsApp Marketing SaaS. Auto-reply keyword, campaign bulk, chat omni-channel. Kelola semua WhatsApp bisnis Anda.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
