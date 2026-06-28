@@ -66,6 +66,20 @@
                 @endif
                 <p class="text-sm text-gray-400 mt-4">WhatsApp siap digunakan untuk auto-reply & kampanye.</p>
             </div>
+        @elseif($session->status === 'disconnected')
+            <div class="py-8">
+                <div class="text-6xl mb-4">⚠️</div>
+                <p class="text-xl font-bold text-red-600">Sesi Terputus</p>
+                <p class="text-sm text-gray-500 mt-2">Sesi WhatsApp sudah logout. Silakan hapus sesi ini dan buat sesi baru untuk menghubungkan kembali.</p>
+                <div class="mt-4">
+                    <form method="POST" action="{{ route('sessions.destroy', $session) }}" onsubmit="return confirm('Hapus sesi ini?')">
+                        @csrf @method('DELETE')
+                        <button class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium">
+                            Hapus & Buat Baru
+                        </button>
+                    </form>
+                </div>
+            </div>
         @elseif($qrImage)
             <div class="inline-block p-4 border border-gray-200 rounded-xl mb-4 bg-white">
                 <img src="{{ $qrImage }}" alt="QR Code" class="w-72 h-72">

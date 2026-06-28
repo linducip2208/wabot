@@ -4,7 +4,7 @@ const {
     DisconnectReason,
     makeCacheableSignalKeyStore,
     fetchLatestBaileysVersion,
-} = require('@whiskeysockets/baileys');
+} = require('baileys');
 const pino = require('pino');
 const fs = require('fs');
 const path = require('path');
@@ -73,18 +73,24 @@ class InstanceManager {
                 creds: state.creds,
                 keys: makeCacheableSignalKeyStore(state.keys, logger),
             },
-            browser: ['WABot', 'Chrome', '1.0.0'],
+            browser: ['Chrome', '', ''],
+            markOnlineOnConnect: true,
+            syncFullHistory: false,
+            connectTimeoutMs: 60000,
+            defaultQueryTimeoutMs: 60000,
+            keepAliveIntervalMs: 30000,
+            generateHighQualityLinkPreview: true,
         });
 
         instanceData.sock = sock;
-
-        const lidMap = new Map();
+        instanceData.lidMap = new Map();
+        const lidMap = instanceData.lidMap;
 
         sock.ev.on('contacts.upsert', (contacts) => {
             console.log(`[${sessionId}] contacts.upsert: ${contacts.length} contacts`);
             if (contacts.length > 0) console.log(`[${sessionId}] sample:`, JSON.stringify(contacts[0]));
             for (const c of contacts) {
-                if (c.lid && c.id) {
+                if (c.lid && c.id && c.lid !== c.id) {
                     lidMap.set(c.lid, c.id);
                     console.log(`[${sessionId}] LID mapped: ${c.lid} → ${c.id}`);
                 }
@@ -95,7 +101,7 @@ class InstanceManager {
             console.log(`[${sessionId}] contacts.update: ${contacts.length} contacts`);
             if (contacts.length > 0) console.log(`[${sessionId}] sample:`, JSON.stringify(contacts[0]));
             for (const c of contacts) {
-                if (c.lid && c.id) {
+                if (c.lid && c.id && c.lid !== c.id) {
                     lidMap.set(c.lid, c.id);
                 }
             }
@@ -259,6 +265,7 @@ class InstanceManager {
             const result = await instanceData.sock.sendMessage(jid, { text: message });
             return { ok: true, messageId: result?.key?.id };
         } catch (e) {
+            console.error(`[${sessionId}] send error:`, e.message);
             return { ok: false, error: e.message };
         }
     }

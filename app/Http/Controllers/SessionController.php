@@ -108,36 +108,52 @@ class SessionController extends Controller
 
         if ($session->server && $session->status !== 'connected') {
             $status = $this->baileys->getStatus($session->server, $session->session_id);
-            $qrString = $this->baileys->getQr($session->server, $session->session_id);
+            $liveStatus = $status['status'] ?? 'unknown';
 
-            if ($qrString) {
-                $session->update(['qr_code' => $qrString, 'status' => 'qr_ready']);
-                $qrImage = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qrString);
-            }
-
-            if (($status['status'] ?? '') === 'connected') {
-                $phone = $status['phone'] ?? null;
-                if ($phone) {
-                    $phone = preg_replace('/[@:].*$/', '', $phone);
-                    $phone = preg_replace('/[^0-9]/', '', $phone);
+            if (in_array($liveStatus, ['disconnected', 'logged_out'])) {
+                if ($session->status !== 'disconnected') {
+                    \App\Models\WaSessionLog::create([
+                        'user_id' => $session->user_id,
+                        'session_id' => $session->id,
+                        'event' => $liveStatus,
+                        'phone' => $session->phone,
+                        'logged_at' => now(),
+                    ]);
                 }
-                \App\Models\WaSessionLog::create([
-                    'user_id' => $session->user_id,
-                    'session_id' => $session->id,
-                    'event' => 'connected',
-                    'phone' => $phone,
-                    'logged_at' => now(),
-                ]);
-                $session->update([
-                    'status' => 'connected',
-                    'phone' => $phone,
-                    'last_active_at' => now(),
-                ]);
+                $session->update(['status' => 'disconnected', 'is_active' => false]);
                 $refresh = false;
-            }
+            } else {
+                $qrString = $this->baileys->getQr($session->server, $session->session_id);
 
-            if (($status['status'] ?? '') === 'qr_ready') {
-                $session->update(['status' => 'qr_ready']);
+                if ($qrString) {
+                    $session->update(['qr_code' => $qrString, 'status' => 'qr_ready']);
+                    $qrImage = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qrString);
+                }
+
+                if ($liveStatus === 'connected') {
+                    $phone = $status['phone'] ?? null;
+                    if ($phone) {
+                        $phone = preg_replace('/[@:].*$/', '', $phone);
+                        $phone = preg_replace('/[^0-9]/', '', $phone);
+                    }
+                    \App\Models\WaSessionLog::create([
+                        'user_id' => $session->user_id,
+                        'session_id' => $session->id,
+                        'event' => 'connected',
+                        'phone' => $phone,
+                        'logged_at' => now(),
+                    ]);
+                    $session->update([
+                        'status' => 'connected',
+                        'phone' => $phone,
+                        'last_active_at' => now(),
+                    ]);
+                    $refresh = false;
+                }
+
+                if ($liveStatus === 'qr_ready') {
+                    $session->update(['status' => 'qr_ready']);
+                }
             }
         } elseif ($session->status === 'connected') {
             $refresh = false;
