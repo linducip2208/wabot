@@ -67,7 +67,8 @@
         <div><span class="font-semibold">OpenAI</span> — GPT-4o, GPT-4o-mini, GPT-4-turbo</div>
         <div><span class="font-semibold">Gemini</span> — gemini-1.5-pro, gemini-1.5-flash</div>
         <div><span class="font-semibold">Anthropic</span> — claude-3-opus, claude-3-5-sonnet</div>
-        <div><span class="font-semibold">OpenAI Compatible</span> — DeepSeek, Groq, Ollama, vLLM, dll</div>
+        <div><span class="font-semibold">DeepSeek</span> — deepseek-chat, deepseek-reasoner, deepseek-v4</div>
+        <div><span class="font-semibold">OpenAI Compatible</span> — Groq, Ollama, vLLM, Mistral, dll</div>
     </div>
 </div>
 
@@ -156,7 +157,7 @@ function toggleBaseUrl() {
     document.getElementById('baseUrlGroup').classList.toggle('hidden', !show);
     if (v === 'deepseek') {
         const baseUrlEl = document.querySelector('input[name="base_url"]');
-        if (!baseUrlEl.value) baseUrlEl.value = 'https://api.deepseek.com';
+        if (!baseUrlEl.value) baseUrlEl.value = 'https://api.deepseek.com/v1/chat/completions';
         const modelEl = document.querySelector('input[name="model"]');
         if (!modelEl.value) modelEl.value = 'deepseek-chat';
     }
