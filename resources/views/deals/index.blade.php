@@ -8,7 +8,7 @@
         <p class="text-sm text-gray-500 mt-0.5">{{ $deals->count() }} deal · total nilai Rp {{ number_format($deals->sum('value'), 0, ',', '.') }}</p>
     </div>
     <div class="flex gap-2">
-        <a href="{{ route('deals.stages') }}" class="bg-white border border-gray-300 text-gray-700 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2"><i class="fas fa-layer-group text-xs"></i> Stages</a>
+        <a href="{{ route('deal-stages.index') }}" class="bg-white border border-gray-300 text-gray-700 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2"><i class="fas fa-layer-group text-xs"></i> Stages</a>
         <a href="{{ route('deals.board') }}" class="bg-white border border-gray-300 text-gray-700 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2"><i class="fas fa-columns text-xs"></i> Kanban</a>
         <a href="{{ route('deals.create') }}" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2"><i class="fas fa-plus text-xs"></i> Deal Baru</a>
     </div>

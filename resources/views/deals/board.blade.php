@@ -39,7 +39,7 @@
         <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3"><i class="fas fa-columns text-gray-400 text-lg"></i></div>
         <p class="text-gray-500 font-medium">Belum ada stage</p>
         <p class="text-sm text-gray-400 mt-1 mb-4">Buat tahapan pipeline terlebih dahulu</p>
-        <a href="{{ route('deals.stages') }}" class="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700"><i class="fas fa-plus text-xs"></i> Kelola Stages</a>
+        <a href="{{ route('deal-stages.index') }}" class="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700"><i class="fas fa-plus text-xs"></i> Kelola Stages</a>
     </div>
     @endforelse
 </div>

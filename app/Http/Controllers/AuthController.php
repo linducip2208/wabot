@@ -37,22 +37,27 @@ class AuthController extends Controller
         ]);
 
         $userRole = \App\Models\Role::where('name', 'user')->first();
+        $freePlan = Plan::where('slug', 'free')->first();
+
+        $trialDays = config('app.trial_days', 14);
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => 'user',
             'role_id' => $userRole?->id,
+            'plan_id' => $freePlan?->id,
+            'trial_ends_at' => now()->addDays($trialDays),
+            'email_verified_at' => now(),
         ]);
 
-        $freePlan = Plan::where('slug', 'free')->first();
         if ($freePlan) {
-            $user->update(['plan_id' => $freePlan->id]);
             Subscription::create([
                 'user_id' => $user->id,
                 'plan_id' => $freePlan->id,
                 'status' => 'active',
                 'starts_at' => now(),
+                'ends_at' => now()->addDays($trialDays),
             ]);
         }
 

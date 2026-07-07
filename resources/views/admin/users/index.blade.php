@@ -41,6 +41,7 @@
                 <th class="px-5 py-3 hidden md:table-cell">Email</th>
                 <th class="px-5 py-3">Paket</th>
                 <th class="px-5 py-3">Role</th>
+                <th class="px-5 py-3 hidden lg:table-cell">Expired</th>
                 <th class="px-5 py-3 hidden lg:table-cell">Daftar</th>
                 <th class="px-5 py-3 w-24 text-right">Aksi</th>
             </tr>
@@ -67,13 +68,16 @@
                         {{ is_object($u->role) ? $u->role->name : ucfirst($u->getAttribute('role') ?? 'user') }}
                     </span>
                 </td>
+                <td class="px-5 py-3 hidden lg:table-cell text-xs {{ $u->expires_at && $u->expires_at->isPast() ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
+                    {{ $u->expires_at ? $u->expires_at->format('d M Y') : ($u->plan_id ? '—' : '—') }}
+                </td>
                 <td class="px-5 py-3 hidden lg:table-cell text-xs text-gray-400">{{ $u->created_at->format('d M Y') }}</td>
                 <td class="px-5 py-3 text-right">
                     <form method="POST" action="{{ route('admin.users.impersonate', $u) }}" class="inline">
                         @csrf
                         <button class="p-1.5 rounded-lg hover:bg-violet-50 text-gray-400 hover:text-violet-600" title="Login sebagai"><i class="fas fa-sign-in-alt text-xs"></i></button>
                     </form>
-                    <button onclick='editUser({{ $u->id }}, "{{ addslashes($u->name) }}", "{{ $u->email }}", {{ $u->role_id ?? 'null' }}, {{ $u->plan_id ?? 'null' }})'
+                    <button onclick='editUser({{ $u->id }}, "{{ addslashes($u->name) }}", "{{ $u->email }}", {{ $u->role_id ?? 'null' }}, {{ $u->plan_id ?? 'null' }}, "{{ $u->expires_at?->format('Y-m-d\TH:i') ?? '' }}")'
                         class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-brand-600"><i class="fas fa-edit text-xs"></i></button>
                     <form method="POST" action="{{ route('admin.users.destroy', $u) }}" class="inline" onsubmit="return confirm('Hapus user ini?')">
                         @csrf @method('DELETE')
@@ -122,6 +126,18 @@
                     @endforeach
                 </select>
             </div>
+            <div id="expiryFields" class="hidden space-y-3">
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Berakhir (ends_at)</label>
+                    <input type="datetime-local" name="ends_at" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <p class="text-[11px] text-gray-400 mt-0.5">Kapan langganan ini berakhir. Kosongkan = selamanya.</p>
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-gray-500">Akses Kadaluarsa (expires_at)</label>
+                    <input type="datetime-local" name="expires_at" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <p class="text-[11px] text-gray-400 mt-0.5">Setelah tanggal ini user tidak bisa akses.</p>
+                </div>
+            </div>
             <div class="flex gap-2 pt-1">
                 <button type="button" onclick="toggleModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">Batal</button>
                 <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">Simpan</button>
@@ -140,9 +156,10 @@ function toggleModal() {
         f.action = '{{ route('admin.users.store') }}';
         f.reset();
         document.getElementById('methodField').innerHTML = '';
+        document.getElementById('expiryFields').classList.add('hidden');
     }
 }
-function editUser(id, name, email, roleId, planId) {
+function editUser(id, name, email, roleId, planId, expiresAt) {
     const m = document.getElementById('userModal');
     m.classList.remove('hidden');
     document.getElementById('modalTitle').textContent = 'Edit User';
@@ -154,7 +171,14 @@ function editUser(id, name, email, roleId, planId) {
     f.querySelector('input[name="password"]').required = false;
     f.querySelector('select[name="role_id"]').value = roleId || '';
     f.querySelector('select[name="plan_id"]').value = planId || '';
+    f.querySelector('input[name="expires_at"]').value = expiresAt || '';
     document.getElementById('methodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
+    toggleExpiryFields();
 }
+function toggleExpiryFields() {
+    const planId = document.querySelector('select[name="plan_id"]').value;
+    document.getElementById('expiryFields').classList.toggle('hidden', !planId);
+}
+document.querySelector('select[name="plan_id"]').addEventListener('change', toggleExpiryFields);
 </script>
 @endsection

@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'role_id', 'plan_id', 'trial_ends_at'])]
+#[Fillable(['name', 'email', 'password', 'role', 'role_id', 'plan_id', 'trial_ends_at', 'expires_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -60,6 +60,10 @@ class User extends Authenticatable
 
     public function activeSubscription(): ?Subscription
     {
+        if ($this->expires_at && $this->expires_at->isPast()) {
+            return null;
+        }
+
         return $this->subscriptions()
             ->where('status', 'active')
             ->where(function ($q) {
@@ -75,6 +79,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'trial_ends_at' => 'datetime',
+            'expires_at' => 'datetime',
         ];
     }
 

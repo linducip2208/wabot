@@ -43,11 +43,6 @@ class PlanController extends Controller
                 'ends_at' => now()->addMonth(),
             ]);
 
-            $user->update([
-                'plan_id' => $plan->id,
-                'trial_ends_at' => null,
-            ]);
-
             return redirect()->route('payment.page', $subscription);
         }
 
@@ -56,11 +51,13 @@ class PlanController extends Controller
             'plan_id' => $plan->id,
             'status' => 'active',
             'starts_at' => now(),
+            'ends_at' => null,
         ]);
 
         $user->update([
             'plan_id' => $plan->id,
             'trial_ends_at' => null,
+            'expires_at' => null,
         ]);
 
         return back()->with('success', "Paket {$plan->name} diaktifkan.");

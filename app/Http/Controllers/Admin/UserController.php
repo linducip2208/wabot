@@ -28,6 +28,8 @@ class UserController extends Controller
             'password' => 'required|min:6',
             'role_id' => 'nullable|exists:roles,id',
             'plan_id' => 'nullable|exists:plans,id',
+            'ends_at' => 'nullable|date',
+            'expires_at' => 'nullable|date',
         ]);
 
         $userRole = Role::find($data['role_id'] ?? null);
@@ -39,6 +41,8 @@ class UserController extends Controller
             'role' => $userRole?->name ?? 'user',
             'role_id' => $data['role_id'] ?? null,
             'plan_id' => $data['plan_id'] ?? null,
+            'email_verified_at' => now(),
+            'expires_at' => $data['expires_at'] ?? null,
         ]);
 
         if ($data['plan_id'] ?? null) {
@@ -47,6 +51,7 @@ class UserController extends Controller
                 'plan_id' => $data['plan_id'],
                 'status' => 'active',
                 'starts_at' => now(),
+                'ends_at' => $data['ends_at'] ?? null,
             ]);
         }
 
@@ -61,6 +66,8 @@ class UserController extends Controller
             'password' => 'nullable|min:6',
             'role_id' => 'nullable|exists:roles,id',
             'plan_id' => 'nullable|exists:plans,id',
+            'ends_at' => 'nullable|date',
+            'expires_at' => 'nullable|date',
         ]);
 
         $userRole = Role::find($data['role_id'] ?? null);
@@ -71,6 +78,7 @@ class UserController extends Controller
             'role' => $userRole?->name ?? $user->role,
             'role_id' => $data['role_id'] ?? null,
             'plan_id' => $data['plan_id'] ?? null,
+            'expires_at' => $data['expires_at'] ?? null,
         ];
 
         if ($data['password']) {
@@ -80,15 +88,16 @@ class UserController extends Controller
         $user->update($updateData);
 
         if ($data['plan_id'] ?? null) {
-            $user->subscriptions()->where('status', 'active')->update(['status' => 'inactive']);
+            $user->subscriptions()->where('status', 'active')->update(['status' => 'expired']);
             Subscription::create([
                 'user_id' => $user->id,
                 'plan_id' => $data['plan_id'],
                 'status' => 'active',
                 'starts_at' => now(),
+                'ends_at' => $data['ends_at'] ?? null,
             ]);
         } else {
-            $user->subscriptions()->where('status', 'active')->update(['status' => 'inactive']);
+            $user->subscriptions()->where('status', 'active')->update(['status' => 'expired']);
         }
 
         return back()->with('success', 'User diperbarui.');
