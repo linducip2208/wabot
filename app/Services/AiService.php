@@ -70,6 +70,41 @@ class AiService
      * Tidak bisa di-bypass oleh user (meskipun pakai custom system_prompt).
      */
     protected function guardrails(): string
+
+    /**
+     * Kirim prompt mentah ke AI tanpa guardrails & knowledge base.
+     * Dipakai untuk analisis internal (sentiment, intent, dll).
+     */
+    public function rawPrompt(WaAiKey $aiKey, string $prompt): ?string
+    {
+        $baseUrl = $aiKey->base_url ?: $this->defaultBaseUrl($aiKey->provider);
+        if (!$baseUrl) return null;
+
+        $messages = [
+            ['role' => 'user', 'content' => $prompt],
+        ];
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $aiKey->api_key_encrypted,
+                'Content-Type' => 'application/json',
+            ])->timeout(30)->post($baseUrl, [
+                'model' => $aiKey->model,
+                'messages' => $messages,
+                'temperature' => 0.2,
+                'max_tokens' => 300,
+            ]);
+
+            if ($response->failed()) return null;
+            $data = $response->json();
+            return $data['choices'][0]['message']['content'] ?? null;
+        } catch (\Throwable $e) {
+            Log::error("AiService::rawPrompt exception: {$e->getMessage()}");
+            return null;
+        }
+    }
+
+    protected function guardrails(): string
     {
         return <<<'GUARD'
 [ATURAN MUTLAK — WAJIB DIPATUHI]

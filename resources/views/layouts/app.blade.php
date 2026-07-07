@@ -133,6 +133,126 @@
             </a>
         </div>
 
+        {{-- CHATBOT --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
+            <span>🤖 Chatbot</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 300px;">
+            <a href="{{ route('flows.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('flows*') ? 'active' : '' }}">
+                <i class="fas fa-project-diagram w-4 text-center"></i> Flow Builder
+            </a>
+            <a href="{{ route('ai-agents.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-agents*') ? 'active' : '' }}">
+                <i class="fas fa-robot w-4 text-center"></i> AI Agents
+            </a>
+            <a href="{{ route('intents.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('intents*') ? 'active' : '' }}">
+                <i class="fas fa-brain w-4 text-center"></i> Intent
+            </a>
+            <a href="{{ route('ai-keys.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-keys*') ? 'active' : '' }}">
+                <i class="fas fa-key w-4 text-center"></i> AI Keys
+            </a>
+            <a href="{{ route('knowledge.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('knowledge*') ? 'active' : '' }}">
+                <i class="fas fa-database w-4 text-center"></i> Knowledge
+            </a>
+        </div>
+
+        {{-- MARKETING --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>📢 Marketing</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('campaigns.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('campaigns*') ? 'active' : '' }}">
+                <i class="fas fa-bullhorn w-4 text-center"></i> Broadcast
+            </a>
+            <a href="{{ route('drips.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('drips*') ? 'active' : '' }}">
+                <i class="fas fa-clock w-4 text-center"></i> Drip Campaign
+            </a>
+            <a href="{{ route('ab-tests.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ab-tests*') ? 'active' : '' }}">
+                <i class="fas fa-flask w-4 text-center"></i> A/B Test
+            </a>
+            <a href="{{ route('click-stats.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('click-stats*') ? 'active' : '' }}">
+                <i class="fas fa-mouse-pointer w-4 text-center"></i> Click Track
+            </a>
+        </div>
+
+        {{-- INTERACTIVE --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>💬 Interactive</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('buttons.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('buttons*') ? 'active' : '' }}">
+                <i class="fas fa-hand-pointer w-4 text-center"></i> Buttons
+            </a>
+            <a href="{{ route('media-templates.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('media-templates*') ? 'active' : '' }}">
+                <i class="fas fa-photo-video w-4 text-center"></i> Media
+            </a>
+            <a href="{{ route('catalogs.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('catalogs*') ? 'active' : '' }}">
+                <i class="fas fa-shopping-bag w-4 text-center"></i> Catalog
+            </a>
+            <a href="{{ route('templates.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('templates*') ? 'active' : '' }}">
+                <i class="fas fa-file-alt w-4 text-center"></i> Template
+            </a>
+        </div>
+
+        {{-- SALES & CRM --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>💼 Sales & CRM</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('deals.board') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('deals-board*') ? 'active' : '' }}">
+                <i class="fas fa-funnel-dollar w-4 text-center"></i> Pipeline
+            </a>
+            <a href="{{ route('deals.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('deals') || request()->is('deals/*') ? 'active' : '' }}">
+                <i class="fas fa-handshake w-4 text-center"></i> Deals
+            </a>
+            <a href="{{ route('commerce.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('commerce*') ? 'active' : '' }}">
+                <i class="fas fa-shopping-cart w-4 text-center"></i> Orders
+            </a>
+            <a href="{{ route('contact-tags.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('contact-tags*') ? 'active' : '' }}">
+                <i class="fas fa-tags w-4 text-center"></i> Tags
+            </a>
+        </div>
+
+        {{-- TEAM --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>👥 Team</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('inbox.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('inbox*') ? 'active' : '' }}">
+                <i class="fas fa-inbox w-4 text-center"></i> Inbox
+            </a>
+            <a href="{{ route('team-members.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('team-members*') ? 'active' : '' }}">
+                <i class="fas fa-users w-4 text-center"></i> Members
+            </a>
+            <a href="{{ route('sla.dashboard') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sla-dashboard*') ? 'active' : '' }}">
+                <i class="fas fa-tachometer-alt w-4 text-center"></i> SLA
+            </a>
+            <a href="{{ route('sla-configs.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sla-configs*') || request()->is('sla-logs*') ? 'active' : '' }}">
+                <i class="fas fa-stopwatch w-4 text-center"></i> SLA Config
+            </a>
+        </div>
+
+        {{-- ANALYTICS --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>📊 Analytics</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('sentiment.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sentiment*') ? 'active' : '' }}">
+                <i class="fas fa-smile w-4 text-center"></i> Sentiment
+            </a>
+            <a href="{{ route('ratings.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ratings*') ? 'active' : '' }}">
+                <i class="fas fa-star w-4 text-center"></i> Ratings
+            </a>
+            <a href="{{ route('logger.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('logger*') ? 'active' : '' }}">
+                <i class="fas fa-history w-4 text-center"></i> Activity Log
+            </a>
+        </div>
+
         {{-- SISTEM --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
             <span>Sistem</span>

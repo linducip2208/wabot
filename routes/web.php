@@ -23,6 +23,24 @@ use App\Http\Controllers\Admin\ShortenerController;
 use App\Http\Controllers\Admin\CmsPageController;
 use App\Http\Controllers\AiKeyController;
 use App\Http\Controllers\KnowledgeController;
+use App\Http\Controllers\FlowController;
+use App\Http\Controllers\DripCampaignController;
+use App\Http\Controllers\ABCampaignController;
+use App\Http\Controllers\ClickTrackController;
+use App\Http\Controllers\ContactTagController;
+use App\Http\Controllers\InteractiveButtonController;
+use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\CommerceOrderController;
+use App\Http\Controllers\DealController;
+use App\Http\Controllers\DealStageController;
+use App\Http\Controllers\TeamMemberController;
+use App\Http\Controllers\TeamInboxController;
+use App\Http\Controllers\SlaConfigController;
+use App\Http\Controllers\AiAgentController;
+use App\Http\Controllers\IntentConfigController;
+use App\Http\Controllers\MediaTemplateController;
+use App\Http\Controllers\SentimentController;
+use App\Http\Controllers\ConversationRatingController;
 
 // Public CMS pages
 Route::get('/pages/{slug}', [CmsPageController::class, 'show'])->name('pages.show')->where('slug', '^(?!builder$).*$');
@@ -55,6 +73,9 @@ Route::post('/webhook/whatsapp-status', [WebhookController::class, 'statusUpdate
 
 // License pairing routes
 require base_path('routes/pair-routes.php');
+
+// Click tracking redirect (public, no auth)
+Route::get('/click/{token}', [ClickTrackController::class, 'redirect'])->name('click.redirect');
 
 // Authenticated routes
 Route::middleware('auth')->group(function () {
@@ -153,6 +174,87 @@ Route::middleware('auth')->group(function () {
 
     // Voucher redeem (user-facing)
     Route::post('vouchers/redeem', [VoucherController::class, 'redeem'])->name('vouchers.redeem');
+
+    // ── Flow Builder ────────────────────────────────────────────
+    Route::resource('flows', FlowController::class)->except(['show']);
+    Route::get('flows/{flow}/nodes', [FlowController::class, 'nodes'])->name('flows.nodes');
+    Route::post('flows/{flow}/nodes', [FlowController::class, 'nodesStore'])->name('flows.nodes.store');
+
+    // ── Drip Campaigns ──────────────────────────────────────────
+    Route::resource('drips', DripCampaignController::class)->except(['show']);
+    Route::get('drips/{drip}/steps', [DripCampaignController::class, 'steps'])->name('drips.steps');
+    Route::post('drips/{drip}/steps', [DripCampaignController::class, 'stepsStore'])->name('drips.steps.store');
+    Route::delete('drips/{drip}/steps/{step}', [DripCampaignController::class, 'stepsDestroy'])->name('drips.steps.destroy');
+
+    // ── A/B Testing ─────────────────────────────────────────────
+    Route::resource('ab-tests', ABCampaignController::class)->except(['show']);
+    Route::post('ab-tests/{test}/start', [ABCampaignController::class, 'start'])->name('ab-tests.start');
+    Route::post('ab-tests/{test}/end', [ABCampaignController::class, 'end'])->name('ab-tests.end');
+
+    // ── Click Tracking ──────────────────────────────────────────
+    Route::get('click-stats', [ClickTrackController::class, 'index'])->name('click-stats.index');
+
+    // ── Contact Tags ────────────────────────────────────────────
+    Route::resource('contact-tags', ContactTagController::class)->except(['show', 'edit']);
+    Route::post('contacts/{contact}/tags/{tag}/attach', [ContactTagController::class, 'attach'])->name('contacts.tags.attach');
+    Route::post('contacts/{contact}/tags/{tag}/detach', [ContactTagController::class, 'detach'])->name('contacts.tags.detach');
+
+    // ── Interactive Buttons ─────────────────────────────────────
+    Route::resource('buttons', InteractiveButtonController::class)->except(['show']);
+
+    // ── Catalogs ────────────────────────────────────────────────
+    Route::resource('catalogs', CatalogController::class)->except(['show']);
+    Route::get('catalogs/{catalog}/items', [CatalogController::class, 'items'])->name('catalogs.items');
+    Route::post('catalogs/{catalog}/items', [CatalogController::class, 'itemsStore'])->name('catalogs.items.store');
+    Route::put('catalogs/{catalog}/items/{item}', [CatalogController::class, 'itemsUpdate'])->name('catalogs.items.update');
+    Route::delete('catalogs/{catalog}/items/{item}', [CatalogController::class, 'itemsDestroy'])->name('catalogs.items.destroy');
+
+    // ── Commerce Orders ─────────────────────────────────────────
+    Route::resource('commerce', CommerceOrderController::class)->except(['create', 'edit', 'destroy']);
+    Route::post('commerce/{order}/confirm', [CommerceOrderController::class, 'confirm'])->name('commerce.confirm');
+    Route::post('commerce/{order}/paid', [CommerceOrderController::class, 'paid'])->name('commerce.paid');
+    Route::post('commerce/{order}/ship', [CommerceOrderController::class, 'ship'])->name('commerce.ship');
+    Route::post('commerce/{order}/cancel', [CommerceOrderController::class, 'cancel'])->name('commerce.cancel');
+
+    // ── CRM Deals ───────────────────────────────────────────────
+    Route::resource('deals', DealController::class);
+    Route::get('deals-board', [DealController::class, 'board'])->name('deals.board');
+    Route::post('deals/{deal}/move', [DealController::class, 'move'])->name('deals.move');
+    Route::get('deal-stages', [DealStageController::class, 'index'])->name('deal-stages.index');
+    Route::post('deal-stages', [DealStageController::class, 'store'])->name('deal-stages.store');
+    Route::put('deal-stages/{stage}', [DealStageController::class, 'update'])->name('deal-stages.update');
+    Route::delete('deal-stages/{stage}', [DealStageController::class, 'destroy'])->name('deal-stages.destroy');
+    Route::post('deal-stages/reorder', [DealStageController::class, 'reorder'])->name('deal-stages.reorder');
+
+    // ── Team Inbox ──────────────────────────────────────────────
+    Route::resource('team-members', TeamMemberController::class)->except(['show']);
+    Route::get('inbox', [TeamInboxController::class, 'index'])->name('inbox.index');
+    Route::post('inbox/assign', [TeamInboxController::class, 'assign'])->name('inbox.assign');
+    Route::post('inbox/{assignment}/reassign', [TeamInboxController::class, 'reassign'])->name('inbox.reassign');
+    Route::post('inbox/{assignment}/close', [TeamInboxController::class, 'close'])->name('inbox.close');
+    Route::get('inbox/stats', [TeamInboxController::class, 'stats'])->name('inbox.stats');
+
+    // ── SLA ─────────────────────────────────────────────────────
+    Route::resource('sla-configs', SlaConfigController::class)->except(['show']);
+    Route::get('sla-logs', [SlaConfigController::class, 'logs'])->name('sla-logs.index');
+    Route::get('sla-dashboard', [SlaConfigController::class, 'dashboard'])->name('sla.dashboard');
+
+    // ── AI Agents ───────────────────────────────────────────────
+    Route::resource('ai-agents', AiAgentController::class)->except(['show']);
+    Route::post('ai-agents/{agent}/test', [AiAgentController::class, 'test'])->name('ai-agents.test');
+
+    // ── Intent Detection ────────────────────────────────────────
+    Route::resource('intents', IntentConfigController::class)->except(['show']);
+
+    // ── Media Templates ─────────────────────────────────────────
+    Route::resource('media-templates', MediaTemplateController::class)->except(['show']);
+
+    // ── Sentiment Dashboard ─────────────────────────────────────
+    Route::get('sentiment', [SentimentController::class, 'index'])->name('sentiment.index');
+
+    // ── Conversation Ratings ────────────────────────────────────
+    Route::resource('ratings', ConversationRatingController::class)->only(['index', 'show']);
+    Route::get('ratings-stats', [ConversationRatingController::class, 'stats'])->name('ratings.stats');
 
     // Admin
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {

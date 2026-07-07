@@ -8,9 +8,15 @@ use App\Models\WaSession;
 use App\Models\WaContact;
 use App\Models\WaWebhook;
 use App\Models\WaWebhookLog;
+use App\Models\WaFlow;
+use App\Services\AiService;
 use App\Services\BaileysService;
 use App\Services\SpintaxService;
-use App\Services\AiService;
+use App\Services\SentimentService;
+use App\Services\IntentService;
+use App\Services\FlowEngineService;
+use App\Services\TeamInboxService;
+use App\Services\SlaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -22,6 +28,11 @@ class WebhookController extends Controller
         protected BaileysService $baileys,
         protected SpintaxService $spintax,
         protected AiService $ai,
+        protected SentimentService $sentiment,
+        protected IntentService $intent,
+        protected FlowEngineService $flowEngine,
+        protected TeamInboxService $teamInbox,
+        protected SlaService $sla,
     ) {}
 
     /*
@@ -242,6 +253,53 @@ class WebhookController extends Controller
             'external_id' => $data['message_id'] ?? null,
         ]);
 
+        // ── Sentiment analysis ───────────────────────────────────
+        $defaultAiKey = \App\Models\WaAiKey::where('user_id', $session->user_id)
+            ->where('is_active', true)
+            ->first();
+        if ($defaultAiKey) {
+            try {
+                $this->sentiment->analyze($defaultAiKey, $data['message'], $contact->id, $session->user_id);
+            } catch (\Throwable) {}
+        }
+
+        // ── Intent detection ─────────────────────────────────────
+        try {
+            $detectedIntent = $this->intent->detect($session->user_id, $data['message']);
+        } catch (\Throwable) { $detectedIntent = null; }
+
+        // ── Flow engine check ────────────────────────────────────
+        $activeFlow = null;
+        if (!$detectedIntent || $detectedIntent['type'] !== 'ai_agent') {
+            $activeFlow = WaFlow::where('user_id', $session->user_id)
+                ->where('is_active', true)
+                ->where(function ($q) use ($session) {
+                    $q->whereNull('trigger_keyword')->orWhere('trigger_keyword', '!=', '');
+                })
+                ->get()
+                ->first(function ($flow) use ($data) {
+                    if (!$flow->trigger_keyword) return false;
+                    $msg = mb_strtolower($data['message']);
+                    $kw = mb_strtolower($flow->trigger_keyword);
+                    return match ($flow->trigger_match_type) {
+                        'exact' => $msg === $kw,
+                        'contains' => str_contains($msg, $kw),
+                        'starts_with' => str_starts_with($msg, $kw),
+                        default => false,
+                    };
+                });
+        }
+
+        // ── SLA tracking ─────────────────────────────────────────
+        try {
+            $this->sla->start($session->user_id, $contact->id);
+        } catch (\Throwable) {}
+
+        // ── Team inbox assignment ────────────────────────────────
+        try {
+            $this->teamInbox->autoAssign($contact->id, $session->id);
+        } catch (\Throwable) {}
+
         $lastOutgoing = WaMessage::where('contact_id', $contact->id)
             ->where('direction', 'out')
             ->max('created_at');
@@ -290,6 +348,19 @@ class WebhookController extends Controller
         }
 
         $autoReply = $this->findAutoReply($session, $data['message']);
+
+        // ── Flow engine ──────────────────────────────────────────
+        if (!$autoReply && $activeFlow && $session->server) {
+            try {
+                $flowResult = $this->flowEngine->execute($activeFlow, $session, $contact, $data['message']);
+                if ($flowResult) {
+                    Log::info("Flow executed", ['flow_id' => $activeFlow->id, 'phone' => $normalizedPhone]);
+                    return response()->json(['ok' => true, 'handler' => 'flow']);
+                }
+            } catch (\Throwable $e) {
+                Log::error("Flow execution failed: {$e->getMessage()}");
+            }
+        }
 
         // ── Fallback: tidak ada keyword cocok → cari fallback rule dengan AI ──
         if (!$autoReply && $session->server) {
