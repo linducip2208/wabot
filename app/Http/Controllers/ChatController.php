@@ -20,11 +20,21 @@ class ChatController extends Controller
     {
         $userId = Auth::id();
 
+        $sessions = WaSession::where('user_id', $userId)
+            ->where('status', 'connected')
+            ->get();
+
+        $connectedSessionIds = $sessions->pluck('id')->toArray();
+
         $contacts = WaContact::where('user_id', $userId)
             ->withCount(['messages as unread' => fn($q) => $q->where('direction', 'in')])
+            ->whereHas('messages', function ($q) use ($connectedSessionIds) {
+                $q->whereIn('session_id', $connectedSessionIds);
+            })
             ->orderByDesc(
                 WaMessage::select('created_at')
                     ->whereColumn('contact_id', 'wa_contacts.id')
+                    ->whereIn('session_id', $connectedSessionIds)
                     ->latest()
                     ->take(1)
             )
@@ -36,12 +46,9 @@ class ChatController extends Controller
                 $contact->last_message = $lastMsg?->message;
                 $contact->last_time = $lastMsg?->created_at;
                 $contact->last_direction = $lastMsg?->direction;
+                $contact->last_session_id = $lastMsg?->session_id;
                 return $contact;
             });
-
-        $sessions = WaSession::where('user_id', $userId)
-            ->where('status', 'connected')
-            ->get();
 
         $activeContact = null;
         $messages = collect();
@@ -186,7 +193,15 @@ class ChatController extends Controller
     {
         $userId = Auth::id();
 
+        $connectedSessionIds = WaSession::where('user_id', $userId)
+            ->where('status', 'connected')
+            ->pluck('id')
+            ->toArray();
+
         $contacts = WaContact::where('user_id', $userId)
+            ->whereHas('messages', function ($q) use ($connectedSessionIds) {
+                $q->whereIn('session_id', $connectedSessionIds);
+            })
             ->get()
             ->map(function ($contact) {
                 $lastMsg = WaMessage::where('contact_id', $contact->id)
@@ -207,6 +222,7 @@ class ChatController extends Controller
                     'last_message' => $lastMsg?->message,
                     'last_time' => $lastMsg?->created_at?->format('H:i'),
                     'last_direction' => $lastMsg?->direction,
+                    'last_session_id' => $lastMsg?->session_id,
                 ];
             })
             ->sortByDesc('last_time')

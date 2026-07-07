@@ -26,8 +26,18 @@
         </template>
     </div>
 
-    <form method="POST" action="{{ route('campaigns.store') }}" @submit="submitting = true" class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+    <form method="POST" action="{{ route('campaigns.store') }}" @submit="submitting = true" novalidate class="bg-white rounded-2xl border border-gray-200 shadow-sm">
         @csrf
+
+        @if ($errors->any())
+        <div class="mx-6 mt-5 bg-red-50 border border-red-200 text-red-800 rounded-xl px-4 py-3 text-sm">
+            <ul class="list-disc pl-4 space-y-0.5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
 
         {{-- Step 1: Audience --}}
         <div x-show="current === 0" class="p-6">
@@ -37,7 +47,7 @@
             <div class="grid grid-cols-2 gap-4 mb-5">
                 <div>
                     <label class="text-xs font-medium text-gray-500">Sesi WhatsApp</label>
-                    <select name="session_id" x-model="sessionId" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <select name="session_id" x-model="sessionId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                         <option value="">Pilih sesi</option>
                         @foreach($sessions as $s)
                             <option value="{{ $s->id }}">{{ $s->name }} ({{ $s->phone ?? 'offline' }})</option>
@@ -46,7 +56,7 @@
                 </div>
                 <div>
                     <label class="text-xs font-medium text-gray-500">Nama Kampanye</label>
-                    <input type="text" name="name" required placeholder="Promo Lebaran 2026" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <input type="text" name="name" x-model="campaignName" placeholder="Promo Lebaran 2026" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
             </div>
 
@@ -57,7 +67,7 @@
                 <button type="button" @click="deselectAll()" class="text-[11px] text-gray-500 hover:underline">Hapus</button>
             </div>
 
-            <div class="border border-gray-200 rounded-xl max-h-64 overflow-y-auto divide-y divide-gray-100">
+            <div class="border border-gray-200 rounded-xl max-h-48 overflow-y-auto divide-y divide-gray-100 mb-4">
                 @forelse($contacts as $c)
                 <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition">
                     <input type="checkbox" name="recipient_ids[]" value="{{ $c->id }}" x-model="selectedIds" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
@@ -69,6 +79,17 @@
                 @empty
                 <p class="px-4 py-8 text-center text-sm text-gray-500">Belum ada kontak. <a href="{{ route('contacts.index') }}" class="text-brand-600 hover:underline">Tambah kontak</a></p>
                 @endforelse
+            </div>
+
+            <div class="border-t border-gray-100 pt-4">
+                <button type="button" @click="manualTab = !manualTab" class="text-xs font-medium text-brand-600 hover:underline flex items-center gap-1">
+                    <i class="fas fa-plus-circle text-[10px]"></i> <span x-text="manualTab ? 'Sembunyikan input manual' : 'Tambah nomor manual'"></span>
+                </button>
+                <div x-show="manualTab" class="mt-3">
+                    <label class="text-xs font-medium text-gray-500">Nomor manual (1 per baris, format: 628123456789 atau Nama,628123456789)</label>
+                    <textarea name="manual_numbers" x-model="manualNumbers" rows="5" placeholder="6281234567890&#10;Budi,6289876543210&#10;6281111111111" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
+                    <p class="text-[10px] text-gray-400 mt-0.5" x-text="'Total: ' + selectedCount + ' penerima'"></p>
+                </div>
             </div>
         </div>
 
@@ -108,7 +129,7 @@
             <p class="text-sm text-gray-500 mb-5">Periksa sebelum mengirim</p>
 
             <div class="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
-                <div class="flex justify-between"><span class="text-gray-500">Kampanye</span><span class="font-medium" x-text="'Promo Lebaran 2026'"></span></div>
+                <div class="flex justify-between"><span class="text-gray-500">Kampanye</span><span class="font-medium" x-text="campaignName || '-'"></span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Penerima</span><span class="font-medium" x-text="selectedCount + ' kontak'"></span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Delay</span><span class="font-medium" x-text="delaySeconds + ' detik'"></span></div>
                 <div class="flex justify-between"><span class="text-gray-500">Estimasi selesai</span><span class="font-medium" x-text="estimateFinish()"></span></div>
@@ -145,18 +166,42 @@ document.addEventListener('alpine:init', () => {
         current: 0,
         steps: ['Audiens', 'Pesan', 'Kirim'],
         selectedIds: [],
+        manualNumbers: '',
+        manualTab: false,
         messageText: '',
         delaySeconds: 3,
         sessionId: '',
+        campaignName: '',
         submitting: false,
 
         get totalContacts() { return {{ $contacts->count() }}; },
-        get selectedCount() { return this.selectedIds.length; },
+        get selectedCount() { return this.selectedIds.length + this.parseManualCount(); },
 
         selectAll() { this.selectedIds = Array.from(document.querySelectorAll('input[name="recipient_ids[]"]')).map(el => el.value); },
         deselectAll() { this.selectedIds = []; },
 
-        next() { if (this.current < 2) this.current++; },
+        parseManualCount() {
+            if (!this.manualNumbers.trim()) return 0;
+            return this.manualNumbers.trim().split('\n').filter(l => l.trim()).length;
+        },
+
+        next() {
+            if (this.current === 0) {
+                if (!this.sessionId) {
+                    alert('Pilih sesi WhatsApp terlebih dahulu.');
+                    return;
+                }
+                if (!this.campaignName.trim()) {
+                    alert('Isi nama kampanye terlebih dahulu.');
+                    return;
+                }
+                if (this.selectedCount === 0) {
+                    alert('Pilih minimal 1 kontak atau masukkan nomor manual.');
+                    return;
+                }
+            }
+            if (this.current < 2) this.current++;
+        },
         prev() { if (this.current > 0) this.current--; },
 
         previewMessage() {

@@ -6,9 +6,14 @@ use App\Models\WaAutoreply;
 use App\Models\WaMessage;
 use App\Models\WaSession;
 use App\Models\WaContact;
+use App\Models\WaWebhook;
+use App\Models\WaWebhookLog;
 use App\Services\BaileysService;
 use App\Services\SpintaxService;
+use App\Services\AiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
@@ -16,7 +21,124 @@ class WebhookController extends Controller
     public function __construct(
         protected BaileysService $baileys,
         protected SpintaxService $spintax,
+        protected AiService $ai,
     ) {}
+
+    /*
+    |--------------------------------------------------------------------------
+    | User-scoped webhook management (CRUD)
+    |--------------------------------------------------------------------------
+    */
+
+    public function index()
+    {
+        $webhooks = WaWebhook::where('user_id', Auth::id())
+            ->with(['logs' => fn ($q) => $q->latest()->limit(5)])
+            ->latest()
+            ->get();
+
+        $recentLogs = WaWebhookLog::whereHas('webhook', fn ($q) => $q->where('user_id', Auth::id()))
+            ->with('webhook')
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        return view('webhooks.index', compact('webhooks', 'recentLogs'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'url' => 'required|url|max:2000',
+            'events' => 'required|array|min:1',
+            'events.*' => 'string|in:message.received,message.sent,session.connected,session.disconnected,campaign.completed',
+        ]);
+
+        WaWebhook::create([
+            'user_id' => Auth::id(),
+            'name' => $validated['name'],
+            'url' => $validated['url'],
+            'events' => array_values($validated['events']),
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        return back()->with('success', 'Webhook berhasil ditambahkan.');
+    }
+
+    public function update(Request $request, WaWebhook $webhook)
+    {
+        abort_if($webhook->user_id !== Auth::id(), 403);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'url' => 'required|url|max:2000',
+            'events' => 'required|array|min:1',
+            'events.*' => 'string|in:message.received,message.sent,session.connected,session.disconnected,campaign.completed',
+        ]);
+
+        $webhook->update([
+            'name' => $validated['name'],
+            'url' => $validated['url'],
+            'events' => array_values($validated['events']),
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        return back()->with('success', 'Webhook diperbarui.');
+    }
+
+    public function destroy(WaWebhook $webhook)
+    {
+        abort_if($webhook->user_id !== Auth::id(), 403);
+        $webhook->delete();
+
+        return back()->with('success', 'Webhook dihapus.');
+    }
+
+    public function test(WaWebhook $webhook)
+    {
+        abort_if($webhook->user_id !== Auth::id(), 403);
+
+        $payload = [
+            'event' => 'test',
+            'webhook_id' => $webhook->id,
+            'name' => $webhook->name,
+            'message' => 'Ini adalah payload test dari WABot.',
+            'timestamp' => now()->toIso8601String(),
+        ];
+
+        try {
+            $response = Http::timeout(10)
+                ->withHeaders(['X-WABot-Event' => 'test'])
+                ->post($webhook->url, $payload);
+
+            WaWebhookLog::create([
+                'webhook_id' => $webhook->id,
+                'event' => 'test',
+                'response_code' => $response->status(),
+                'response_body' => mb_substr($response->body(), 0, 2000),
+                'error' => $response->failed() ? 'HTTP ' . $response->status() : null,
+            ]);
+
+            $webhook->update(['last_triggered_at' => now()]);
+
+            if ($response->successful()) {
+                return back()->with('success', 'Test webhook terkirim (HTTP ' . $response->status() . ').');
+            }
+
+            return back()->with('warning', 'Webhook merespon dengan HTTP ' . $response->status() . '.');
+        } catch (\Throwable $e) {
+            WaWebhookLog::create([
+                'webhook_id' => $webhook->id,
+                'event' => 'test',
+                'response_code' => null,
+                'response_body' => null,
+                'error' => mb_substr($e->getMessage(), 0, 2000),
+            ]);
+
+            return back()->with('error', 'Gagal mengirim test: ' . $e->getMessage());
+        }
+    }
 
     public function statusUpdate(Request $request)
     {
@@ -120,6 +242,53 @@ class WebhookController extends Controller
             'external_id' => $data['message_id'] ?? null,
         ]);
 
+        $lastOutgoing = WaMessage::where('contact_id', $contact->id)
+            ->where('direction', 'out')
+            ->max('created_at');
+
+        $canSendWelcome = !$lastOutgoing || $lastOutgoing->diffInHours(now()) >= 24;
+
+        if ($canSendWelcome && $session->server) {
+            $welcomeRule = WaAutoreply::where('user_id', $session->user_id)
+                ->where('is_active', true)
+                ->where('match_type', 'welcome')
+                ->where(function ($query) use ($session) {
+                    $query->where('session_id', $session->id)
+                        ->orWhereNull('session_id');
+                })
+                ->first();
+
+            if ($welcomeRule) {
+                $welcomeText = $this->spintax->process($welcomeRule->reply_message, [
+                    'name' => $contact->name,
+                    'phone' => $normalizedPhone,
+                ]);
+                $result = $this->baileys->send(
+                    $session->server,
+                    $session->session_id,
+                    $data['phone'],
+                    $welcomeText
+                );
+
+                if ($result['ok'] ?? false) {
+                    WaMessage::create([
+                        'user_id' => $session->user_id,
+                        'session_id' => $session->id,
+                        'contact_id' => $contact->id,
+                        'direction' => 'out',
+                        'message' => $welcomeRule->reply_message,
+                        'phone' => $normalizedPhone,
+                        'status' => 'sent',
+                    ]);
+                }
+
+                Log::info("Welcome message sent", [
+                    'phone' => $normalizedPhone,
+                    'name' => $contact->name,
+                ]);
+            }
+        }
+
         $autoReply = $this->findAutoReply($session, $data['message']);
 
         if ($autoReply && $session->server) {
@@ -132,10 +301,29 @@ class WebhookController extends Controller
                 Log::info("Auto-reply skipped (cooldown)", ['phone' => $normalizedPhone]);
                 return response()->json(['ok' => true, 'skipped' => 'cooldown']);
             }
-            $replyText = $this->spintax->process($autoReply->reply_message, [
-                'name' => $contact->name,
-                'phone' => $normalizedPhone,
-            ]);
+
+            // ── AI mode (use_ai = true) ──────────────────────────
+            if ($autoReply->use_ai && $autoReply->aiKey) {
+                $kb = $this->ai->getKnowledgeContext($session->user_id);
+                $replyText = $this->ai->send($autoReply->aiKey, $data['message'], $kb ?: null);
+                if ($replyText) {
+                    $savedReply = $replyText;
+                } else {
+                    // AI gagal → fallback ke reply_message biasa
+                    Log::warning("AI auto-reply failed, falling back to text", ['keyword' => $autoReply->keyword]);
+                    $replyText = $this->spintax->process($autoReply->reply_message ?: 'Maaf, saya tidak bisa menjawab saat ini.', [
+                        'name' => $contact->name, 'phone' => $normalizedPhone,
+                    ]);
+                    $savedReply = $autoReply->reply_message ?: 'AI fallback';
+                }
+            } else {
+                $replyText = $this->spintax->process($autoReply->reply_message, [
+                    'name' => $contact->name,
+                    'phone' => $normalizedPhone,
+                ]);
+                $savedReply = $autoReply->reply_message;
+            }
+
             $result = $this->baileys->send(
                 $session->server,
                 $session->session_id,
@@ -149,7 +337,7 @@ class WebhookController extends Controller
                     'session_id' => $session->id,
                     'contact_id' => $contact->id,
                     'direction' => 'out',
-                    'message' => $autoReply->reply_message,
+                    'message' => $replyText,
                     'phone' => $normalizedPhone,
                     'status' => 'sent',
                 ]);
@@ -157,19 +345,73 @@ class WebhookController extends Controller
                 Log::info("Auto-reply sent", [
                     'keyword' => $autoReply->keyword,
                     'phone' => $normalizedPhone,
+                    'ai' => $autoReply->use_ai,
                 ]);
             } else {
-                Log::warning("Auto-reply failed to send", [
+                Log::warning("Auto-reply REST API failed, falling back to socket", [
                     'keyword' => $autoReply->keyword,
                     'phone' => $data['phone'],
                     'error' => $result['error'] ?? 'unknown',
                 ]);
             }
+
+            return response()->json(['ok' => true]);
         } elseif ($autoReply && !$session->server) {
             Log::warning("Auto-reply matched but no server configured", [
                 'keyword' => $autoReply->keyword,
                 'session_id' => $session->session_id,
             ]);
+        }
+
+        if (!$autoReply && $session->server) {
+            $fallbackRule = WaAutoreply::where('user_id', $session->user_id)
+                ->where('is_active', true)
+                ->where('match_type', 'fallback')
+                ->where(function ($query) use ($session) {
+                    $query->where('session_id', $session->id)
+                        ->orWhereNull('session_id');
+                })
+                ->first();
+
+            if ($fallbackRule) {
+                $cooldownMinutes = intval($fallbackRule->keyword) ?: 5;
+                $lastReply = WaMessage::where('contact_id', $contact->id)
+                    ->where('direction', 'out')
+                    ->where('created_at', '>', now()->subMinutes($cooldownMinutes))
+                    ->exists();
+
+                if (!$lastReply) {
+                    $fallbackText = $this->spintax->process($fallbackRule->reply_message, [
+                        'name' => $contact->name,
+                        'phone' => $normalizedPhone,
+                    ]);
+                    $result = $this->baileys->send(
+                        $session->server,
+                        $session->session_id,
+                        $data['phone'],
+                        $fallbackText
+                    );
+
+                    if ($result['ok'] ?? false) {
+                        WaMessage::create([
+                            'user_id' => $session->user_id,
+                            'session_id' => $session->id,
+                            'contact_id' => $contact->id,
+                            'direction' => 'out',
+                            'message' => $fallbackRule->reply_message,
+                            'phone' => $normalizedPhone,
+                            'status' => 'sent',
+                        ]);
+                    }
+
+                    Log::info("Fallback reply sent", [
+                        'phone' => $normalizedPhone,
+                        'cooldown_minutes' => $cooldownMinutes,
+                    ]);
+                } else {
+                    Log::info("Fallback reply skipped (cooldown)", ['phone' => $normalizedPhone, 'cooldown_minutes' => $cooldownMinutes]);
+                }
+            }
         }
 
         return response()->json(['ok' => true]);
@@ -179,6 +421,7 @@ class WebhookController extends Controller
     {
         $rules = WaAutoreply::where('user_id', $session->user_id)
             ->where('is_active', true)
+            ->whereNotIn('match_type', ['welcome', 'fallback'])
             ->where(function ($query) use ($session) {
                 $query->where('session_id', $session->id)
                     ->orWhereNull('session_id');

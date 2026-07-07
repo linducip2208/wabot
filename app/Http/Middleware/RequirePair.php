@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\LicenseClient;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -18,11 +19,20 @@ class RequirePair
 
     public function handle(Request $request, Closure $next): Response
     {
+        Log::info('RequirePair:handle', ['path' => $request->path(), 'host' => $request->getHost()]);
         if ($this->shouldBypass($request)) {
+            Log::info('RequirePair: BYPASSED');
             return $next($request);
         }
 
         $domain = strtolower($request->getHost());
+
+        // DEV: always bypass on .test / localhost
+        if ($this->isDevHost($domain)) {
+            Log::info('RequirePair: DEV BYPASS');
+            return $next($request);
+        }
+
         $data   = $this->client->verify($domain);
 
         if ($data) {
@@ -31,6 +41,7 @@ class RequirePair
         }
 
         // Not paired (or invalid/tampered) — redirect to wizard
+        Log::info('RequirePair: REDIRECT to __pair');
         return redirect()->to('/__pair');
     }
 
@@ -47,6 +58,9 @@ class RequirePair
 
         // Public webhook receiver — harus bisa diakses tanpa license
         if (str_starts_with($path, '/webhook')) return true;
+
+        // Public CMS pages
+        if (str_starts_with($path, '/pages')) return true;
 
         // Localhost dev bypass
         if (config('license.dev_bypass') && app()->environment('local')) {

@@ -36,14 +36,18 @@ class AuthController extends Controller
             'password' => 'required|min:6|confirmed',
         ]);
 
+        $userRole = \App\Models\Role::where('name', 'user')->first();
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'role' => 'user',
+            'role_id' => $userRole?->id,
         ]);
 
         $freePlan = Plan::where('slug', 'free')->first();
         if ($freePlan) {
+            $user->update(['plan_id' => $freePlan->id]);
             Subscription::create([
                 'user_id' => $user->id,
                 'plan_id' => $freePlan->id,

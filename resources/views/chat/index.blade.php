@@ -2,7 +2,9 @@
 @section('title', 'Chat — WABot')
 
 @section('chat_content')
-<div x-data="chatApp({{ $activeContact?->id ?? 'null' }}, {{ $activeContact?->phone ? "'{$activeContact->phone}'" : 'null' }})" class="flex h-full">
+<div x-data="chatApp({{ $activeContact?->id ?? 'null' }}, {{ $activeContact?->phone ? "'{$activeContact->phone}'" : 'null' }})" class="flex h-full"
+    x-init="sessionsData = {{ json_encode($sessions->map(fn($s) => ['id' => $s->id, 'session_id' => $s->session_id, 'name' => $s->name, 'phone' => $s->phone])) }};
+    contactsData = {{ json_encode($contacts->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone, 'display_phone' => $c->display_phone, 'is_lid' => str_contains($c->phone, '@lid'), 'last_message' => $c->last_message, 'last_time' => $c->last_time?->format('H:i'), 'last_direction' => $c->last_direction, 'last_session_id' => $c->last_session_id])) }}">
 
     {{-- Contact List Sidebar --}}
     <aside class="w-full md:w-80 lg:w-96 flex-shrink-0 bg-gray-900 flex flex-col border-r border-gray-800"
@@ -12,9 +14,27 @@
                 <h2 class="text-white font-bold text-lg">Chat</h2>
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                    <span class="text-xs text-gray-400" x-text="onlineCount">-</span>
+                    <span class="text-xs text-gray-400">{{ $sessions->count() }} online</span>
                 </div>
             </div>
+
+            {{-- Session Tabs --}}
+            <div class="flex gap-1 mb-3 overflow-x-auto pb-1" style="scrollbar-width:thin">
+                <button @click="activeTab = 'all'"
+                    class="flex-shrink-0 text-[11px] px-2.5 py-1.5 rounded-lg font-medium transition"
+                    :class="activeTab === 'all' ? 'bg-brand-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'">
+                    Semua
+                </button>
+                @foreach($sessions as $s)
+                <button @click="activeTab = {{ $s->id }}"
+                    class="flex-shrink-0 text-[11px] px-2.5 py-1.5 rounded-lg font-medium transition flex items-center gap-1"
+                    :class="activeTab === {{ $s->id }} ? 'bg-brand-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    {{ \Str::limit($s->name, 10) }}
+                </button>
+                @endforeach
+            </div>
+
             <div class="relative">
                 <input type="text" placeholder="Cari kontak..." x-model="searchQuery"
                     class="w-full bg-gray-800 text-gray-200 text-sm rounded-xl py-2.5 pl-10 pr-4 border border-gray-700 focus:border-brand-500 focus:outline-none placeholder-gray-500 transition">

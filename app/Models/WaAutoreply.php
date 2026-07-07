@@ -9,11 +9,12 @@ class WaAutoreply extends Model
 {
     protected $fillable = [
         'user_id', 'session_id', 'keyword', 'reply_message',
-        'match_type', 'is_active',
+        'match_type', 'is_active', 'ai_key_id', 'use_ai',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'use_ai' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -26,8 +27,17 @@ class WaAutoreply extends Model
         return $this->belongsTo(WaSession::class, 'session_id');
     }
 
+    public function aiKey(): BelongsTo
+    {
+        return $this->belongsTo(WaAiKey::class, 'ai_key_id');
+    }
+
     public function matches(string $incomingMessage): bool
     {
+        if (in_array($this->match_type, ['welcome', 'fallback'])) {
+            return true;
+        }
+
         $incoming = mb_strtolower(trim($incomingMessage));
         $keyword = mb_strtolower(trim($this->keyword));
 

@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Plan;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,9 +11,16 @@ class CheckSubscription
     public function handle(Request $request, Closure $next, string $feature = null)
     {
         $user = Auth::user();
-        if (!$user) return $next($request);
+        if (!$user) {
+            return $next($request);
+        }
 
-        $plan = $user->plan;
+        if ($user->isAdmin()) {
+            return $next($request);
+        }
+
+        $subscription = $user->activeSubscription();
+        $plan = $subscription?->plan ?? $user->plan;
 
         if (!$plan) {
             if ($request->expectsJson()) {
@@ -22,6 +28,14 @@ class CheckSubscription
             }
             return redirect()->route('plans.index')
                 ->with('warning', 'Silakan pilih paket untuk melanjutkan.');
+        }
+
+        if (!$subscription && $plan->price > 0) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Subscription required.'], 402);
+            }
+            return redirect()->route('plans.index')
+                ->with('warning', 'Anda perlu subscription aktif untuk paket ini.');
         }
 
         if ($feature) {
@@ -43,6 +57,7 @@ class CheckSubscription
             }
         }
 
+        $request->attributes->set('plan_limit', $plan);
         return $next($request);
     }
 }

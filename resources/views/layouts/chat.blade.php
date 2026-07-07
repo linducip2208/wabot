@@ -99,11 +99,18 @@ document.addEventListener('alpine:init', () => {
         showEditModal: false,
         editName: '',
         editPhone: '',
+        activeTab: 'all',
+        sessionsData: [],
+        contactsData: [],
 
         get filteredContacts() {
-            if (!this.searchQuery) return this.contacts;
+            let list = this.contactsData.length ? this.contactsData : this.contacts;
+            if (this.activeTab !== 'all') {
+                list = list.filter(c => c.last_session_id == this.activeTab);
+            }
+            if (!this.searchQuery) return list;
             const q = this.searchQuery.toLowerCase();
-            return this.contacts.filter(c =>
+            return list.filter(c =>
                 (c.name && c.name.toLowerCase().includes(q)) ||
                 (c.display_phone && c.display_phone.includes(q)) ||
                 (c.last_message && c.last_message.toLowerCase().includes(q))
@@ -111,7 +118,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         async init() {
-            await this.loadContacts();
+            if (this.contactsData.length) {
+                this.contacts = this.contactsData;
+            } else {
+                await this.loadContacts();
+            }
             if (initialContactId) {
                 const c = this.contacts.find(x => x.id == initialContactId);
                 if (c) this.openChat(c);
@@ -124,6 +135,7 @@ document.addEventListener('alpine:init', () => {
                 const res = await fetch('/api/chat/contacts');
                 const data = await res.json();
                 this.contacts = data.contacts || [];
+                this.contactsData = data.contacts || [];
             } catch (e) { console.error(e); }
         },
 

@@ -19,25 +19,30 @@
         <div class="flex items-start justify-between gap-4">
             <div class="flex items-start gap-3 flex-1 min-w-0">
                 <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
-                    {{ $a->match_type === 'exact' ? 'bg-rose-50' : ($a->match_type === 'contains' ? 'bg-sky-50' : 'bg-amber-50') }}">
-                    <i class="fas {{ $a->match_type === 'exact' ? 'fa-equals text-rose-500' : ($a->match_type === 'contains' ? 'fa-search text-sky-500' : 'fa-arrow-right text-amber-500') }}"></i>
+                    {{ $a->match_type === 'exact' ? 'bg-rose-50' : ($a->match_type === 'contains' ? 'bg-sky-50' : ($a->match_type === 'welcome' ? 'bg-emerald-50' : ($a->match_type === 'fallback' ? 'bg-violet-50' : 'bg-amber-50'))) }}">
+                    <i class="fas {{ $a->match_type === 'exact' ? 'fa-equals text-rose-500' : ($a->match_type === 'contains' ? 'fa-search text-sky-500' : ($a->match_type === 'welcome' ? 'fa-hand-sparkles text-emerald-500' : ($a->match_type === 'fallback' ? 'fa-reply-all text-violet-500' : 'fa-arrow-right text-amber-500'))) }}"></i>
                 </div>
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-xs font-mono px-2 py-0.5 rounded-md
-                            {{ $a->match_type === 'exact' ? 'bg-rose-50 text-rose-700 border border-rose-200' : ($a->match_type === 'contains' ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-amber-50 text-amber-700 border border-amber-200') }}">
-                            {{ ['exact'=>'Persis','contains'=>'Mengandung','starts_with'=>'Diawali'][$a->match_type] }}
+                            {{ $a->match_type === 'exact' ? 'bg-rose-50 text-rose-700 border border-rose-200' : ($a->match_type === 'contains' ? 'bg-sky-50 text-sky-700 border border-sky-200' : ($a->match_type === 'welcome' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : ($a->match_type === 'fallback' ? 'bg-violet-50 text-violet-700 border border-violet-200' : 'bg-amber-50 text-amber-700 border border-amber-200'))) }}">
+                            {{ ['exact'=>'Persis','contains'=>'Mengandung','starts_with'=>'Diawali','welcome'=>'Selamat Datang','fallback'=>'Balasan Umum'][$a->match_type] }}
                         </span>
                         <span class="text-xs text-gray-400">{{ $a->session?->name ?? 'Semua sesi' }}</span>
                         <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium {{ $a->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $a->is_active ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
                             {{ $a->is_active ? 'Aktif' : 'Nonaktif' }}
                         </span>
+                        @if($a->use_ai)
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700">
+                            <i class="fas fa-robot text-[9px]"></i> AI
+                        </span>
+                        @endif
                     </div>
                     <div class="flex items-start gap-4">
                         <div class="min-w-0 flex-1">
-                            <div class="text-xs text-gray-500 mb-0.5">Keyword</div>
-                            <div class="font-mono text-sm text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg break-all">{{ $a->keyword }}</div>
+                            <div class="text-xs text-gray-500 mb-0.5">{{ $a->match_type === 'welcome' ? 'Trigger' : ($a->match_type === 'fallback' ? 'Trigger' : 'Keyword') }}</div>
+                            <div class="font-mono text-sm text-gray-900 bg-gray-50 px-2.5 py-1 rounded-lg break-all">{{ $a->match_type === 'welcome' ? '24 jam sekali' : ($a->match_type === 'fallback' ? $a->keyword.' menit' : $a->keyword) }}</div>
                         </div>
                         <div class="text-gray-300 flex-shrink-0 self-stretch flex items-center"><i class="fas fa-arrow-right text-sm"></i></div>
                         <div class="min-w-0 flex-1">
@@ -48,7 +53,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-1 flex-shrink-0">
-                <button onclick='editRule({{ $a->id }}, "{{ addslashes($a->keyword) }}", "{{ addslashes($a->reply_message) }}", "{{ $a->match_type }}", {{ $a->session_id ?? 'null' }}, {{ $a->is_active ? 'true' : 'false' }})'
+                <button onclick='editRule({{ $a->id }}, "{{ addslashes($a->keyword) }}", "{{ addslashes($a->reply_message) }}", "{{ $a->match_type }}", {{ $a->session_id ?? 'null' }}, {{ $a->is_active ? 'true' : 'false' }}, {{ $a->use_ai ? 'true' : 'false' }}, {{ $a->ai_key_id ?? 'null' }})'
                     class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-brand-600"><i class="fas fa-edit text-xs"></i></button>
                 <form method="POST" action="{{ route('autoreplies.destroy', $a) }}" onsubmit="return confirm('Hapus rule?')">
                     @csrf @method('DELETE')
@@ -79,18 +84,24 @@
             @csrf
             <div id="ruleMethodField"></div>
             <div class="grid grid-cols-2 gap-3">
-                <div>
+                <div id="keywordGroup">
                     <label class="text-xs font-medium text-gray-500">Keyword</label>
-                    <input type="text" name="keyword" placeholder="hi" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <input type="text" name="keyword" placeholder="hi" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
                 <div>
                     <label class="text-xs font-medium text-gray-500">Tipe Match</label>
-                    <select name="match_type" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm">
+                    <select name="match_type" onchange="onMatchTypeChange(this.value)" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm">
                         <option value="contains">Mengandung</option>
                         <option value="exact">Persis</option>
                         <option value="starts_with">Diawali</option>
+                        <option value="welcome">Selamat Datang</option>
+                        <option value="fallback">Balasan Umum</option>
                     </select>
                 </div>
+            </div>
+            <div id="cooldownGroup" class="hidden mt-3">
+                <label class="text-xs font-medium text-gray-500">Cooldown (menit) <span class="text-gray-400">— jeda sebelum balasan umum dikirim lagi</span></label>
+                <input type="number" name="fallback_cooldown" value="5" min="1" max="1440" placeholder="5" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
                 <label class="text-xs font-medium text-gray-500">Balasan <span class="text-gray-400">({'{Halo|Hai}'} = spintax)</span></label>
@@ -114,6 +125,20 @@
                     </select>
                 </div>
             </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <label class="flex items-center gap-2 cursor-pointer mb-2">
+                    <input type="checkbox" name="use_ai" value="1" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500" onchange="toggleAiMode(this)">
+                    <span class="text-xs font-medium text-amber-800">Gunakan AI (abaikan keyword & balasan di atas)</span>
+                </label>
+                <div id="aiKeyGroup" class="hidden">
+                    <select name="ai_key_id" class="w-full rounded-xl border border-amber-300 px-3 py-2.5 text-sm">
+                        <option value="">Pilih AI Key...</option>
+                        @foreach($aiKeys as $k)
+                            <option value="{{ $k->id }}">{{ $k->name }} ({{ $k->provider }} / {{ $k->model }})</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
             <div class="flex gap-2 pt-1">
                 <button type="button" onclick="toggleModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">Batal</button>
                 <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">Simpan</button>
@@ -134,10 +159,17 @@ function toggleModal() {
         document.getElementById('ruleForm').querySelector('select[name="match_type"]').value = 'contains';
         document.getElementById('ruleForm').querySelector('select[name="session_id"]').value = '';
         document.getElementById('ruleForm').querySelector('select[name="is_active"]').value = '1';
+        document.getElementById('ruleForm').querySelector('input[name="use_ai"]').checked = false;
+        document.getElementById('ruleForm').querySelector('select[name="ai_key_id"]').value = '';
+        document.getElementById('aiKeyGroup').classList.add('hidden');
+        document.getElementById('keywordGroup').classList.remove('hidden');
+        document.getElementById('cooldownGroup').classList.add('hidden');
+        document.getElementById('ruleForm').querySelector('input[name="fallback_cooldown"]').value = '5';
+        toggleRequiredFields(false);
         document.getElementById('ruleMethodField').innerHTML = '';
     }
 }
-function editRule(id, keyword, reply, matchType, sessionId, isActive) {
+function editRule(id, keyword, reply, matchType, sessionId, isActive, useAi, aiKeyId) {
     const m = document.getElementById('ruleModal');
     m.classList.remove('hidden');
     document.getElementById('ruleModalTitle').textContent = 'Edit Auto-Reply';
@@ -148,7 +180,55 @@ function editRule(id, keyword, reply, matchType, sessionId, isActive) {
     f.querySelector('select[name="match_type"]').value = matchType;
     f.querySelector('select[name="session_id"]').value = sessionId || '';
     f.querySelector('select[name="is_active"]').value = isActive ? '1' : '0';
+    f.querySelector('input[name="use_ai"]').checked = useAi;
+    f.querySelector('select[name="ai_key_id"]').value = aiKeyId || '';
+    document.getElementById('aiKeyGroup').classList.toggle('hidden', !useAi);
+    document.getElementById('aiKeyGroup').classList.toggle('hidden', !useAi);
+    document.getElementById('keywordGroup').classList.toggle('hidden', matchType === 'welcome' || matchType === 'fallback');
+    document.getElementById('cooldownGroup').classList.toggle('hidden', matchType !== 'fallback');
+    if (matchType === 'fallback') {
+        f.querySelector('input[name="fallback_cooldown"]').value = keyword || '5';
+    }
+    if (matchType === 'welcome' || matchType === 'fallback') {
+        f.querySelector('input[name="keyword"]').removeAttribute('required');
+    }
+    toggleRequiredFields(useAi);
     document.getElementById('ruleMethodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
+}
+
+function toggleAiMode(cb) {
+    document.getElementById('aiKeyGroup').classList.toggle('hidden', !cb.checked);
+    toggleRequiredFields(cb.checked);
+}
+
+function onMatchTypeChange(type) {
+    const keywordGroup = document.getElementById('keywordGroup');
+    const keywordInput = document.getElementById('ruleForm').querySelector('input[name="keyword"]');
+    const cooldownGroup = document.getElementById('cooldownGroup');
+    if (type === 'welcome') {
+        keywordGroup.classList.add('hidden');
+        cooldownGroup.classList.add('hidden');
+        keywordInput.removeAttribute('required');
+        keywordInput.value = '';
+    } else if (type === 'fallback') {
+        keywordGroup.classList.add('hidden');
+        cooldownGroup.classList.remove('hidden');
+        keywordInput.removeAttribute('required');
+        keywordInput.value = '';
+    } else {
+        keywordGroup.classList.remove('hidden');
+        cooldownGroup.classList.add('hidden');
+        if (!document.getElementById('ruleForm').querySelector('input[name="use_ai"]').checked) {
+            keywordInput.setAttribute('required', '');
+        }
+    }
+}
+
+function toggleRequiredFields(useAi) {
+    const f = document.getElementById('ruleForm');
+    f.querySelector('input[name="keyword"]').required = !useAi;
+    f.querySelector('textarea[name="reply_message"]').required = !useAi;
+    f.querySelector('select[name="ai_key_id"]').required = useAi;
 }
 </script>
 @endsection

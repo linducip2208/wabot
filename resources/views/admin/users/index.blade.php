@@ -40,6 +40,7 @@
                 <th class="px-5 py-3">User</th>
                 <th class="px-5 py-3 hidden md:table-cell">Email</th>
                 <th class="px-5 py-3">Paket</th>
+                <th class="px-5 py-3">Role</th>
                 <th class="px-5 py-3 hidden lg:table-cell">Daftar</th>
                 <th class="px-5 py-3 w-24 text-right">Aksi</th>
             </tr>
@@ -61,13 +62,18 @@
                         {{ $u->plan?->name ?? 'Free' }}
                     </span>
                 </td>
+                <td class="px-5 py-3">
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ is_object($u->role) && $u->role->name === 'admin' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700' }}">
+                        {{ is_object($u->role) ? $u->role->name : ucfirst($u->getAttribute('role') ?? 'user') }}
+                    </span>
+                </td>
                 <td class="px-5 py-3 hidden lg:table-cell text-xs text-gray-400">{{ $u->created_at->format('d M Y') }}</td>
                 <td class="px-5 py-3 text-right">
                     <form method="POST" action="{{ route('admin.users.impersonate', $u) }}" class="inline">
                         @csrf
                         <button class="p-1.5 rounded-lg hover:bg-violet-50 text-gray-400 hover:text-violet-600" title="Login sebagai"><i class="fas fa-sign-in-alt text-xs"></i></button>
                     </form>
-                    <button onclick='editUser({{ $u->id }}, "{{ addslashes($u->name) }}", "{{ $u->email }}", {{ $u->plan_id ?? 'null' }})'
+                    <button onclick='editUser({{ $u->id }}, "{{ addslashes($u->name) }}", "{{ $u->email }}", {{ $u->role_id ?? 'null' }}, {{ $u->plan_id ?? 'null' }})'
                         class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-brand-600"><i class="fas fa-edit text-xs"></i></button>
                     <form method="POST" action="{{ route('admin.users.destroy', $u) }}" class="inline" onsubmit="return confirm('Hapus user ini?')">
                         @csrf @method('DELETE')
@@ -100,6 +106,14 @@
                 <input type="password" name="password" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
+                <label class="text-xs font-medium text-gray-500">Role</label>
+                <select name="role_id" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm">
+                    @foreach($roles as $r)
+                        <option value="{{ $r->id }}">{{ $r->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="text-xs font-medium text-gray-500">Paket</label>
                 <select name="plan_id" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm">
                     <option value="">Tanpa Paket</option>
@@ -128,7 +142,7 @@ function toggleModal() {
         document.getElementById('methodField').innerHTML = '';
     }
 }
-function editUser(id, name, email, planId) {
+function editUser(id, name, email, roleId, planId) {
     const m = document.getElementById('userModal');
     m.classList.remove('hidden');
     document.getElementById('modalTitle').textContent = 'Edit User';
@@ -138,6 +152,7 @@ function editUser(id, name, email, planId) {
     f.querySelector('input[name="email"]').value = email;
     f.querySelector('input[name="password"]').value = '';
     f.querySelector('input[name="password"]').required = false;
+    f.querySelector('select[name="role_id"]').value = roleId || '';
     f.querySelector('select[name="plan_id"]').value = planId || '';
     document.getElementById('methodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
 }

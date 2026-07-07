@@ -10,6 +10,7 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    @stack('styles')
     <style>
         body { font-family: 'Inter', sans-serif; }
         [x-cloak] { display: none !important; }
@@ -84,7 +85,19 @@
             <span>WhatsApp</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
-        <div class="nav-group-body space-y-0.5" style="max-height: 400px;">
+        <div class="nav-group-body space-y-0.5" style="max-height: 500px;">
+            <a href="{{ route('messages.send.form') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('messages/send*') ? 'active' : '' }}">
+                <i class="fas fa-paper-plane w-4 text-center"></i> Kirim Pesan
+            </a>
+            <a href="{{ route('messages.received') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('messages/received*') ? 'active' : '' }}">
+                <i class="fas fa-inbox w-4 text-center"></i> Pesan Masuk
+            </a>
+            <a href="{{ route('messages.sent') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('messages/sent*') ? 'active' : '' }}">
+                <i class="fas fa-check-double w-4 text-center"></i> Pesan Terkirim
+            </a>
+            <a href="{{ route('messages.queue') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('messages/queue*') ? 'active' : '' }}">
+                <i class="fas fa-clock w-4 text-center"></i> Antrian
+            </a>
             <a href="{{ route('sessions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sessions*') ? 'active' : '' }}">
                 <i class="fas fa-mobile-alt w-4 text-center"></i> Sesi / Agen
             </a>
@@ -103,6 +116,21 @@
             <a href="{{ route('autoreplies.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('autoreplies*') ? 'active' : '' }}">
                 <i class="fas fa-robot w-4 text-center"></i> Auto-Reply
             </a>
+            <a href="{{ route('knowledge.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('knowledge*') ? 'active' : '' }}">
+                <i class="fas fa-database w-4 text-center"></i> Knowledge
+            </a>
+            <a href="{{ route('ai-keys.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-keys*') ? 'active' : '' }}">
+                <i class="fas fa-key w-4 text-center"></i> AI Keys
+            </a>
+            <a href="{{ route('templates.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('templates*') ? 'active' : '' }}">
+                <i class="fas fa-file-lines w-4 text-center"></i> Template
+            </a>
+            <a href="{{ route('webhooks.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('webhooks*') ? 'active' : '' }}">
+                <i class="fas fa-bolt w-4 text-center"></i> Webhook
+            </a>
+            <a href="{{ route('ai-keys.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-keys*') ? 'active' : '' }}">
+                <i class="fas fa-brain w-4 text-center"></i> AI Keys
+            </a>
         </div>
 
         {{-- SISTEM --}}
@@ -110,7 +138,7 @@
             <span>Sistem</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
-        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 500px;' : 'max-height: 0;'">
             <a href="{{ route('servers.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('servers*') ? 'active' : '' }}">
                 <i class="fas fa-server w-4 text-center"></i> Server
             </a>
@@ -120,8 +148,43 @@
             <a href="{{ route('tokens.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('tokens*') ? 'active' : '' }}">
                 <i class="fas fa-key w-4 text-center"></i> API Token
             </a>
-            <a href="{{ route('admin.users.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin*') ? 'active' : '' }}">
+            @if(Auth::user()->isAdmin())
+            <a href="{{ route('admin.users.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/users*') ? 'active' : '' }}">
                 <i class="fas fa-users-cog w-4 text-center"></i> User
+            </a>
+            <a href="{{ route('admin.vouchers.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/vouchers*') ? 'active' : '' }}">
+                <i class="fas fa-ticket-alt w-4 text-center"></i> Voucher
+            </a>
+            <a href="{{ route('admin.transactions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/transactions*') ? 'active' : '' }}">
+                <i class="fas fa-exchange-alt w-4 text-center"></i> Transaksi
+            </a>
+            <a href="{{ route('admin.shorteners.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/shorteners*') ? 'active' : '' }}">
+                <i class="fas fa-link w-4 text-center"></i> Shortener
+            </a>
+            <a href="{{ route('admin.pages.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/pages*') ? 'active' : '' }}">
+                <i class="fas fa-file-alt w-4 text-center"></i> CMS Pages
+            </a>
+            <a href="{{ route('admin.blog.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/blog*') ? 'active' : '' }}">
+                <i class="fas fa-blog w-4 text-center"></i> Blog
+            </a>
+            <a href="{{ route('admin.payouts.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/payouts*') ? 'active' : '' }}">
+                <i class="fas fa-hand-holding-usd w-4 text-center"></i> Payout Admin
+            </a>
+            @endif
+            <a href="{{ route('plans.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('plans*') ? 'active' : '' }}">
+                <i class="fas fa-box w-4 text-center"></i> Paket
+            </a>
+            <a href="{{ route('subscriptions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('subscriptions*') ? 'active' : '' }}">
+                <i class="fas fa-id-card w-4 text-center"></i> Langganan
+            </a>
+            <a href="{{ route('tokens.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('tokens*') ? 'active' : '' }}">
+                <i class="fas fa-key w-4 text-center"></i> API Token
+            </a>
+            <a href="{{ route('payouts.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('payouts*') && !request()->is('admin*') ? 'active' : '' }}">
+                <i class="fas fa-wallet w-4 text-center"></i> Payout
+            </a>
+            <a href="{{ route('logger.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('logger*') ? 'active' : '' }}">
+                <i class="fas fa-history w-4 text-center"></i> Log
             </a>
         </div>
     </nav>

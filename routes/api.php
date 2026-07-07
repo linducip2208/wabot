@@ -19,5 +19,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('autoreplies', [ApiController::class, 'autoreplyRules']);
 });
 
-// Public webhook (no auth, called by Node.js Baileys service)
-Route::post('webhook/receive', [ApiController::class, 'webhookReceive']);
+// Public webhook (no middleware, called by Node.js Baileys service)
+Route::post('webhook/whatsapp', [\App\Http\Controllers\WebhookController::class, 'whatsapp']);
+Route::post('webhook/whatsapp-status', [\App\Http\Controllers\WebhookController::class, 'statusUpdate']);

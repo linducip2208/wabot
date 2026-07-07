@@ -29,6 +29,11 @@ class Subscription extends Model
         return $this->belongsTo(Plan::class);
     }
 
+    public function paymentTransactions(): HasMany
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
+
     public function isActive(): bool
     {
         if ($this->status !== 'active') return false;

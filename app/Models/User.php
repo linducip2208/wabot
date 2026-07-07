@@ -12,12 +12,62 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'plan_id', 'trial_ends_at'])]
+#[Fillable(['name', 'email', 'password', 'role', 'role_id', 'plan_id', 'trial_ends_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasApiTokens;
+
+    const ROLE_ADMIN = 'admin';
+    const ROLE_USER = 'user';
+
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        if ($this->role_id && $this->relationLoaded('role')) {
+            return $this->role->name === self::ROLE_ADMIN;
+        }
+
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isUser(): bool
+    {
+        if ($this->role_id && $this->relationLoaded('role')) {
+            return $this->role->name === self::ROLE_USER;
+        }
+
+        return $this->role === self::ROLE_USER;
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        if ($this->relationLoaded('role') && $this->role) {
+            return $this->role->hasPermission($permission);
+        }
+
+        if ($this->role_id) {
+            return $this->role()->first()?->hasPermission($permission) ?? false;
+        }
+
+        return $this->isAdmin();
+    }
+
+    public function activeSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+            })
+            ->latest()
+            ->first();
+    }
 
     protected function casts(): array
     {
@@ -86,5 +136,35 @@ class User extends Authenticatable
     public function apiTokens(): HasMany
     {
         return $this->hasMany(ApiToken::class);
+    }
+
+    public function paymentTransactions(): HasMany
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
+
+    public function waWebhooks(): HasMany
+    {
+        return $this->hasMany(WaWebhook::class);
+    }
+
+    public function waMessageTemplates(): HasMany
+    {
+        return $this->hasMany(WaMessageTemplate::class);
+    }
+
+    public function waAiKeys(): HasMany
+    {
+        return $this->hasMany(WaAiKey::class);
+    }
+
+    public function blogPosts(): HasMany
+    {
+        return $this->hasMany(BlogPost::class, 'author_id');
+    }
+
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(Payout::class);
     }
 }

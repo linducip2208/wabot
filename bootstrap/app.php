@@ -17,12 +17,19 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\RequirePair::class,
         ]);
 
+        $middleware->web(prepend: [
+            \App\Http\Middleware\ForceJsonForWebhook::class,
+        ]);
+
         $middleware->alias([
             'check.subscription' => \App\Http\Middleware\CheckSubscription::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
             'webhook/*',
+            'webhook/whatsapp',
+            'webhook/whatsapp-status',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

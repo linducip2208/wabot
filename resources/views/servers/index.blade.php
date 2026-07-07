@@ -7,10 +7,12 @@
         <h1 class="text-xl font-extrabold text-gray-900">Server</h1>
         <p class="text-sm text-gray-500 mt-0.5">Kelola koneksi Baileys & pantau performa</p>
     </div>
+    @if(Auth::user()->isAdmin())
     <button onclick="toggleModal()"
         class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2">
         <i class="fas fa-plus text-xs"></i> Tambah Server
     </button>
+    @endif
 </div>
 
 {{-- Stats Bar --}}
@@ -73,11 +75,13 @@
                         <span class="w-2 h-2 rounded-full {{ $online ? 'bg-emerald-500 animate-pulse' : 'bg-red-400' }}"></span>
                         {{ $online ? 'Online' : 'Offline' }}
                     </span>
+                    @if(Auth::user()->isAdmin())
                     <button onclick="editServer({{ $s->id }}, '{{ $s->name }}', '{{ $s->host }}', {{ $s->port }}, '{{ $s->api_key }}')" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-brand-600"><i class="fas fa-edit text-sm"></i></button>
                     <form method="POST" action="{{ route('servers.destroy', $s) }}" onsubmit="return confirm('Hapus server?')" class="inline">
                         @csrf @method('DELETE')
                         <button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-sm"></i></button>
                     </form>
+                    @endif
                 </div>
             </div>
 
@@ -131,6 +135,7 @@
     @endforelse
 </div>
 
+@if(Auth::user()->isAdmin())
 {{-- Add/Edit Modal --}}
 <div id="serverModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl" onclick="event.stopPropagation()">
@@ -177,6 +182,7 @@ function editServer(id, name, host, port, apiKey) {
     if (!m.querySelector('input')) m.innerHTML = '<input type="hidden" name="_method" value="PUT">';
 }
 </script>
+@endif
 @endsection
 
 @push('scripts')

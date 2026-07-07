@@ -20,9 +20,10 @@
                 <div class="w-10 h-10 rounded-lg flex items-center justify-center
                     {{ $c->status === 'sent' ? 'bg-emerald-50' : '' }}
                     {{ $c->status === 'sending' ? 'bg-blue-50' : '' }}
+                    {{ $c->status === 'paused' ? 'bg-orange-50' : '' }}
                     {{ $c->status === 'draft' ? 'bg-amber-50' : '' }}
                     {{ $c->status === 'failed' ? 'bg-red-50' : '' }}">
-                    <i class="fas {{ $c->status === 'sent' ? 'fa-check-circle text-emerald-500' : ($c->status === 'sending' ? 'fa-spinner fa-spin text-blue-500' : ($c->status === 'draft' ? 'fa-clock text-amber-500' : 'fa-exclamation-circle text-red-500')) }}"></i>
+                    <i class="fas {{ $c->status === 'sent' ? 'fa-check-circle text-emerald-500' : ($c->status === 'sending' ? 'fa-spinner fa-spin text-blue-500' : ($c->status === 'paused' ? 'fa-pause-circle text-orange-500' : ($c->status === 'draft' ? 'fa-clock text-amber-500' : 'fa-exclamation-circle text-red-500'))) }}"></i>
                 </div>
                 <div>
                     <div class="font-semibold text-gray-900">{{ $c->name }}</div>
@@ -32,9 +33,10 @@
             <span class="text-[11px] font-medium px-2 py-0.5 rounded-full
                 {{ $c->status === 'sent' ? 'bg-emerald-50 text-emerald-700' : '' }}
                 {{ $c->status === 'sending' ? 'bg-blue-50 text-blue-700' : '' }}
+                {{ $c->status === 'paused' ? 'bg-orange-50 text-orange-700' : '' }}
                 {{ $c->status === 'draft' ? 'bg-amber-50 text-amber-700' : '' }}
                 {{ $c->status === 'failed' ? 'bg-red-50 text-red-700' : '' }}">
-                {{ ['sent'=>'Terkirim','sending'=>'Mengirim','draft'=>'Draft','failed'=>'Gagal'][$c->status] ?? $c->status }}
+                {{ ['sent'=>'Terkirim','sending'=>'Mengirim','paused'=>'Dijeda','draft'=>'Draft','failed'=>'Gagal'][$c->status] ?? $c->status }}
             </span>
         </div>
         <p class="text-sm text-gray-500 mb-3 line-clamp-1">{{ Str::limit($c->message, 100) }}</p>
@@ -42,6 +44,26 @@
             <span><i class="fas fa-users mr-1"></i> {{ $c->sent_count }}/{{ $c->total_recipients }}</span>
             @if($c->failed_count) <span class="text-red-500"><i class="fas fa-times mr-1"></i> {{ $c->failed_count }} gagal</span> @endif
             <span>{{ $c->scheduled_at ? 'Terjadwal: '.$c->scheduled_at->format('d M H:i') : $c->created_at->format('d M Y H:i') }}</span>
+            <div class="ml-auto flex gap-1" onclick="event.preventDefault(); event.stopPropagation();">
+                @if(in_array($c->status, ['sent','failed']))
+                <form method="POST" action="{{ route('campaigns.resend', $c) }}" class="inline">
+                    @csrf
+                    <button class="text-[11px] bg-amber-50 text-amber-700 hover:bg-amber-100 px-2 py-1 rounded-lg font-medium">Kirim Ulang</button>
+                </form>
+                @endif
+                @if($c->status === 'sending')
+                <form method="POST" action="{{ route('campaigns.pause', $c) }}" class="inline">
+                    @csrf
+                    <button class="text-[11px] bg-orange-50 text-orange-700 hover:bg-orange-100 px-2 py-1 rounded-lg font-medium">Jeda</button>
+                </form>
+                @endif
+                @if($c->status === 'paused')
+                <form method="POST" action="{{ route('campaigns.resume', $c) }}" class="inline">
+                    @csrf
+                    <button class="text-[11px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2 py-1 rounded-lg font-medium">Lanjutkan</button>
+                </form>
+                @endif
+            </div>
         </div>
     </a>
     @empty

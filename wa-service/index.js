@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const instanceManager = require('./instance-manager');
 
@@ -5,7 +6,7 @@ const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3100;
-const API_KEY = process.env.API_KEY || 'wabot-secret-key-change-me';
+const API_KEY = process.env.API_KEY || 'wabotaku';
 
 function auth(req, res, next) {
     const key = req.headers['x-api-key'] || req.query.api_key;

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\PaymentGateway;
+use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,17 +30,15 @@ class PlanController extends Controller
 
         $user = Auth::user();
 
-        // End previous subscription
         Subscription::where('user_id', $user->id)
             ->where('status', 'active')
             ->update(['status' => 'expired', 'canceled_at' => now()]);
 
         if ($plan->price > 0) {
-            // Paid plan - create subscription with payment needed
-            Subscription::create([
+            $subscription = Subscription::create([
                 'user_id' => $user->id,
                 'plan_id' => $plan->id,
-                'status' => 'active',
+                'status' => 'pending',
                 'starts_at' => now(),
                 'ends_at' => now()->addMonth(),
             ]);
@@ -48,10 +48,9 @@ class PlanController extends Controller
                 'trial_ends_at' => null,
             ]);
 
-            return back()->with('success', "Berlangganan ke paket {$plan->name}. (Pembayaran akan diintegrasikan)");
+            return redirect()->route('payment.page', $subscription);
         }
 
-        // Free plan - activate immediately
         Subscription::create([
             'user_id' => $user->id,
             'plan_id' => $plan->id,
@@ -65,5 +64,44 @@ class PlanController extends Controller
         ]);
 
         return back()->with('success', "Paket {$plan->name} diaktifkan.");
+    }
+
+    public function payment(Subscription $subscription)
+    {
+        abort_if($subscription->user_id !== Auth::id(), 403);
+
+        $gateways = PaymentGateway::where('is_active', true)->orderBy('sort_order')->get();
+        $plan = $subscription->plan;
+
+        return view('payment.page', compact('subscription', 'gateways', 'plan'));
+    }
+
+    public function uploadPayment(Request $request, Subscription $subscription)
+    {
+        abort_if($subscription->user_id !== Auth::id(), 403);
+
+        $data = $request->validate([
+            'gateway_id' => 'required|exists:payment_gateways,id',
+            'amount' => 'required|numeric|min:0',
+        ]);
+
+        $gateway = PaymentGateway::findOrFail($data['gateway_id']);
+
+        PaymentTransaction::create([
+            'user_id' => Auth::id(),
+            'subscription_id' => $subscription->id,
+            'type' => 'subscription',
+            'amount' => $data['amount'],
+            'status' => 'pending',
+            'gateway' => $gateway->code,
+            'gateway_meta' => ['gateway_name' => $gateway->name],
+        ]);
+
+        $subscription->update(['status' => 'active']);
+
+        Auth::user()->update(['plan_id' => $subscription->plan_id]);
+
+        return redirect()->route('subscriptions.index')
+            ->with('success', 'Pembayaran berhasil dikonfirmasi. Paket Anda aktif.');
     }
 }

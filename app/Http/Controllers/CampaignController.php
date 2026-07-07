@@ -50,14 +50,49 @@ class CampaignController extends Controller
             'message' => 'required|string|max:5000',
             'delay_seconds' => 'nullable|integer|min:1|max:60',
             'media_url' => 'nullable|url|max:1000',
-            'recipient_ids' => 'required|array|min:1|max:' . $maxRecipients,
+            'recipient_ids' => 'nullable|array|max:' . $maxRecipients,
             'recipient_ids.*' => 'exists:wa_contacts,id',
+            'manual_numbers' => 'nullable|string',
             'scheduled_at' => 'nullable|date',
         ]);
 
-        $recipients = WaContact::where('user_id', Auth::id())
-            ->whereIn('id', $validated['recipient_ids'])
-            ->get();
+        if (empty($validated['recipient_ids']) && empty(trim($validated['manual_numbers'] ?? ''))) {
+            return back()->with('error', 'Pilih minimal 1 kontak atau masukkan nomor manual.')->withInput();
+        }
+
+        $recipients = collect();
+
+        if (!empty($validated['recipient_ids'])) {
+            $recipients = WaContact::where('user_id', Auth::id())
+                ->whereIn('id', $validated['recipient_ids'])
+                ->get();
+        }
+
+        $manualPhones = [];
+        if (!empty($validated['manual_numbers'])) {
+            $lines = explode("\n", trim($validated['manual_numbers']));
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+                if (str_contains($line, ',')) {
+                    [$name, $phone] = array_map('trim', explode(',', $line, 2));
+                } else {
+                    $name = $line;
+                    $phone = $line;
+                }
+                $phone = preg_replace('/[^0-9]/', '', $phone);
+                if (empty($phone)) continue;
+
+                $contact = WaContact::firstOrCreate(
+                    ['user_id' => Auth::id(), 'phone' => $phone],
+                    ['name' => $name]
+                );
+                $recipients->push($contact);
+                $manualPhones[] = (string) $contact->id;
+            }
+        }
+
+        $allRecipientIds = array_merge($validated['recipient_ids'] ?? [], $manualPhones);
 
         $campaign = WaCampaign::create([
             'user_id' => Auth::id(),
@@ -66,13 +101,13 @@ class CampaignController extends Controller
             'message' => $validated['message'],
             'delay_seconds' => $validated['delay_seconds'] ?? 3,
             'media_url' => $validated['media_url'] ?? null,
-            'recipient_ids' => $validated['recipient_ids'],
-            'status' => $validated['scheduled_at'] ? 'draft' : 'sending',
-            'total_recipients' => count($validated['recipient_ids']),
+            'recipient_ids' => $allRecipientIds,
+            'status' => ($validated['scheduled_at'] ?? null) ? 'draft' : 'sending',
+            'total_recipients' => count($allRecipientIds),
             'scheduled_at' => $validated['scheduled_at'] ?? null,
         ]);
 
-        if (!$validated['scheduled_at']) {
+        if (empty($validated['scheduled_at'] ?? null)) {
             $this->sendCampaign($campaign, $recipients);
         }
 
@@ -109,10 +144,19 @@ class CampaignController extends Controller
             $variables[$r->phone] = ['name' => $r->name, 'phone' => $phone];
         }
 
-        $sent = 0;
-        $failed = 0;
+        $sent = $campaign->sent_count ?? 0;
+        $failed = $campaign->failed_count ?? 0;
+        $startIndex = count($phones) > 0 ? 0 : $sent + $failed;
 
-        foreach ($phones as $phone) {
+        for ($i = $startIndex; $i < count($phones); $i++) {
+            $phone = $phones[$i];
+
+            $campaign->refresh();
+            if ($campaign->status === 'paused') {
+                $campaign->update(['status' => 'paused']);
+                return;
+            }
+
             $msg = $campaign->message;
             if ($this->spintax->hasSpintax($msg) || str_contains($msg, '{name}')) {
                 $msg = $this->spintax->process($msg, $variables[$phone] ?? []);
@@ -125,6 +169,11 @@ class CampaignController extends Controller
                 $failed++;
             }
 
+            $campaign->update([
+                'sent_count' => $sent,
+                'failed_count' => $failed,
+            ]);
+
             $delay = ($campaign->delay_seconds ?? 3) * 1000000;
             usleep($delay + random_int(0, 1000000));
         }
@@ -134,5 +183,38 @@ class CampaignController extends Controller
             'sent_count' => $sent,
             'failed_count' => $failed,
         ]);
+    }
+
+    public function pause(WaCampaign $campaign)
+    {
+        abort_if($campaign->user_id !== Auth::id(), 403);
+        if ($campaign->status === 'sending') {
+            $campaign->update(['status' => 'paused']);
+        }
+        return back()->with('success', 'Kampanye dijeda.');
+    }
+
+    public function resume(WaCampaign $campaign)
+    {
+        abort_if($campaign->user_id !== Auth::id(), 403);
+        if ($campaign->status === 'paused') {
+            $campaign->update(['status' => 'sending']);
+            $recipients = WaContact::where('user_id', Auth::id())
+                ->whereIn('id', $campaign->recipient_ids ?? [])
+                ->get();
+            $this->sendCampaign($campaign, $recipients);
+        }
+        return back()->with('success', 'Kampanye dilanjutkan.');
+    }
+
+    public function resend(WaCampaign $campaign)
+    {
+        abort_if($campaign->user_id !== Auth::id(), 403);
+        $campaign->update(['status' => 'sending', 'sent_count' => 0, 'failed_count' => 0]);
+        $recipients = WaContact::where('user_id', Auth::id())
+            ->whereIn('id', $campaign->recipient_ids ?? [])
+            ->get();
+        $this->sendCampaign($campaign, $recipients);
+        return back()->with('success', 'Kampanye dikirim ulang.');
     }
 }

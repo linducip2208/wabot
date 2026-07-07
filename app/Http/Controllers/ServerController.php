@@ -19,7 +19,10 @@ class ServerController extends Controller
     public function index()
     {
         $userId = Auth::id();
-        $servers = WaServer::where('user_id', $userId)
+        $isAdmin = Auth::user()->isAdmin();
+
+        $servers = WaServer::when(!$isAdmin, fn($q) => $q->where('is_active', true))
+            ->when($isAdmin, fn($q) => $q->where('user_id', $userId))
             ->with('sessions')
             ->withCount('sessions')
             ->get();

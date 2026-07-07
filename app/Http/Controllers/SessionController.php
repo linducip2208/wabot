@@ -16,7 +16,7 @@ class SessionController extends Controller
 
     public function index()
     {
-        $servers = WaServer::where('user_id', Auth::id())->get();
+        $servers = WaServer::where('is_active', true)->get();
         $sessions = WaSession::where('user_id', Auth::id())
             ->with('server')
             ->latest()
@@ -73,7 +73,7 @@ class SessionController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $server = WaServer::where('user_id', Auth::id())->findOrFail($validated['server_id']);
+        $server = WaServer::where('is_active', true)->findOrFail($validated['server_id']);
 
         if (!$this->baileys->check($server)) {
             return back()->with('error', 'Tidak bisa terhubung ke server Baileys. Periksa host dan port.');

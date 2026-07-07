@@ -79,6 +79,7 @@ class InstanceManager {
         instanceData.sock = sock;
 
         const lidMap = new Map();
+        instanceData.lidMap = lidMap;
 
         sock.ev.on('contacts.upsert', (contacts) => {
             console.log(`[${sessionId}] contacts.upsert: ${contacts.length} contacts`);
@@ -152,19 +153,35 @@ class InstanceManager {
 
             const pushName = message.pushName || null;
 
+            console.log(`[${sessionId}] INCOMING: msg=${JSON.stringify(message.message).substring(0,200)}`);
+
             let realPhone = sender;
             let displayPhone = null;
             if (sender.endsWith('@lid') && lidMap.has(sender)) {
                 realPhone = lidMap.get(sender);
                 displayPhone = realPhone.replace(/@s.whatsapp.net/g, '');
+            } else if (sender.endsWith('@lid')) {
+                displayPhone = sender.replace(/@s.whatsapp.net|@lid/gi, '');
+                try {
+                    const pn = await sock.signalRepository.lidMapping.getPNForLID(sender);
+                    if (pn) {
+                        realPhone = pn;
+                        displayPhone = realPhone.replace(/@s.whatsapp.net/g, '');
+                        console.log(`[${sessionId}] LID resolved: ${sender} → ${pn}`);
+                        lidMap.set(sender, pn);
+                    }
+                } catch (e) {
+                    console.log(`[${sessionId}] LID resolve failed: ${e.message}`);
+                }
             } else {
                 displayPhone = sender.replace(/@s.whatsapp.net|@lid/gi, '');
             }
 
-            if (!webhookUrl || !text) return;
+            // text check removed - send all messages
+            if (!webhookUrl) return;
 
             try {
-                await fetch(webhookUrl, {
+                const res = await fetch(webhookUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -179,6 +196,18 @@ class InstanceManager {
                         timestamp: Math.floor(Date.now() / 1000),
                     }),
                 });
+
+                if (res.ok) {
+                    const data = await res.json().catch(() => null);
+                    if (data?.reply) {
+                        let replyJid = realPhone;
+                        if (!replyJid || replyJid.endsWith('@lid')) {
+                            replyJid = message.key.remoteJid;
+                        }
+                        await sock.sendMessage(replyJid, { text: data.reply });
+                        console.log(`[${sessionId}] Reply sent via socket to ${replyJid}`);
+                    }
+                }
             } catch (e) {
                 console.error(`[${sessionId}] Webhook error:`, e.message);
             }
@@ -255,7 +284,22 @@ class InstanceManager {
         }
 
         try {
-            const jid = to.includes('@') ? to : `${to}@s.whatsapp.net`;
+            let jid = to.includes('@') ? to : `${to}@s.whatsapp.net`;
+            if (jid.endsWith('@lid')) {
+                if (instanceData.lidMap?.has(jid)) {
+                    jid = instanceData.lidMap.get(jid);
+                } else {
+                    try {
+                        const pn = await instanceData.sock.signalRepository.lidMapping.getPNForLID(jid);
+                        if (pn) {
+                            console.log(`[${sessionId}] LID resolved via getPNForLID: ${jid} → ${pn}`);
+                            jid = pn;
+                        }
+                    } catch (e) {
+                        console.log(`[${sessionId}] getPNForLID failed: ${e.message}`);
+                    }
+                }
+            }
             const result = await instanceData.sock.sendMessage(jid, { text: message });
             return { ok: true, messageId: result?.key?.id };
         } catch (e) {
@@ -301,3 +345,12 @@ async function notifyStatus(sessionId, instanceData, status) {
 }
 
 module.exports = new InstanceManager();
+
+async function waitForLidMap(lidMap, lid, timeout) {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+        if (lidMap.has(lid)) return lidMap.get(lid);
+        await new Promise(r => setTimeout(r, 300));
+    }
+    return null;
+}

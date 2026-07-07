@@ -11,12 +11,13 @@ class Plan extends Model
         'name', 'slug', 'price', 'billing_period',
         'features', 'max_sessions', 'max_contacts',
         'max_autoreplies', 'max_campaign_recipients',
-        'is_active', 'sort_order',
+        'can_manage_server', 'is_active', 'sort_order',
     ];
 
     protected $casts = [
         'features' => 'json',
         'is_active' => 'boolean',
+        'can_manage_server' => 'boolean',
         'price' => 'decimal:2',
     ];
 
@@ -28,6 +29,11 @@ class Plan extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function vouchers(): HasMany
+    {
+        return $this->hasMany(WaVoucher::class);
     }
 
     public function getLimit(string $key): int

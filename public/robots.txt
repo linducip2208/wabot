@@ -1,2 +1,11 @@
 User-agent: *
-Disallow:
+Allow: /$
+Allow: /docs
+Allow: /blog
+Allow: /welcome
+Allow: /pages/
+Disallow: /admin
+Disallow: /api
+Disallow: /__pair
+Disallow: /webhooks
+Sitemap: /sitemap.xml
