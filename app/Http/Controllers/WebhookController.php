@@ -291,6 +291,65 @@ class WebhookController extends Controller
 
         $autoReply = $this->findAutoReply($session, $data['message']);
 
+        // ── Fallback: tidak ada keyword cocok → cari fallback rule dengan AI ──
+        if (!$autoReply && $session->server) {
+            $fallback = WaAutoreply::where('user_id', $session->user_id)
+                ->where('is_active', true)
+                ->where('match_type', 'fallback')
+                ->where('use_ai', true)
+                ->whereNotNull('ai_key_id')
+                ->where(function ($query) use ($session) {
+                    $query->where('session_id', $session->id)
+                        ->orWhereNull('session_id');
+                })
+                ->first();
+
+            if ($fallback) {
+                $cooldownMinutes = intval($fallback->keyword) ?: 5;
+                $recentFallback = WaMessage::where('contact_id', $contact->id)
+                    ->where('direction', 'out')
+                    ->where('created_at', '>', now()->subMinutes($cooldownMinutes))
+                    ->exists();
+
+                if (!$recentFallback) {
+                    $kb = $this->ai->getKnowledgeContext($session->user_id);
+                    $replyText = $this->ai->send($fallback->aiKey, $data['message'], $kb ?: null);
+
+                    if ($replyText) {
+                        $result = $this->baileys->send(
+                            $session->server,
+                            $session->session_id,
+                            $data['phone'],
+                            $replyText
+                        );
+
+                        if ($result['ok'] ?? false) {
+                            WaMessage::create([
+                                'user_id' => $session->user_id,
+                                'session_id' => $session->id,
+                                'contact_id' => $contact->id,
+                                'direction' => 'out',
+                                'message' => $replyText,
+                                'phone' => $normalizedPhone,
+                                'status' => 'sent',
+                            ]);
+                        }
+
+                        Log::info("Fallback AI reply sent", [
+                            'phone' => $normalizedPhone,
+                            'rule_id' => $fallback->id,
+                        ]);
+                    } else {
+                        Log::warning("Fallback AI failed, no reply sent", ['phone' => $normalizedPhone]);
+                    }
+                } else {
+                    Log::info("Fallback skipped (cooldown {$cooldownMinutes}m)", ['phone' => $normalizedPhone]);
+                }
+            }
+
+            return response()->json(['ok' => true]);
+        }
+
         if ($autoReply && $session->server) {
             $lastReply = WaMessage::where('contact_id', $contact->id)
                 ->where('direction', 'out')
