@@ -29,20 +29,36 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        if ($this->role_id && $this->relationLoaded('role')) {
-            return $this->role->name === self::ROLE_ADMIN;
+        if ($this->role === self::ROLE_ADMIN) {
+            return true;
         }
 
-        return $this->role === self::ROLE_ADMIN;
+        if ($this->role_id) {
+            if ($this->relationLoaded('role')) {
+                return $this->role->name === self::ROLE_ADMIN;
+            }
+
+            return \App\Models\Role::find($this->role_id)?->name === self::ROLE_ADMIN;
+        }
+
+        return false;
     }
 
     public function isUser(): bool
     {
-        if ($this->role_id && $this->relationLoaded('role')) {
-            return $this->role->name === self::ROLE_USER;
+        if ($this->role === self::ROLE_USER) {
+            return true;
         }
 
-        return $this->role === self::ROLE_USER;
+        if ($this->role_id) {
+            if ($this->relationLoaded('role')) {
+                return $this->role->name === self::ROLE_USER;
+            }
+
+            return \App\Models\Role::find($this->role_id)?->name === self::ROLE_USER;
+        }
+
+        return false;
     }
 
     public function hasPermission(string $permission): bool
