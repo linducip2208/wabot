@@ -5,7 +5,7 @@ const instanceManager = require('./instance-manager');
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 3100;
+const PORT = process.env.PORT || 3111;
 const API_KEY = process.env.API_KEY || 'wabotaku';
 
 function auth(req, res, next) {

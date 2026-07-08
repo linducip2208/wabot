@@ -304,6 +304,8 @@ class WebhookController extends Controller
             ->where('direction', 'out')
             ->max('created_at');
 
+        $lastOutgoing = $lastOutgoing ? \Illuminate\Support\Carbon::parse($lastOutgoing) : null;
+
         $canSendWelcome = !$lastOutgoing || $lastOutgoing->diffInHours(now()) >= 24;
 
         if ($canSendWelcome && $session->server) {
@@ -362,59 +364,68 @@ class WebhookController extends Controller
             }
         }
 
-        // ── Fallback: tidak ada keyword cocok → cari fallback rule dengan AI ──
+        // ── Fallback: tidak ada keyword cocok → cari fallback rule ──
         if (!$autoReply && $session->server) {
             $fallback = WaAutoreply::where('user_id', $session->user_id)
                 ->where('is_active', true)
                 ->where('match_type', 'fallback')
-                ->where('use_ai', true)
-                ->whereNotNull('ai_key_id')
                 ->where(function ($query) use ($session) {
                     $query->where('session_id', $session->id)
                         ->orWhereNull('session_id');
                 })
+                ->orderByRaw('session_id IS NULL')
                 ->first();
 
             if ($fallback) {
-                $cooldownMinutes = intval($fallback->keyword) ?: 5;
-                $recentFallback = WaMessage::where('contact_id', $contact->id)
+                $recentFallbacks = WaMessage::where('contact_id', $contact->id)
                     ->where('direction', 'out')
-                    ->where('created_at', '>', now()->subMinutes($cooldownMinutes))
-                    ->exists();
+                    ->where('type', 'fallback')
+                    ->where('created_at', '>', now()->subMinutes(10))
+                    ->count();
 
-                if (!$recentFallback) {
+                if ($recentFallbacks >= 3) {
+                    Log::info("Fallback cooldown active (>3 in 10m)", ['phone' => $normalizedPhone]);
+                    return response()->json(['ok' => true]);
+                }
+
+                if ($fallback->use_ai && $fallback->aiKey) {
                     $kb = $this->ai->getKnowledgeContext($session->user_id);
                     $replyText = $this->ai->send($fallback->aiKey, $data['message'], $kb ?: null);
-
-                    if ($replyText) {
-                        $result = $this->baileys->send(
-                            $session->server,
-                            $session->session_id,
-                            $data['phone'],
-                            $replyText
-                        );
-
-                        if ($result['ok'] ?? false) {
-                            WaMessage::create([
-                                'user_id' => $session->user_id,
-                                'session_id' => $session->id,
-                                'contact_id' => $contact->id,
-                                'direction' => 'out',
-                                'message' => $replyText,
-                                'phone' => $normalizedPhone,
-                                'status' => 'sent',
-                            ]);
-                        }
-
-                        Log::info("Fallback AI reply sent", [
-                            'phone' => $normalizedPhone,
-                            'rule_id' => $fallback->id,
-                        ]);
-                    } else {
-                        Log::warning("Fallback AI failed, no reply sent", ['phone' => $normalizedPhone]);
-                    }
                 } else {
-                    Log::info("Fallback skipped (cooldown {$cooldownMinutes}m)", ['phone' => $normalizedPhone]);
+                    $replyText = $this->spintax->process($fallback->reply_message, [
+                        'name' => $contact->name,
+                        'phone' => $normalizedPhone,
+                    ]);
+                }
+
+                if ($replyText) {
+                    $result = $this->baileys->send(
+                        $session->server,
+                        $session->session_id,
+                        $data['phone'],
+                        $replyText
+                    );
+
+                    if ($result['ok'] ?? false) {
+                        WaMessage::create([
+                            'user_id' => $session->user_id,
+                            'session_id' => $session->id,
+                            'contact_id' => $contact->id,
+                            'direction' => 'out',
+                            'type' => 'fallback',
+                            'message' => $replyText,
+                            'phone' => $normalizedPhone,
+                            'status' => 'sent',
+                        ]);
+                    }
+
+                    Log::info("Fallback reply sent", [
+                        'phone' => $normalizedPhone,
+                        'rule_id' => $fallback->id,
+                        'ai' => (bool) $fallback->use_ai,
+                    ]);
+                } else {
+                    Log::warning("Fallback failed, no reply sent", ['phone' => $normalizedPhone]);
                 }
             }
 
@@ -422,16 +433,6 @@ class WebhookController extends Controller
         }
 
         if ($autoReply && $session->server) {
-            $lastReply = WaMessage::where('contact_id', $contact->id)
-                ->where('direction', 'out')
-                ->where('created_at', '>', now()->subSeconds(10))
-                ->exists();
-
-            if ($lastReply) {
-                Log::info("Auto-reply skipped (cooldown)", ['phone' => $normalizedPhone]);
-                return response()->json(['ok' => true, 'skipped' => 'cooldown']);
-            }
-
             // ── AI mode (use_ai = true) ──────────────────────────
             if ($autoReply->use_ai && $autoReply->aiKey) {
                 $kb = $this->ai->getKnowledgeContext($session->user_id);
@@ -491,57 +492,6 @@ class WebhookController extends Controller
                 'keyword' => $autoReply->keyword,
                 'session_id' => $session->session_id,
             ]);
-        }
-
-        if (!$autoReply && $session->server) {
-            $fallbackRule = WaAutoreply::where('user_id', $session->user_id)
-                ->where('is_active', true)
-                ->where('match_type', 'fallback')
-                ->where(function ($query) use ($session) {
-                    $query->where('session_id', $session->id)
-                        ->orWhereNull('session_id');
-                })
-                ->first();
-
-            if ($fallbackRule) {
-                $cooldownMinutes = intval($fallbackRule->keyword) ?: 5;
-                $lastReply = WaMessage::where('contact_id', $contact->id)
-                    ->where('direction', 'out')
-                    ->where('created_at', '>', now()->subMinutes($cooldownMinutes))
-                    ->exists();
-
-                if (!$lastReply) {
-                    $fallbackText = $this->spintax->process($fallbackRule->reply_message, [
-                        'name' => $contact->name,
-                        'phone' => $normalizedPhone,
-                    ]);
-                    $result = $this->baileys->send(
-                        $session->server,
-                        $session->session_id,
-                        $data['phone'],
-                        $fallbackText
-                    );
-
-                    if ($result['ok'] ?? false) {
-                        WaMessage::create([
-                            'user_id' => $session->user_id,
-                            'session_id' => $session->id,
-                            'contact_id' => $contact->id,
-                            'direction' => 'out',
-                            'message' => $fallbackRule->reply_message,
-                            'phone' => $normalizedPhone,
-                            'status' => 'sent',
-                        ]);
-                    }
-
-                    Log::info("Fallback reply sent", [
-                        'phone' => $normalizedPhone,
-                        'cooldown_minutes' => $cooldownMinutes,
-                    ]);
-                } else {
-                    Log::info("Fallback reply skipped (cooldown)", ['phone' => $normalizedPhone, 'cooldown_minutes' => $cooldownMinutes]);
-                }
-            }
         }
 
         return response()->json(['ok' => true]);
