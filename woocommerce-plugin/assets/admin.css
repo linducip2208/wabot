@@ -1,0 +1,8 @@
+.wabot-wc-wrap { max-width: 800px; margin: 20px 0; }
+.wabot-wc-wrap h1 { font-size: 23px; margin-bottom: 10px; }
+.wabot-wc-card { background: #fff; border: 1px solid #ccd0d4; border-radius: 6px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.wabot-wc-card h2 { margin-top: 0; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+.wabot-wc-checklist { columns: 2; }
+.wabot-wc-checklist label { display: block; padding: 4px 0; }
+.wabot-wc-help ol { margin-left: 18px; }
+.wabot-wc-help li { margin-bottom: 6px; }
