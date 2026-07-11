@@ -25,6 +25,7 @@ class MediaTemplateController extends Controller
             'name' => 'required|string|max:255',
             'type' => 'required|in:image,video,audio,document,sticker,location',
             'media_url' => 'nullable|url|max:2000',
+            'file' => 'nullable|file|max:51200',
             'caption' => 'nullable|string|max:2000',
             'filename' => 'nullable|string|max:255',
             'mime_type' => 'nullable|string|max:100',
@@ -37,14 +38,26 @@ class MediaTemplateController extends Controller
             ]);
         }
 
+        $mediaUrl = $validated['media_url'] ?? '';
+        $filename = $validated['filename'] ?? '';
+        $mimeType = $validated['mime_type'] ?? '';
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $filename = $file->getClientOriginalName();
+            $mimeType = $file->getMimeType();
+            $path = $file->store('media-templates', 'public');
+            $mediaUrl = asset('storage/' . $path);
+        }
+
         WaMediaTemplate::create([
             'user_id' => Auth::id(),
             'name' => $validated['name'],
             'type' => $validated['type'],
-            'media_url' => $validated['media_url'] ?? '',
+            'media_url' => $mediaUrl,
             'caption' => $validated['caption'] ?? '',
-            'filename' => $validated['filename'] ?? '',
-            'mime_type' => $validated['mime_type'] ?? '',
+            'filename' => $filename,
+            'mime_type' => $mimeType,
             'latitude' => $request->input('latitude'),
             'longitude' => $request->input('longitude'),
         ]);
@@ -60,6 +73,7 @@ class MediaTemplateController extends Controller
             'name' => 'required|string|max:255',
             'type' => 'required|in:image,video,audio,document,sticker,location',
             'media_url' => 'nullable|url|max:2000',
+            'file' => 'nullable|file|max:51200',
             'caption' => 'nullable|string|max:2000',
             'filename' => 'nullable|string|max:255',
             'mime_type' => 'nullable|string|max:100',
@@ -70,6 +84,18 @@ class MediaTemplateController extends Controller
                 'latitude' => 'required|numeric|between:-90,90',
                 'longitude' => 'required|numeric|between:-180,180',
             ]);
+        }
+
+        $mediaUrl = $validated['media_url'] ?? $template->media_url;
+        $filename = $validated['filename'] ?? $template->filename;
+        $mimeType = $validated['mime_type'] ?? $template->mime_type;
+
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $filename = $file->getClientOriginalName();
+            $mimeType = $file->getMimeType();
+            $path = $file->store('media-templates', 'public');
+            $mediaUrl = asset('storage/' . $path);
         }
 
         $template->update([

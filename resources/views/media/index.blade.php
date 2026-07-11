@@ -50,7 +50,7 @@
 <div id="mediaModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl" onclick="event.stopPropagation()" x-data="{ type: 'image' }">
         <h2 class="text-lg font-bold mb-4" id="mediaModalTitle">{{ __('media.create_title') }}</h2>
-        <form method="POST" action="{{ route('media-templates.store') }}" class="space-y-3" id="mediaForm">
+        <form method="POST" action="{{ route('media-templates.store') }}" enctype="multipart/form-data" class="space-y-3" id="mediaForm">
             @csrf
             <div id="mediaMethod"></div>
             <div class="grid grid-cols-2 gap-3">
@@ -64,6 +64,11 @@
                         <option value="image">{{ __('media.image') }}</option><option value="video">{{ __('media.video') }}</option><option value="audio">{{ __('media.audio') }}</option><option value="document">{{ __('media.document') }}</option><option value="sticker">{{ __('media.sticker') }}</option><option value="location">{{ __('media.location') }}</option>
                     </select>
                 </div>
+            </div>
+            <div x-show="type !== 'location'">
+                <label class="text-xs font-medium text-gray-500">Upload File</label>
+                <input type="file" name="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.zip" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm file:mr-3 file:py-1 file:px-3 file:border-0 file:bg-brand-50 file:text-brand-700 file:rounded-lg file:text-xs">
+                <p class="text-[11px] text-gray-400 mt-1">atau</p>
             </div>
             <div x-show="type !== 'location'">
                 <label class="text-xs font-medium text-gray-500">Media URL</label>
