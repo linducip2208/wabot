@@ -4,12 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\WaAutoreply;
 use App\Models\WaContact;
+use App\Models\WaDiscordAccount;
+use App\Models\WaGbmAccount;
+use App\Models\WaFacebookAccount;
 use App\Models\WaInstagramAccount;
 use App\Models\WaMessage;
 use App\Models\WaMetaAccount;
 use App\Models\WaSession;
 use App\Models\WaTelegramAccount;
 use App\Services\BaileysService;
+use App\Services\DiscordService;
+use App\Services\GbmService;
+use App\Services\FacebookService;
 use App\Services\InstagramService;
 use App\Services\MetaApiService;
 use App\Services\TelegramService;
@@ -23,6 +29,9 @@ class ChatController extends Controller
         protected InstagramService $instagram,
         protected TelegramService $telegram,
         protected MetaApiService $metaApi,
+        protected DiscordService $discord,
+        protected GbmService $gbm,
+        protected FacebookService $facebook,
     ) {}
 
     protected function detectChannel(WaContact $contact): string
@@ -32,6 +41,30 @@ class ChatController extends Controller
         }
         if (str_starts_with($contact->phone, 'tg:')) {
             return 'telegram';
+        }
+        if (str_starts_with($contact->phone, 'fb:')) {
+            return 'facebook';
+        }
+        if (str_starts_with($contact->phone, 'sms:')) {
+            return 'sms';
+        }
+        if (str_starts_with($contact->phone, 'email:')) {
+            return 'email';
+        }
+        if (str_starts_with($contact->phone, 'gbm:')) {
+            return 'gbm';
+        }
+        if (str_starts_with($contact->phone, 'dc:')) {
+            return 'discord';
+        }
+        if (str_starts_with($contact->phone, 'tt:')) {
+            return 'tiktok';
+        }
+        if (str_starts_with($contact->phone, 'line:')) {
+            return 'line';
+        }
+        if (str_starts_with($contact->phone, 'x:')) {
+            return 'twitter';
         }
         return 'baileys';
     }
@@ -53,7 +86,15 @@ class ChatController extends Controller
                     $q->whereIn('session_id', $connectedSessionIds);
                 })->orWhere(function ($q) {
                     $q->where('phone', 'like', 'ig:%')
-                      ->orWhere('phone', 'like', 'tg:%');
+                      ->orWhere('phone', 'like', 'tg:%')
+                      ->orWhere('phone', 'like', 'fb:%')
+                      ->orWhere('phone', 'like', 'sms:%')
+                      ->orWhere('phone', 'like', 'email:%')
+                      ->orWhere('phone', 'like', 'gbm:%')
+                      ->orWhere('phone', 'like', 'dc:%')
+                      ->orWhere('phone', 'like', 'tt:%')
+                      ->orWhere('phone', 'like', 'line:%')
+                      ->orWhere('phone', 'like', 'x:%');
                 });
             })
             ->orderByDesc(
@@ -98,6 +139,24 @@ class ChatController extends Controller
         $metaAccounts = WaMetaAccount::where('user_id', $userId)
             ->where('is_active', true)
             ->get();
+        $gbmAccounts = WaGbmAccount::where('user_id', $userId)
+            ->where('is_active', true)
+            ->get();
+        $discordAccounts = WaDiscordAccount::where('user_id', $userId)
+            ->where('is_active', true)
+            ->get();
+        $facebookAccounts = WaFacebookAccount::where('user_id', $userId)
+            ->where('is_active', true)
+            ->get();
+        $tiktokAccounts = \App\Models\WaTiktokAccount::where('user_id', $userId)
+            ->where('is_active', true)
+            ->get();
+        $lineAccounts = \App\Models\WaLineAccount::where('user_id', $userId)
+            ->where('is_active', true)
+            ->get();
+        $twitterAccounts = \App\Models\WaTwitterAccount::where('user_id', $userId)
+            ->where('is_active', true)
+            ->get();
 
         $socketServerUrl = null;
         $socketApiKey = null;
@@ -110,6 +169,8 @@ class ChatController extends Controller
         return view('chat.index', compact(
             'contacts', 'sessions', 'activeContact', 'messages',
             'instagramAccounts', 'telegramAccounts', 'metaAccounts',
+            'gbmAccounts', 'discordAccounts', 'facebookAccounts',
+            'tiktokAccounts', 'lineAccounts', 'twitterAccounts',
             'socketServerUrl', 'socketApiKey'
         ));
     }
@@ -124,7 +185,7 @@ class ChatController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        if (in_array($channel, ['instagram', 'telegram'])) {
+        if (in_array($channel, ['instagram', 'telegram', 'facebook', 'gbm', 'discord'])) {
             WaMessage::where('contact_id', $contact->id)
                 ->where('direction', 'in')
                 ->whereNull('read_at')
@@ -158,7 +219,7 @@ class ChatController extends Controller
             ->get();
 
         $displayPhone = $contact->display_phone;
-        if (!$displayPhone && !str_contains($contact->phone, '@lid') && !str_starts_with($contact->phone, 'ig:') && !str_starts_with($contact->phone, 'tg:')) {
+        if (!$displayPhone && !str_contains($contact->phone, '@lid') && !str_starts_with($contact->phone, 'ig:') && !str_starts_with($contact->phone, 'tg:') && !str_starts_with($contact->phone, 'gbm:') && !str_starts_with($contact->phone, 'dc:')) {
             $displayPhone = preg_replace('/@.*$/', '', $contact->phone);
         }
         $showName = $contact->name !== $contact->phone ? $contact->name : ($displayPhone ?: preg_replace('/@.*$/', '', $contact->phone));
@@ -172,6 +233,18 @@ class ChatController extends Controller
         $instagramAccounts = WaInstagramAccount::where('user_id', $userId)
             ->where('is_active', true)->get();
         $telegramAccounts = WaTelegramAccount::where('user_id', $userId)
+            ->where('is_active', true)->get();
+        $facebookAccounts = WaFacebookAccount::where('user_id', $userId)
+            ->where('is_active', true)->get();
+        $gbmAccounts = WaGbmAccount::where('user_id', $userId)
+            ->where('is_active', true)->get();
+        $discordAccounts = WaDiscordAccount::where('user_id', $userId)
+            ->where('is_active', true)->get();
+        $tiktokAccounts = \App\Models\WaTiktokAccount::where('user_id', $userId)
+            ->where('is_active', true)->get();
+        $lineAccounts = \App\Models\WaLineAccount::where('user_id', $userId)
+            ->where('is_active', true)->get();
+        $twitterAccounts = \App\Models\WaTwitterAccount::where('user_id', $userId)
             ->where('is_active', true)->get();
 
         return response()->json([
@@ -206,6 +279,24 @@ class ChatController extends Controller
                 'telegram' => $telegramAccounts->map(fn($a) => [
                     'id' => 'tg_'.$a->id, 'name' => $a->name, 'bot_username' => $a->bot_username,
                 ])->values(),
+                'facebook' => $facebookAccounts->map(fn($a) => [
+                    'id' => 'fb_'.$a->id, 'name' => $a->name, 'page_id' => $a->page_id,
+                ])->values(),
+                'gbm' => $gbmAccounts->map(fn($a) => [
+                    'id' => 'gbm_'.$a->id, 'name' => $a->name, 'brand_id' => $a->brand_id,
+                ])->values(),
+                'discord' => $discordAccounts->map(fn($a) => [
+                    'id' => 'dc_'.$a->id, 'name' => $a->name, 'bot_name' => $a->bot_name,
+                ])->values(),
+                'tiktok' => $tiktokAccounts->map(fn($a) => [
+                    'id' => 'tt_'.$a->id, 'name' => $a->name, 'open_id' => $a->open_id,
+                ])->values(),
+                'line' => $lineAccounts->map(fn($a) => [
+                    'id' => 'line_'.$a->id, 'name' => $a->name, 'channel_id' => $a->channel_id,
+                ])->values(),
+                'twitter' => $twitterAccounts->map(fn($a) => [
+                    'id' => 'x_'.$a->id, 'name' => $a->name, 'username' => $a->username,
+                ])->values(),
             ],
         ]);
     }
@@ -217,7 +308,7 @@ class ChatController extends Controller
         $channel = $this->detectChannel($contact);
         $userId = Auth::id();
 
-        $isWhatsApp = !in_array($channel, ['instagram', 'telegram']);
+        $isWhatsApp = !in_array($channel, ['instagram', 'telegram', 'sms', 'email', 'gbm', 'discord', 'facebook', 'tiktok', 'line', 'twitter']);
         $rules = ['message' => 'required|string|max:5000'];
         if ($isWhatsApp) {
             $rules['session_id'] = 'required|exists:wa_sessions,session_id';
@@ -252,6 +343,63 @@ class ChatController extends Controller
                 $result = $this->telegram->sendMessage($tgAccount, $chatId, $request->message);
                 break;
 
+            case 'gbm':
+                $gbmAccount = WaGbmAccount::where('user_id', $userId)->where('is_active', true)->first();
+                if (!$gbmAccount) {
+                    return response()->json(['ok' => false, 'error' => 'Akun GBM tidak tersedia'], 422);
+                }
+                $convoId = str_replace('gbm:', '', $contact->phone);
+                $result = $this->gbm->sendMessage($gbmAccount, $convoId, $request->message);
+                break;
+
+            case 'discord':
+                $dcAccount = WaDiscordAccount::where('user_id', $userId)->where('is_active', true)->first();
+                if (!$dcAccount) {
+                    return response()->json(['ok' => false, 'error' => 'Akun Discord tidak tersedia'], 422);
+                }
+                $dcId = str_replace('dc:', '', $contact->phone);
+                $result = $this->discord->sendMessage($dcAccount, $dcId, $request->message);
+                break;
+
+            case 'facebook':
+                $fbAccount = WaFacebookAccount::where('user_id', $userId)->where('is_active', true)->first();
+                if (!$fbAccount) {
+                    return response()->json(['ok' => false, 'error' => 'Akun Facebook tidak tersedia'], 422);
+                }
+                $fbId = str_replace('fb:', '', $contact->phone);
+                $result = $this->facebook->sendMessage($fbAccount, $fbId, $request->message);
+                break;
+
+            case 'tiktok':
+                $ttAccount = \App\Models\WaTiktokAccount::where('user_id', $userId)->where('is_active', true)->first();
+                if (!$ttAccount) {
+                    return response()->json(['ok' => false, 'error' => 'Akun TikTok tidak tersedia'], 422);
+                }
+                $ttOpenId = str_replace('tt:', '', $contact->phone);
+                $result = app(\App\Services\TikTokService::class)->sendMessage($ttAccount->access_token, $ttOpenId, $request->message);
+                $messageType = 'tiktok';
+                break;
+
+            case 'line':
+                $lineAccount = \App\Models\WaLineAccount::where('user_id', $userId)->where('is_active', true)->first();
+                if (!$lineAccount) {
+                    return response()->json(['ok' => false, 'error' => 'Akun LINE tidak tersedia'], 422);
+                }
+                $lineUserId = str_replace('line:', '', $contact->phone);
+                $result = app(\App\Services\LineService::class)->pushMessage($lineAccount, $lineUserId, $request->message);
+                $messageType = 'line';
+                break;
+
+            case 'twitter':
+                $twAccount = \App\Models\WaTwitterAccount::where('user_id', $userId)->where('is_active', true)->first();
+                if (!$twAccount) {
+                    return response()->json(['ok' => false, 'error' => 'Akun X/Twitter tidak tersedia'], 422);
+                }
+                $twId = str_replace('x:', '', $contact->phone);
+                $result = app(\App\Services\TwitterService::class)->sendDM($twAccount->access_token, $twId, $request->message);
+                $messageType = 'twitter';
+                break;
+
             default:
                 $session = WaSession::where('user_id', $userId)
                     ->where('session_id', $request->session_id)
@@ -283,7 +431,7 @@ class ChatController extends Controller
 
         $isOk = match ($channel) {
             'instagram' => empty($result['error']),
-            'telegram' => $result['ok'] ?? false,
+            'telegram', 'gbm', 'discord', 'tiktok', 'line', 'twitter' => $result['ok'] ?? false,
             default => ($result['ok'] ?? false) || empty($result['error']),
         };
 
@@ -355,7 +503,15 @@ class ChatController extends Controller
                     $q->whereIn('session_id', $connectedSessionIds);
                 })->orWhere(function ($q) {
                     $q->where('phone', 'like', 'ig:%')
-                      ->orWhere('phone', 'like', 'tg:%');
+                      ->orWhere('phone', 'like', 'tg:%')
+                      ->orWhere('phone', 'like', 'fb:%')
+                      ->orWhere('phone', 'like', 'sms:%')
+                      ->orWhere('phone', 'like', 'email:%')
+                      ->orWhere('phone', 'like', 'gbm:%')
+                      ->orWhere('phone', 'like', 'dc:%')
+                      ->orWhere('phone', 'like', 'tt:%')
+                      ->orWhere('phone', 'like', 'line:%')
+                      ->orWhere('phone', 'like', 'x:%');
                 });
             })
             ->get()
@@ -364,7 +520,7 @@ class ChatController extends Controller
                     ->latest()
                     ->first();
                 $displayPhone = $contact->display_phone;
-                if (!$displayPhone && !str_contains($contact->phone, '@lid') && !str_starts_with($contact->phone, 'ig:') && !str_starts_with($contact->phone, 'tg:')) {
+        if (!$displayPhone && !str_contains($contact->phone, '@lid') && !str_starts_with($contact->phone, 'ig:') && !str_starts_with($contact->phone, 'tg:') && !str_starts_with($contact->phone, 'sms:') && !str_starts_with($contact->phone, 'email:') && !str_starts_with($contact->phone, 'gbm:') && !str_starts_with($contact->phone, 'dc:')) {
                     $displayPhone = preg_replace('/@.*$/', '', $contact->phone);
                 }
                 $isLid = str_contains($contact->phone, '@lid');
@@ -409,7 +565,7 @@ class ChatController extends Controller
         }
 
         $displayPhone = $contact->display_phone;
-        if (!$displayPhone && !str_contains($contact->phone, '@lid') && !str_starts_with($contact->phone, 'ig:') && !str_starts_with($contact->phone, 'tg:')) {
+        if (!$displayPhone && !str_contains($contact->phone, '@lid') && !str_starts_with($contact->phone, 'ig:') && !str_starts_with($contact->phone, 'tg:') && !str_starts_with($contact->phone, 'fb:') && !str_starts_with($contact->phone, 'gbm:') && !str_starts_with($contact->phone, 'dc:') && !str_starts_with($contact->phone, 'tt:') && !str_starts_with($contact->phone, 'line:') && !str_starts_with($contact->phone, 'x:') && !str_starts_with($contact->phone, 'sms:') && !str_starts_with($contact->phone, 'email:')) {
             $displayPhone = preg_replace('/@.*$/', '', $contact->phone);
         }
 

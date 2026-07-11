@@ -5,6 +5,9 @@ namespace App\Services;
 use App\Models\WaFlow;
 use App\Models\WaFlowNode;
 use App\Models\WaContact;
+use App\Models\WaDiscordAccount;
+use App\Models\WaGbmAccount;
+use App\Models\WaFacebookAccount;
 use App\Models\WaInstagramAccount;
 use App\Models\WaMetaAccount;
 use App\Models\WaMessage;
@@ -20,6 +23,9 @@ class FlowEngineService
     protected TelegramService $telegram;
     protected MetaApiService $metaApi;
     protected SpintaxService $spintax;
+    protected DiscordService $discord;
+    protected GbmService $gbm;
+    protected FacebookService $facebook;
 
     public function __construct(
         AiService $ai,
@@ -28,6 +34,9 @@ class FlowEngineService
         TelegramService $telegram,
         MetaApiService $metaApi,
         SpintaxService $spintax,
+        DiscordService $discord,
+        GbmService $gbm,
+        FacebookService $facebook,
     ) {
         $this->ai = $ai;
         $this->baileys = $baileys;
@@ -35,12 +44,23 @@ class FlowEngineService
         $this->telegram = $telegram;
         $this->metaApi = $metaApi;
         $this->spintax = $spintax;
+        $this->discord = $discord;
+        $this->gbm = $gbm;
+        $this->facebook = $facebook;
     }
 
     protected function detectChannel(WaContact $contact): string
     {
         if (str_starts_with($contact->phone, 'ig:')) return 'instagram';
         if (str_starts_with($contact->phone, 'tg:')) return 'telegram';
+        if (str_starts_with($contact->phone, 'fb:')) return 'facebook';
+        if (str_starts_with($contact->phone, 'sms:')) return 'sms';
+        if (str_starts_with($contact->phone, 'email:')) return 'email';
+        if (str_starts_with($contact->phone, 'gbm:')) return 'gbm';
+        if (str_starts_with($contact->phone, 'dc:')) return 'discord';
+        if (str_starts_with($contact->phone, 'tt:')) return 'tiktok';
+        if (str_starts_with($contact->phone, 'line:')) return 'line';
+        if (str_starts_with($contact->phone, 'x:')) return 'twitter';
         return 'baileys';
     }
 
@@ -64,6 +84,70 @@ class FlowEngineService
                 $chatId = str_replace('tg:', '', $contact->phone);
                 $result = $this->telegram->sendMessage($account, $chatId, $message);
                 return ['ok' => $result['ok'] ?? false, 'error' => $result['description'] ?? null];
+
+            case 'sms':
+                $smsAccount = \App\Models\WaTwilioAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if (!$smsAccount) return ['ok' => false, 'error' => 'No active Twilio account'];
+                $smsTo = str_replace('sms:', '', $contact->phone);
+                $smsResult = app(\App\Services\TwilioService::class)->sendSms($smsAccount, $smsTo, $message);
+                return ['ok' => !($smsResult['error'] ?? false) && empty($smsResult['error_code']), 'error' => $smsResult['error_message'] ?? null];
+
+            case 'email':
+                $emailAccount = \App\Models\WaSendGridAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if (!$emailAccount) return ['ok' => false, 'error' => 'No active SendGrid account'];
+                $emailTo = str_replace('email:', '', $contact->phone);
+                $emailResult = app(\App\Services\SendGridService::class)->sendEmail($emailAccount, $emailTo, 'Message from WABot', $message);
+                return ['ok' => $emailResult['ok'] ?? false, 'error' => $emailResult['error'] ?? null];
+
+            case 'gbm':
+                $account = WaGbmAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if (!$account) return ['ok' => false, 'error' => 'No active GBM account'];
+                $convoId = str_replace('gbm:', '', $contact->phone);
+                $result = $this->gbm->sendMessage($account, $convoId, $message);
+                return ['ok' => $result['ok'] ?? false, 'error' => $result['error'] ?? null];
+
+            case 'discord':
+                $account = WaDiscordAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if (!$account) return ['ok' => false, 'error' => 'No active Discord account'];
+                $dcId = str_replace('dc:', '', $contact->phone);
+                $result = $this->discord->sendMessage($account, $dcId, $message);
+                return ['ok' => $result['ok'] ?? false, 'error' => $result['error'] ?? null];
+
+            case 'tiktok':
+                $ttAccount = \App\Models\WaTiktokAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if (!$ttAccount) return ['ok' => false, 'error' => 'No active TikTok account'];
+                $ttOpenId = str_replace('tt:', '', $contact->phone);
+                $ttResult = app(\App\Services\TikTokService::class)->sendMessage($ttAccount->access_token, $ttOpenId, $message);
+                return ['ok' => $ttResult['ok'] ?? false, 'error' => $ttResult['error'] ?? null];
+
+            case 'line':
+                $lineAccount = \App\Models\WaLineAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if (!$lineAccount) return ['ok' => false, 'error' => 'No active LINE account'];
+                $lineUserId = str_replace('line:', '', $contact->phone);
+                $lineResult = app(\App\Services\LineService::class)->pushMessage($lineAccount, $lineUserId, $message);
+                return ['ok' => $lineResult['ok'] ?? false, 'error' => $lineResult['error'] ?? null];
+
+            case 'twitter':
+                $twAccount = \App\Models\WaTwitterAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if (!$twAccount) return ['ok' => false, 'error' => 'No active X/Twitter account'];
+                $twUserId = str_replace('x:', '', $contact->phone);
+                $twResult = app(\App\Services\TwitterService::class)->sendDM($twAccount->access_token, $twUserId, $message);
+                return ['ok' => $twResult['ok'] ?? false, 'error' => $twResult['error'] ?? null];
+
+            case 'facebook':
+                $account = WaFacebookAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if (!$account) return ['ok' => false, 'error' => 'No active Facebook account'];
+                $fbId = str_replace('fb:', '', $contact->phone);
+                $result = $this->facebook->sendMessage($account, $fbId, $message);
+                return ['ok' => empty($result['error']), 'error' => $result['error'] ?? null];
 
             default:
                 if ($session->meta_account_id) {
@@ -113,6 +197,8 @@ class FlowEngineService
                 return $this->handleWait($node);
             case 'condition':
                 return $this->handleCondition($node, $context);
+            case 'booking':
+                return $this->handleBooking($node, $session, $contact, $context);
             default:
                 return true;
         }
@@ -265,6 +351,47 @@ class FlowEngineService
 
         $this->goNext($node, $matched);
         return $matched;
+    }
+
+    protected function handleBooking(WaFlowNode $node, WaSession $session, WaContact $contact, string $context): bool
+    {
+        $config = $node->config ?? [];
+        $serviceId = $config['service_id'] ?? null;
+        $message = $node->reply_message ?: 'Booking confirmed. We will contact you shortly.';
+
+        if ($serviceId) {
+            try {
+                $appointmentService = app(\App\Services\AppointmentService::class);
+                $result = $appointmentService->book(
+                    $session->user_id,
+                    $contact->id,
+                    (int) $serviceId,
+                    now()->addHour()->toDateTimeString(),
+                    'Flow-based booking'
+                );
+            } catch (\Throwable $e) {
+                Log::error('FlowEngine booking failed: ' . $e->getMessage());
+            }
+        }
+
+        $channel = $node->channel ?: $this->detectChannel($contact);
+        $result = $this->sendViaChannel($session, $contact, $message, $node->channel);
+
+        if ($result['ok'] ?? false) {
+            WaMessage::create([
+                'user_id' => $session->user_id,
+                'session_id' => $session->id,
+                'contact_id' => $contact->id,
+                'direction' => 'out',
+                'channel' => $channel,
+                'message' => $message,
+                'phone' => $contact->phone,
+                'status' => 'sent',
+            ]);
+        }
+
+        $this->goNext($node, true);
+        return true;
     }
 
     protected function goNext(WaFlowNode $node, bool $trueBranch): bool

@@ -425,7 +425,71 @@ class InstagramController extends Controller
 
     protected function handleComment(array $value): void
     {
-        // Handle Instagram comments - store as message
-        // This is a simplified handler
+        $commentId = $value['id'] ?? null;
+        $commentText = $value['text'] ?? '';
+        $mediaId = $value['media']['id'] ?? null;
+        $fromId = $value['from']['id'] ?? null;
+        $fromName = $value['from']['username'] ?? 'Instagram User';
+
+        if (!$commentId || !$fromId) return;
+
+        $account = WaInstagramAccount::where('status', 'connected')
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) return;
+
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => $account->user_id, 'phone' => 'ig:' . $fromId],
+            ['name' => $fromName, 'display_phone' => 'IG Comment']
+        );
+
+        WaMessage::create([
+            'user_id' => $account->user_id,
+            'contact_id' => $contact->id,
+            'direction' => 'in',
+            'type' => 'instagram',
+            'channel' => 'instagram',
+            'message' => '[Comment] ' . $commentText,
+            'phone' => 'ig:' . $fromId,
+            'status' => 'delivered',
+        ]);
+
+        $rule = WaAutoreply::where('user_id', $account->user_id)
+            ->where('is_active', true)
+            ->whereIn('match_type', ['contains', 'exact', 'starts_with'])
+            ->whereNull('session_id')
+            ->get()
+            ->first(fn($r) => $r->matches($commentText));
+
+        if ($rule) {
+            $replyText = $this->spintax->process($rule->reply_message, [
+                'name' => $fromName,
+                'phone' => $fromId,
+            ]);
+
+            $this->instagram->sendDM(
+                $account->instagram_id,
+                $account->access_token,
+                $replyText,
+                $fromId
+            );
+
+            WaMessage::create([
+                'user_id' => $account->user_id,
+                'contact_id' => $contact->id,
+                'direction' => 'out',
+                'type' => 'instagram',
+                'channel' => 'instagram',
+                'message' => '[Comment Reply] ' . $replyText,
+                'phone' => 'ig:' . $fromId,
+                'status' => 'sent',
+            ]);
+
+            Log::info("Instagram comment auto-reply sent", [
+                'comment_id' => $commentId,
+                'from' => $fromName,
+            ]);
+        }
     }
 }

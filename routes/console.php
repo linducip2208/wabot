@@ -8,3 +8,4 @@ Schedule::command('wabot:retry-campaigns')->everyThirtyMinutes();
 Schedule::command('wabot:cleanup-sessions --days=30')->dailyAt('03:00');
 Schedule::command('seo:indexnow')->dailyAt('02:45');
 Schedule::command('subscriptions:expire')->hourly();
+Schedule::command('wabot:appointment-reminders')->everyThirtyMinutes();

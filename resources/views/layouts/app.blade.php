@@ -94,6 +94,17 @@
             </a>
         </div>
 
+        {{-- APPOINTMENTS --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
+            <span>{{ __('sidebar.appointments') }}</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 200px;">
+            <a href="{{ route('appointments.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('appointments*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-check w-4 text-center"></i> {{ __('sidebar.appointments') }}
+            </a>
+        </div>
+
         {{-- INBOX --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
             <span>{{ __('sidebar.inbox') }}</span>
@@ -217,12 +228,12 @@
             </a>
         </div>
 
-        {{-- CHANNELS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
-            <span>{{ __('sidebar.channels') }}</span>
-            <i class="fas fa-chevron-right text-[9px] chevron"></i>
-        </div>
-        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+    {{-- CHANNELS --}}
+    <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <span>{{ __('sidebar.channels') }}</span>
+        <i class="fas fa-chevron-right text-[9px] chevron"></i>
+    </div>
+    <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 600px;' : 'max-height: 0;'">
             <a href="{{ route('meta.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('meta*') ? 'active' : '' }}">
                 <i class="fab fa-meta w-4 text-center"></i> {{ __('sidebar.whatsapp_cloud_api') }}
             </a>
@@ -239,6 +250,33 @@
             </a>
             <a href="{{ route('telegram.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('telegram*') ? 'active' : '' }}">
                 <i class="fab fa-telegram w-4 text-center"></i> {{ __('sidebar.telegram') }}
+            </a>
+            <a href="{{ route('twilio.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('twilio*') ? 'active' : '' }}">
+                <i class="fas fa-sms w-4 text-center"></i> {{ __('sidebar.sms') }}
+            </a>
+            <a href="{{ route('sendgrid.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sendgrid*') ? 'active' : '' }}">
+                <i class="fas fa-envelope w-4 text-center"></i> {{ __('sidebar.email') }}
+            </a>
+            <a href="{{ route('facebook.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('facebook*') ? 'active' : '' }}">
+                <i class="fab fa-facebook w-4 text-center"></i> {{ __('sidebar.facebook') }}
+            </a>
+            <a href="{{ route('gbm.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('gbm*') ? 'active' : '' }}">
+                <i class="fab fa-google w-4 text-center"></i> {{ __('sidebar.gbm') }}
+            </a>
+            <a href="{{ route('discord.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('discord*') ? 'active' : '' }}">
+                <i class="fab fa-discord w-4 text-center"></i> {{ __('sidebar.discord') }}
+            </a>
+            <a href="{{ route('tiktok.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('tiktok*') ? 'active' : '' }}">
+                <i class="fab fa-tiktok w-4 text-center"></i> {{ __('sidebar.tiktok') }}
+            </a>
+            <a href="{{ route('line.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('line*') ? 'active' : '' }}">
+                <i class="fab fa-line w-4 text-center"></i> {{ __('sidebar.line') }}
+            </a>
+            <a href="{{ route('twitter.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('twitter*') ? 'active' : '' }}">
+                <i class="fab fa-x-twitter w-4 text-center"></i> {{ __('sidebar.twitter') }}
+            </a>
+            <a href="{{ route('widgets.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('widgets*') ? 'active' : '' }}">
+                <i class="fas fa-puzzle-piece w-4 text-center"></i> {{ __('sidebar.widgets') }}
             </a>
         </div>
 
@@ -279,6 +317,20 @@
             </a>
             <a href="{{ route('logger.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('logger*') ? 'active' : '' }}">
                 <i class="fas fa-history w-4 text-center"></i> {{ __('sidebar.activity_logs') }}
+            </a>
+        </div>
+
+        {{-- INTEGRATIONS --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>{{ __('sidebar.integrations') }}</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('store.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('store*') ? 'active' : '' }}">
+                <i class="fas fa-store w-4 text-center"></i> {{ __('sidebar.e_commerce') }}
+            </a>
+            <a href="{{ route('sheets.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sheets*') ? 'active' : '' }}">
+                <i class="fas fa-table w-4 text-center"></i> {{ __('sidebar.google_sheets') }}
             </a>
         </div>
 

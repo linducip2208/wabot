@@ -193,4 +193,19 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Language::class);
     }
+
+    public function waWidgets(): HasMany
+    {
+        return $this->hasMany(WaWidget::class);
+    }
+
+    public function waStoreIntegrations(): HasMany
+    {
+        return $this->hasMany(WaStoreIntegration::class);
+    }
+
+    public function waSheetsIntegrations(): HasMany
+    {
+        return $this->hasMany(WaSheetsIntegration::class);
+    }
 }

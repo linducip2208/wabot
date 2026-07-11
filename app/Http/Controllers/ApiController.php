@@ -5,15 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\WaContact;
 use App\Models\WaMessage;
 use App\Models\WaMetaAccount;
+use App\Models\WaDiscordAccount;
+use App\Models\WaGbmAccount;
 use App\Models\WaInstagramAccount;
 use App\Models\WaTelegramAccount;
+use App\Models\WaTwilioAccount;
+use App\Models\WaSendGridAccount;
 use App\Models\WaSession;
 use App\Models\WaAutoreply;
 use App\Models\WaCampaign;
 use App\Services\BaileysService;
+use App\Services\DiscordService;
+use App\Services\GbmService;
 use App\Services\InstagramService;
 use App\Services\TelegramService;
 use App\Services\MetaApiService;
+use App\Services\TwilioService;
+use App\Services\SendGridService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +33,10 @@ class ApiController extends Controller
         protected InstagramService $instagram,
         protected TelegramService $telegram,
         protected MetaApiService $metaApi,
+        protected TwilioService $twilio,
+        protected SendGridService $sendgrid,
+        protected DiscordService $discord,
+        protected GbmService $gbm,
     ) {}
 
     public function send(Request $request)
@@ -348,9 +360,403 @@ class ApiController extends Controller
             'username' => $a->bot_username,
         ]);
 
-        return response()->json([
-            'data' => $baileys->concat($meta)->concat($instagram)->concat($telegram)->values(),
+        $twilio = WaTwilioAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'sms',
+            'id' => (string) $a->id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+            'phone' => $a->phone_number,
         ]);
+
+        $sendgrid = WaSendGridAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'email',
+            'id' => (string) $a->id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+            'from_email' => $a->from_email,
+        ]);
+
+        $gbm = WaGbmAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'gbm',
+            'id' => $a->brand_id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+        ]);
+
+        $discord = WaDiscordAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'discord',
+            'id' => $a->application_id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+            'bot_name' => $a->bot_name,
+        ]);
+
+        $tiktok = \App\Models\WaTiktokAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'tiktok',
+            'id' => $a->open_id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+        ]);
+
+        $line = \App\Models\WaLineAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'line',
+            'id' => $a->channel_id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+            'display_name' => $a->display_name,
+        ]);
+
+        $twitter = \App\Models\WaTwitterAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'twitter',
+            'id' => $a->twitter_user_id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+            'username' => $a->username,
+        ]);
+
+        $facebook = \App\Models\WaFacebookAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'facebook',
+            'id' => $a->page_id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+        ]);
+
+        return response()->json([
+            'data' => $baileys->concat($meta)->concat($instagram)->concat($telegram)->concat($twilio)->concat($sendgrid)->concat($gbm)->concat($discord)->concat($tiktok)->concat($line)->concat($twitter)->concat($facebook)->values(),
+        ]);
+    }
+
+    public function smsSend(Request $request)
+    {
+        $validated = $request->validate([
+            'to' => 'required|string',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $account = WaTwilioAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'No active Twilio account'], 404);
+        }
+
+        $result = $this->twilio->sendSms($account, $validated['to'], $validated['message']);
+
+        if ($result['error'] ?? false) {
+            return response()->json(['ok' => false, 'error' => $result['error_message'] ?? 'Failed'], 422);
+        }
+
+        $senderId = 'sms:' . $validated['to'];
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => Auth::id(), 'phone' => $senderId],
+            ['name' => 'SMS: ' . $validated['to'], 'display_phone' => $validated['to']]
+        );
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'contact_id' => $contact->id,
+            'direction' => 'out',
+            'type' => 'sms',
+            'channel' => 'sms',
+            'message' => $validated['message'],
+            'phone' => $senderId,
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function emailSend(Request $request)
+    {
+        $validated = $request->validate([
+            'to' => 'required|email',
+            'subject' => 'required|string|max:255',
+            'body' => 'required|string|max:50000',
+        ]);
+
+        $account = WaSendGridAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'No active SendGrid account'], 404);
+        }
+
+        $result = $this->sendgrid->sendEmail($account, $validated['to'], $validated['subject'], $validated['body']);
+
+        if (!($result['ok'] ?? false)) {
+            return response()->json(['ok' => false, 'error' => $result['error'] ?? 'Failed'], 422);
+        }
+
+        $senderId = 'email:' . $validated['to'];
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => Auth::id(), 'phone' => $senderId],
+            ['name' => $validated['to'], 'display_phone' => $validated['to']]
+        );
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'contact_id' => $contact->id,
+            'direction' => 'out',
+            'type' => 'email',
+            'channel' => 'email',
+            'message' => $validated['body'],
+            'phone' => $senderId,
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function gbmSend(Request $request)
+    {
+        $validated = $request->validate([
+            'conversation_id' => 'required|string',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $account = WaGbmAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'No active GBM account'], 404);
+        }
+
+        $result = $this->gbm->sendMessage($account, $validated['conversation_id'], $validated['message']);
+
+        if (!($result['ok'] ?? false)) {
+            return response()->json(['ok' => false, 'error' => $result['error'] ?? 'Failed'], 422);
+        }
+
+        $senderId = 'gbm:' . $validated['conversation_id'];
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => Auth::id(), 'phone' => $senderId],
+            ['name' => 'GBM: ' . $validated['conversation_id'], 'display_phone' => $senderId]
+        );
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'contact_id' => $contact->id,
+            'direction' => 'out',
+            'type' => 'gbm',
+            'channel' => 'gbm',
+            'message' => $validated['message'],
+            'phone' => $senderId,
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function discordSend(Request $request)
+    {
+        $validated = $request->validate([
+            'channel_id' => 'required|string',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $account = WaDiscordAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'No active Discord account'], 404);
+        }
+
+        $result = $this->discord->sendMessage($account, $validated['channel_id'], $validated['message']);
+
+        if (!($result['ok'] ?? false)) {
+            return response()->json(['ok' => false, 'error' => $result['error'] ?? 'Failed'], 422);
+        }
+
+        $senderId = 'dc:' . $validated['channel_id'];
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => Auth::id(), 'phone' => $senderId],
+            ['name' => 'DC: ' . $validated['channel_id'], 'display_phone' => $senderId]
+        );
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'contact_id' => $contact->id,
+            'direction' => 'out',
+            'type' => 'discord',
+            'channel' => 'discord',
+            'message' => $validated['message'],
+            'phone' => $senderId,
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function tiktokSend(Request $request)
+    {
+        $validated = $request->validate([
+            'open_id' => 'required|string',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $tiktok = app(\App\Services\TikTokService::class);
+        $account = \App\Models\WaTiktokAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'No active TikTok account'], 404);
+        }
+
+        $result = $tiktok->sendMessage($account->access_token, $validated['open_id'], $validated['message']);
+
+        if (!($result['ok'] ?? false)) {
+            return response()->json(['ok' => false, 'error' => $result['error'] ?? 'Failed'], 422);
+        }
+
+        $senderId = 'tt:' . $validated['open_id'];
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => Auth::id(), 'phone' => $senderId],
+            ['name' => 'TT: ' . $validated['open_id'], 'display_phone' => 'TikTok DM']
+        );
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'contact_id' => $contact->id,
+            'direction' => 'out',
+            'type' => 'tiktok',
+            'channel' => 'tiktok',
+            'message' => $validated['message'],
+            'phone' => $senderId,
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function lineSend(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|string',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $line = app(\App\Services\LineService::class);
+        $account = \App\Models\WaLineAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'No active LINE account'], 404);
+        }
+
+        $result = $line->pushMessage($account, $validated['user_id'], $validated['message']);
+
+        if (!($result['ok'] ?? false)) {
+            return response()->json(['ok' => false, 'error' => $result['error'] ?? 'Failed'], 422);
+        }
+
+        $senderId = 'line:' . $validated['user_id'];
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => Auth::id(), 'phone' => $senderId],
+            ['name' => 'LINE: ' . $validated['user_id'], 'display_phone' => 'LINE Chat']
+        );
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'contact_id' => $contact->id,
+            'direction' => 'out',
+            'type' => 'line',
+            'channel' => 'line',
+            'message' => $validated['message'],
+            'phone' => $senderId,
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function twitterSend(Request $request)
+    {
+        $validated = $request->validate([
+            'recipient_id' => 'required|string',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $twitter = app(\App\Services\TwitterService::class);
+        $account = \App\Models\WaTwitterAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'No active X/Twitter account'], 404);
+        }
+
+        $result = $twitter->sendDM($account->access_token, $validated['recipient_id'], $validated['message']);
+
+        if (!($result['ok'] ?? false)) {
+            return response()->json(['ok' => false, 'error' => $result['error'] ?? 'Failed'], 422);
+        }
+
+        $senderId = 'x:' . $validated['recipient_id'];
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => Auth::id(), 'phone' => $senderId],
+            ['name' => 'X: ' . $validated['recipient_id'], 'display_phone' => 'X DM']
+        );
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'contact_id' => $contact->id,
+            'direction' => 'out',
+            'type' => 'twitter',
+            'channel' => 'twitter',
+            'message' => $validated['message'],
+            'phone' => $senderId,
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function facebookSend(Request $request)
+    {
+        $validated = $request->validate([
+            'recipient_id' => 'required|string',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $fb = app(\App\Services\FacebookService::class);
+        $account = \App\Models\WaFacebookAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'No active Facebook account'], 404);
+        }
+
+        $result = $fb->sendMessage($account, $validated['recipient_id'], $validated['message']);
+
+        if (!empty($result['error'])) {
+            return response()->json(['ok' => false, 'error' => $result['error']], 422);
+        }
+
+        $senderId = 'fb:' . $validated['recipient_id'];
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => Auth::id(), 'phone' => $senderId],
+            ['name' => 'FB: ' . $validated['recipient_id'], 'display_phone' => 'FB Messenger']
+        );
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'contact_id' => $contact->id,
+            'direction' => 'out',
+            'type' => 'facebook',
+            'channel' => 'facebook',
+            'message' => $validated['message'],
+            'phone' => $senderId,
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
     }
 
     public function webhookReceive(Request $request)

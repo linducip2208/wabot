@@ -48,6 +48,18 @@ use App\Http\Controllers\CallController;
 use App\Http\Controllers\InstagramController;
 use App\Http\Controllers\KanbanController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\FacebookController;
+use App\Http\Controllers\WidgetController;
+use App\Http\Controllers\GbmController;
+use App\Http\Controllers\DiscordController;
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\TikTokController;
+use App\Http\Controllers\LineController;
+use App\Http\Controllers\TwitterController;
+
+// Public widget embed script & lead capture
+Route::get('/widget/{embedKey}.js', [WidgetController::class, 'embedScript'])->name('widget.embed');
+Route::post('/widget/{embedKey}/lead', [WidgetController::class, 'storeLead'])->name('widget.lead');
 
 // Public CMS pages
 Route::get('/pages/{slug}', [CmsPageController::class, 'show'])->name('pages.show')->where('slug', '^(?!builder$).*$');
@@ -92,6 +104,17 @@ Route::post('/webhook/whatsapp-status', [WebhookController::class, 'statusUpdate
 Route::match(['get', 'post'], '/webhook/meta', [MetaWebhookController::class, 'receive'])->name('webhook.meta');
 Route::match(['get', 'post'], '/webhook/instagram', [InstagramController::class, 'webhook'])->name('webhook.instagram');
 Route::post('/webhook/telegram/{account}', [TelegramController::class, 'webhook'])->name('webhook.telegram');
+Route::post('/webhook/twilio', [App\Http\Controllers\TwilioController::class, 'webhook'])->name('webhook.twilio');
+Route::post('/webhook/sendgrid', [App\Http\Controllers\SendGridController::class, 'webhook'])->name('webhook.sendgrid');
+Route::match(['get', 'post'], '/webhook/facebook', [FacebookController::class, 'webhook'])->name('webhook.facebook');
+Route::post('/webhook/gbm', [GbmController::class, 'webhook'])->name('webhook.gbm');
+Route::match(['get', 'post'], '/webhook/discord', [DiscordController::class, 'webhook'])->name('webhook.discord');
+Route::match(['get', 'post'], '/webhook/tiktok', [\App\Http\Controllers\TikTokController::class, 'webhook'])->name('webhook.tiktok');
+Route::post('/webhook/line', [\App\Http\Controllers\LineController::class, 'webhook'])->name('webhook.line');
+Route::match(['get', 'post'], '/webhook/twitter', [\App\Http\Controllers\TwitterController::class, 'webhook'])->name('webhook.twitter');
+Route::post('/webhook/stripe', [\App\Http\Controllers\Admin\PaymentGatewayController::class, 'stripeWebhook'])->name('webhook.stripe')->withoutMiddleware(['web', \App\Http\Middleware\VerifyCsrfToken::class]);
+Route::post('/webhook/razorpay', [\App\Http\Controllers\Admin\PaymentGatewayController::class, 'razorpayWebhook'])->name('webhook.razorpay')->withoutMiddleware(['web', \App\Http\Middleware\VerifyCsrfToken::class]);
+Route::post('/webhook/store/{integration}', [\App\Http\Controllers\StoreController::class, 'webhook'])->name('store.webhook')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
 // License pairing routes
 require base_path('routes/pair-routes.php');
@@ -310,6 +333,96 @@ Route::middleware('auth')->group(function () {
     Route::post('telegram/{account}/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
     Route::post('telegram/{account}/disconnect', [TelegramController::class, 'disconnect'])->name('telegram.disconnect');
     Route::post('telegram/{account}/test', [TelegramController::class, 'testSend'])->name('telegram.test');
+
+    // ── Facebook Messenger ──────────────────────────────────────
+    Route::resource('facebook', FacebookController::class)->except(['create', 'show', 'edit']);
+    Route::post('facebook/{account}/connect', [FacebookController::class, 'connect'])->name('facebook.connect');
+    Route::post('facebook/{account}/disconnect', [FacebookController::class, 'disconnect'])->name('facebook.disconnect');
+
+    // ── Twilio (SMS) ────────────────────────────────────────────
+    Route::resource('twilio', \App\Http\Controllers\TwilioController::class)->except(['create', 'show', 'edit']);
+    Route::post('twilio/{account}/connect', [\App\Http\Controllers\TwilioController::class, 'connect'])->name('twilio.connect');
+    Route::post('twilio/{account}/disconnect', [\App\Http\Controllers\TwilioController::class, 'disconnect'])->name('twilio.disconnect');
+    Route::post('twilio/{account}/test', [\App\Http\Controllers\TwilioController::class, 'testSend'])->name('twilio.test');
+
+    // ── SendGrid (Email) ────────────────────────────────────────
+    Route::resource('sendgrid', \App\Http\Controllers\SendGridController::class)->except(['create', 'show', 'edit']);
+    Route::post('sendgrid/{account}/connect', [\App\Http\Controllers\SendGridController::class, 'connect'])->name('sendgrid.connect');
+    Route::post('sendgrid/{account}/disconnect', [\App\Http\Controllers\SendGridController::class, 'disconnect'])->name('sendgrid.disconnect');
+    Route::post('sendgrid/{account}/test', [\App\Http\Controllers\SendGridController::class, 'testSend'])->name('sendgrid.test');
+    Route::post('sendgrid/template', [\App\Http\Controllers\SendGridController::class, 'templateStore'])->name('sendgrid.template.store');
+    Route::put('sendgrid/template/{template}', [\App\Http\Controllers\SendGridController::class, 'templateUpdate'])->name('sendgrid.template.update');
+    Route::delete('sendgrid/template/{template}', [\App\Http\Controllers\SendGridController::class, 'templateDestroy'])->name('sendgrid.template.destroy');
+
+    // ── Google Business Messages ─────────────────────────────────
+    Route::resource('gbm', GbmController::class)->except(['create', 'show', 'edit']);
+    Route::post('gbm/{account}/connect', [GbmController::class, 'connect'])->name('gbm.connect');
+    Route::post('gbm/{account}/disconnect', [GbmController::class, 'disconnect'])->name('gbm.disconnect');
+
+    // ── Discord ──────────────────────────────────────────────────
+    Route::resource('discord', DiscordController::class)->except(['create', 'show', 'edit']);
+    Route::post('discord/{account}/connect', [DiscordController::class, 'connect'])->name('discord.connect');
+    Route::post('discord/{account}/disconnect', [DiscordController::class, 'disconnect'])->name('discord.disconnect');
+    Route::post('discord/{account}/test', [DiscordController::class, 'testSend'])->name('discord.test');
+
+    // ── TikTok ─────────────────────────────────────────────────
+    Route::resource('tiktok', TikTokController::class)->except(['create', 'show', 'edit']);
+    Route::post('tiktok/{account}/connect', [TikTokController::class, 'connect'])->name('tiktok.connect');
+    Route::post('tiktok/{account}/disconnect', [TikTokController::class, 'disconnect'])->name('tiktok.disconnect');
+    Route::post('tiktok/{account}/test', [TikTokController::class, 'testSend'])->name('tiktok.test');
+    Route::get('tiktok/callback', [TikTokController::class, 'callback'])->name('tiktok.callback');
+
+    // ── LINE ───────────────────────────────────────────────────
+    Route::resource('line', LineController::class)->except(['create', 'show', 'edit']);
+    Route::post('line/{account}/connect', [LineController::class, 'connect'])->name('line.connect');
+    Route::post('line/{account}/disconnect', [LineController::class, 'disconnect'])->name('line.disconnect');
+    Route::post('line/{account}/test', [LineController::class, 'testSend'])->name('line.test');
+    Route::get('line/{account}/richmenus', [LineController::class, 'richMenuList'])->name('line.richmenus');
+
+    // ── X/Twitter ──────────────────────────────────────────────
+    Route::resource('twitter', TwitterController::class)->except(['create', 'show', 'edit']);
+    Route::post('twitter/{account}/connect', [TwitterController::class, 'connect'])->name('twitter.connect');
+    Route::post('twitter/{account}/disconnect', [TwitterController::class, 'disconnect'])->name('twitter.disconnect');
+    Route::post('twitter/{account}/test', [TwitterController::class, 'testSend'])->name('twitter.test');
+    Route::get('twitter/callback', [TwitterController::class, 'callback'])->name('twitter.callback');
+
+    // ── Appointments ───────────────────────────────────────────
+    Route::resource('appointments', AppointmentController::class)->except(['create', 'show', 'edit']);
+    Route::post('appointments/{appointment}/confirm', [AppointmentController::class, 'confirm'])->name('appointments.confirm');
+    Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
+    Route::post('appointments/{appointment}/complete', [AppointmentController::class, 'complete'])->name('appointments.complete');
+    Route::post('appointments/{appointment}/reminder', [AppointmentController::class, 'sendReminder'])->name('appointments.reminder');
+    Route::get('api/appointments/slots', [AppointmentController::class, 'getSlots'])->name('api.appointments.slots');
+
+    // ── Services ───────────────────────────────────────────────
+    Route::post('services', [AppointmentController::class, 'serviceStore'])->name('services.store');
+    Route::put('services/{service}', [AppointmentController::class, 'serviceUpdate'])->name('services.update');
+    Route::delete('services/{service}', [AppointmentController::class, 'serviceDestroy'])->name('services.destroy');
+
+    // ── Availabilities ─────────────────────────────────────────
+    Route::post('availabilities', [AppointmentController::class, 'availabilityStore'])->name('availabilities.store');
+    Route::post('availabilities/{availability}/toggle', [AppointmentController::class, 'availabilityToggle'])->name('availabilities.toggle');
+    Route::delete('availabilities/{availability}', [AppointmentController::class, 'availabilityDestroy'])->name('availabilities.destroy');
+
+        // ── Store Integration ────────────────────────────────────────
+        Route::get('store', [App\Http\Controllers\StoreController::class, 'index'])->name('store.index');
+        Route::post('store', [App\Http\Controllers\StoreController::class, 'store'])->name('store.store');
+        Route::put('store/{integration}', [App\Http\Controllers\StoreController::class, 'update'])->name('store.update');
+        Route::delete('store/{integration}', [App\Http\Controllers\StoreController::class, 'destroy'])->name('store.destroy');
+        Route::post('store/{integration}/connect', [App\Http\Controllers\StoreController::class, 'connect'])->name('store.connect');
+        Route::post('store/{integration}/sync', [App\Http\Controllers\StoreController::class, 'sync'])->name('store.sync');
+        Route::patch('store/{integration}/settings', [App\Http\Controllers\StoreController::class, 'updateSettings'])->name('store.settings');
+
+        // ── Google Sheets Sync ──────────────────────────────────────
+        Route::get('sheets', [App\Http\Controllers\SheetsController::class, 'index'])->name('sheets.index');
+        Route::post('sheets', [App\Http\Controllers\SheetsController::class, 'store'])->name('sheets.store');
+        Route::put('sheets/{integration}', [App\Http\Controllers\SheetsController::class, 'update'])->name('sheets.update');
+        Route::delete('sheets/{integration}', [App\Http\Controllers\SheetsController::class, 'destroy'])->name('sheets.destroy');
+        Route::post('sheets/{integration}/connect', [App\Http\Controllers\SheetsController::class, 'connect'])->name('sheets.connect');
+        Route::post('sheets/{integration}/sync', [App\Http\Controllers\SheetsController::class, 'sync'])->name('sheets.sync');
+
+        // ── Widget Builder ──────────────────────────────────────────
+        Route::resource('widgets', WidgetController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // ── Kanban ──────────────────────────────────────────────────
     Route::get('kanban', [KanbanController::class, 'index'])->name('kanban.index');

@@ -21,6 +21,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('meta/send', [ApiController::class, 'metaSend']);
     Route::post('instagram/send', [ApiController::class, 'instagramSend']);
     Route::post('telegram/send', [ApiController::class, 'telegramSend']);
+    Route::post('gbm/send', [ApiController::class, 'gbmSend']);
+    Route::post('discord/send', [ApiController::class, 'discordSend']);
+    Route::post('tiktok/send', [ApiController::class, 'tiktokSend']);
+    Route::post('line/send', [ApiController::class, 'lineSend']);
+    Route::post('twitter/send', [ApiController::class, 'twitterSend']);
+    Route::post('facebook/send', [ApiController::class, 'facebookSend']);
+    Route::post('sms/send', [ApiController::class, 'smsSend']);
+    Route::post('email/send', [ApiController::class, 'emailSend']);
     Route::get('channels', [ApiController::class, 'channels']);
 });
 
