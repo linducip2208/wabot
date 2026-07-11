@@ -1,5 +1,4 @@
 <div x-data="languageSwitcher()" class="relative">
-    @php $position = $position ?? 'bottom'; @endphp
     <button @click="open = !open"
         class="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition">
         <span class="fi fi-{{ $languages->firstWhere('iso', $currentLocale)?->flag ?? 'id' }} rounded-sm" style="width:18px;height:12px;"></span>
@@ -8,7 +7,7 @@
     </button>
 
     <div x-show="open" @click.outside="open = false" x-cloak
-        class="absolute {{ $position === 'top' ? 'top-full mt-2' : 'bottom-full mb-2' }} right-0 w-44 bg-sidebar-bg border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+        class="absolute {{ ($position ?? 'bottom') === 'top' ? 'top-full mt-2' : 'bottom-full mb-2' }} right-0 w-44 bg-sidebar-bg border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
         @foreach($languages as $lang)
         <a href="{{ route('lang.switch', $lang->iso) }}"
             class="flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-white/5 {{ $currentLocale === $lang->iso ? 'text-brand-400 bg-white/5' : 'text-gray-300' }}">
