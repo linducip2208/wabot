@@ -99,6 +99,57 @@
     @endif
 </div>
 
+{{-- Setup Guide --}}
+<div class="bg-white border border-gray-200 rounded-2xl p-6 mb-6 shadow-sm">
+    <h2 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fas fa-book text-brand-500"></i> Setup Guide
+    </h2>
+    <div class="grid md:grid-cols-2 gap-6">
+        <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-2">1. Google Cloud Console</h3>
+            <ol class="text-xs text-gray-600 space-y-1.5 list-decimal ml-4">
+                <li>Buka <a href="https://console.cloud.google.com" target="_blank" class="text-brand-600 underline">console.cloud.google.com</a></li>
+                <li>Buat project baru atau pilih existing</li>
+                <li><strong>APIs &amp; Services → Library</strong> → cari <code class="bg-gray-100 px-1 rounded">Google Sheets API</code> → Enable</li>
+                <li><strong>APIs &amp; Services → Credentials</strong> → Create Credentials → <strong>Service Account</strong></li>
+                <li>Isi nama (misal: wabot-sheets), klik <strong>Create &amp; Continue</strong></li>
+                <li>Role: <strong>Editor</strong> (atau skip), klik <strong>Done</strong></li>
+            </ol>
+        </div>
+        <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-2">2. Download JSON Key</h3>
+            <ol class="text-xs text-gray-600 space-y-1.5 list-decimal ml-4">
+                <li>Klik service account yang baru dibuat</li>
+                <li>Tab <strong>Keys → Add Key → Create New Key → JSON</strong></li>
+                <li>File JSON akan otomatis terdownload</li>
+                <li>Buka file JSON, copy <strong>seluruh isinya</strong></li>
+                <li>Paste ke field <strong>Service Account JSON</strong> di form WABot</li>
+            </ol>
+
+            <h3 class="text-sm font-semibold text-gray-700 mt-4 mb-2">3. Share Google Sheet</h3>
+            <ol class="text-xs text-gray-600 space-y-1.5 list-decimal ml-4">
+                <li>Buka Google Sheet yang ingin disambungkan</li>
+                <li>Klik <strong>Share</strong> (tombol hijau kanan atas)</li>
+                <li>Masukkan email service account (ada di file JSON: <code class="bg-gray-100 px-1 rounded">...@...iam.gserviceaccount.com</code>)</li>
+                <li>Role: <strong>Editor</strong>, klik <strong>Send</strong></li>
+                <li>Copy <strong>Spreadsheet ID</strong> dari URL:<br><code class="bg-gray-100 px-1 rounded text-[10px]">https://docs.google.com/spreadsheets/d/<strong>INI_SPREADSHEET_ID</strong>/edit</code></li>
+            </ol>
+
+            <h3 class="text-sm font-semibold text-gray-700 mt-4 mb-2">4. WABot</h3>
+            <ol class="text-xs text-gray-600 space-y-1.5 list-decimal ml-4">
+                <li>Klik <strong>Tambah Integrasi</strong> di atas</li>
+                <li>Isi nama, Spreadsheet ID, nama sheet (misal: Sheet1)</li>
+                <li>Pilih arah sync: Import / Export / Both</li>
+                <li>Paste Service Account JSON</li>
+                <li>Klik <strong>Simpan</strong> → klik <strong>Test Connect</strong></li>
+            </ol>
+        </div>
+    </div>
+    <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+        <i class="fas fa-lightbulb mr-1"></i> <strong>Format CSV/Sheet:</strong> Kolom <code>name</code>, <code>phone</code> wajib. Kolom <code>email</code>, <code>tags</code>, <code>notes</code> opsional. Baris pertama = header.
+    </div>
+</div>
+
 {{-- Add Modal --}}
 <div id="addModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">

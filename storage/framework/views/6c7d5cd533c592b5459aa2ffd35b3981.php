@@ -1,2 +1,0 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.3.2/css/flag-icons.min.css">
-<?php /**PATH D:\project laravel\wabot\resources\views\components\flag-icons-css.blade.php ENDPATH**/ ?>
