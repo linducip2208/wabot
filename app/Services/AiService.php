@@ -4,17 +4,27 @@ namespace App\Services;
 
 use App\Models\WaAiKey;
 use App\Models\WaKnowledge;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AiService
 {
+    protected CreditService $credit;
+
+    public function __construct(CreditService $credit)
+    {
+        $this->credit = $credit;
+    }
+
     /**
      * Kirim prompt ke AI provider (OpenAI-compatible format).
      * Gemini & DeepSeek juga mendukung format yg sama.
      */
     public function send(WaAiKey $aiKey, string $userMessage, ?array $knowledgeRows = null): ?string
     {
+        $this->deductCredits($aiKey, 1, 'AI Chat');
+
         $baseUrl = $aiKey->base_url ?: $this->defaultBaseUrl($aiKey->provider);
         if (!$baseUrl) {
             Log::error("AiService: unknown provider or base_url", ['provider' => $aiKey->provider]);
@@ -87,6 +97,8 @@ class AiService
      */
     public function rawPrompt(WaAiKey $aiKey, string $prompt): ?string
     {
+        $this->deductCredits($aiKey, 1, 'AI Raw Prompt');
+
         $baseUrl = $aiKey->base_url ?: $this->defaultBaseUrl($aiKey->provider);
         if (!$baseUrl) return null;
 
@@ -142,5 +154,13 @@ class AiService
             'gemini' => 'https://generativelanguage.googleapis.com/v1beta/models/' . 'gemini-2.0-flash' . ':generateContent',
             default => null,
         };
+    }
+
+    protected function deductCredits(WaAiKey $aiKey, int $amount, string $description): void
+    {
+        $user = User::find($aiKey->user_id);
+        if (!$user) return;
+
+        $this->credit->deductCredits($user, $amount, $description, WaAiKey::class, $aiKey->id);
     }
 }

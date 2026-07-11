@@ -193,10 +193,121 @@ class SendGridController extends Controller
                 }
             }
 
+            // ── Auto-Reply Pipeline for Inbound Email ──
+            if ($eventType === 'inbound' && !empty($event['subject']) && !empty($event['text'])) {
+                $this->processInboundEmail($userId, $contact, $event);
+            }
+
             Log::info("SendGrid event: {$eventType}", ['email' => $email, 'status' => $status]);
         }
 
         return response('ok');
+    }
+
+    /**
+     * 8-step auto-reply pipeline for inbound email.
+     */
+    protected function processInboundEmail(int $userId, WaContact $contact, array $event): void
+    {
+        $incomingMessage = $event['text'] ?? '';
+        $subject = $event['subject'] ?? '';
+        $fromEmail = $event['from'] ?? $contact->phone;
+
+        Log::info('SendGrid inbound pipeline', ['email' => $fromEmail, 'subject' => $subject]);
+
+        $replyText = null;
+
+        // Step 1: Sentiment analysis
+        $sentiment = $this->sentiment->analyze($contact, $incomingMessage);
+
+        // Step 2: Intent detection
+        $intent = $this->intent->detect($contact, $incomingMessage);
+
+        // Step 3: SLA escalation
+        $this->sla->escalateIfNeeded($userId, $contact, $incomingMessage);
+
+        // Step 4: Team inbox routing
+        $this->teamInbox->routeToTeam($userId, $contact, $incomingMessage, 'email');
+
+        // Step 5: Welcome message (first-time contact)
+        $autoreply = WaAutoreply::where('user_id', $userId)
+            ->where('is_active', true)
+            ->where('channel', 'email')
+            ->where('match_type', 'welcome')
+            ->first();
+        if ($autoreply && WaMessage::where('contact_id', $contact->id)->where('direction', 'in')->count() <= 1) {
+            $replyText = $this->spintax->process($autoreply->reply, ['name' => $contact->name]);
+        }
+
+        // Step 6: AI auto-reply
+        if (!$replyText) {
+            $autoReply = WaAutoreply::where('user_id', $userId)
+                ->where('is_active', true)
+                ->where('channel', 'email')
+                ->where('match_type', 'keyword')
+                ->get();
+            foreach ($autoReply as $ar) {
+                if ($ar->is_exact && mb_strtolower(trim($incomingMessage)) === mb_strtolower(trim($ar->keyword))) {
+                    $replyText = $this->spintax->process($ar->reply, ['name' => $contact->name]);
+                    break;
+                }
+                if (!$ar->is_exact && str_contains(mb_strtolower($incomingMessage), mb_strtolower($ar->keyword))) {
+                    $replyText = $this->spintax->process($ar->reply, ['name' => $contact->name]);
+                    break;
+                }
+            }
+        }
+
+        // Step 7: AI-powered fallback
+        if (!$replyText) {
+            $aiReply = WaAutoreply::where('user_id', $userId)
+                ->where('is_active', true)
+                ->where('channel', 'email')
+                ->where('match_type', 'ai')
+                ->first();
+            if ($aiReply) {
+                $aiKey = $aiReply->aiKey;
+                if ($aiKey) {
+                    try {
+                        $replyText = $this->ai->send($aiKey, $incomingMessage);
+                    } catch (\Throwable $e) {
+                        Log::error('SendGrid AI reply failed: ' . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        // Step 8: Generic fallback
+        if (!$replyText) {
+            $fallback = WaAutoreply::where('user_id', $userId)
+                ->where('is_active', true)
+                ->where('channel', 'email')
+                ->where('match_type', 'fallback')
+                ->first();
+            if ($fallback) {
+                $replyText = $this->spintax->process($fallback->reply, ['name' => $contact->name]);
+            }
+        }
+
+        // Send reply if we have one
+        if ($replyText) {
+            $account = WaSendGridAccount::where('user_id', $userId)->where('is_active', true)->first();
+            if ($account) {
+                $replySubject = 'Re: ' . $subject;
+                $result = $this->sendgrid->sendEmail($account, $fromEmail, $replySubject, $replyText);
+                if ($result['ok'] ?? false) {
+                    WaMessage::create([
+                        'user_id' => $userId,
+                        'contact_id' => $contact->id,
+                        'direction' => 'out',
+                        'channel' => 'email',
+                        'message' => $replyText,
+                        'phone' => $contact->phone,
+                        'status' => 'sent',
+                    ]);
+                }
+            }
+        }
     }
 
     // ── Email Template CRUD ──────────────────────────────────────

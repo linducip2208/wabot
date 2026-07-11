@@ -38,7 +38,11 @@ class AiBestTimeController extends Controller
         );
 
         $aiService = app(AiService::class);
-        $result = $aiService->rawPrompt($aiKey, $prompt);
+        try {
+            $result = $aiService->rawPrompt($aiKey, $prompt);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage())->withInput();
+        }
 
         if ($result === null) {
             return back()->with('error', __('messages.error.ai_response_failed'))->withInput();

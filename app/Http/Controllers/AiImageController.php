@@ -4,11 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\WaAiImageJob;
 use App\Services\AiImageService;
+use App\Services\CreditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AiImageController extends Controller
 {
+    protected CreditService $credit;
+
+    public function __construct(CreditService $credit)
+    {
+        $this->credit = $credit;
+    }
+
     public function index()
     {
         $jobs = WaAiImageJob::where('user_id', Auth::id())
@@ -35,6 +43,13 @@ class AiImageController extends Controller
             'count' => $validated['count'] ?? 1,
             'status' => 'pending',
         ]);
+
+        try {
+            $this->credit->deductCredits(Auth::user(), 2, 'AI Image Generation: ' . $job->id, WaAiImageJob::class, $job->id);
+        } catch (\RuntimeException $e) {
+            $job->update(['status' => 'failed']);
+            return back()->with('error', $e->getMessage())->withInput();
+        }
 
         $imageService = app(AiImageService::class);
         $imageService->generateAndStore($job);

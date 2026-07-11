@@ -51,6 +51,15 @@
                         <option value="whatsapp">WhatsApp (Baileys)</option>
                         <option value="meta">WhatsApp Cloud (Meta)</option>
                         <option value="telegram">Telegram</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="gbm">Google Business Messages</option>
+                        <option value="discord">Discord</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="line">LINE</option>
+                        <option value="twitter">X / Twitter</option>
+                        <option value="sms">SMS (Twilio)</option>
+                        <option value="email">Email (SendGrid)</option>
                     </select>
                 </div>
                 <div>
@@ -88,6 +97,105 @@
                     <option value="">Pilih Telegram Account</option>
                     @foreach($telegramAccounts as $t)
                         <option value="{{ $t->id }}">{{ $t->name }} (@{{ $t->bot_username }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Instagram account selector --}}
+            <div x-show="channel === 'instagram'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">Instagram Account</label>
+                <select name="instagram_account_id" x-model="instagramAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih Instagram Account</option>
+                    @foreach($instagramAccounts as $ig)
+                        <option value="{{ $ig->id }}">{{ $ig->name }} ({{ $ig->instagram_id }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Facebook account selector --}}
+            <div x-show="channel === 'facebook'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">Facebook Account</label>
+                <select name="facebook_account_id" x-model="facebookAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih Facebook Account</option>
+                    @foreach($facebookAccounts as $fb)
+                        <option value="{{ $fb->id }}">{{ $fb->name }} ({{ $fb->page_id }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- GBM account selector --}}
+            <div x-show="channel === 'gbm'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">GBM Account</label>
+                <select name="gbm_account_id" x-model="gbmAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih GBM Account</option>
+                    @foreach($gbmAccounts as $g)
+                        <option value="{{ $g->id }}">{{ $g->name }} ({{ $g->brand_id }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Discord account selector --}}
+            <div x-show="channel === 'discord'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">Discord Account</label>
+                <select name="discord_account_id" x-model="discordAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih Discord Account</option>
+                    @foreach($discordAccounts as $d)
+                        <option value="{{ $d->id }}">{{ $d->name }} ({{ $d->bot_name }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- TikTok account selector --}}
+            <div x-show="channel === 'tiktok'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">TikTok Account</label>
+                <select name="tiktok_account_id" x-model="tiktokAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih TikTok Account</option>
+                    @foreach($tiktokAccounts as $tt)
+                        <option value="{{ $tt->id }}">{{ $tt->name }} ({{ $tt->open_id }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- LINE account selector --}}
+            <div x-show="channel === 'line'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">LINE Account</label>
+                <select name="line_account_id" x-model="lineAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih LINE Account</option>
+                    @foreach($lineAccounts as $l)
+                        <option value="{{ $l->id }}">{{ $l->name }} ({{ $l->channel_id }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- X/Twitter account selector --}}
+            <div x-show="channel === 'twitter'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">X / Twitter Account</label>
+                <select name="twitter_account_id" x-model="twitterAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih X/Twitter Account</option>
+                    @foreach($twitterAccounts as $tw)
+                        <option value="{{ $tw->id }}">{{ $tw->name }} (@{{ $tw->username }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Twilio account selector --}}
+            <div x-show="channel === 'sms'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">SMS (Twilio) Account</label>
+                <select name="twilio_account_id" x-model="twilioAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih Twilio Account</option>
+                    @foreach($twilioAccounts as $sms)
+                        <option value="{{ $sms->id }}">{{ $sms->name }} ({{ $sms->phone_number }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- SendGrid account selector --}}
+            <div x-show="channel === 'email'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">Email (SendGrid) Account</label>
+                <select name="sendgrid_account_id" x-model="sendgridAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih SendGrid Account</option>
+                    @foreach($sendgridAccounts as $sg)
+                        <option value="{{ $sg->id }}">{{ $sg->name }} ({{ $sg->from_email }})</option>
                     @endforeach
                 </select>
             </div>
@@ -206,6 +314,15 @@ document.addEventListener('alpine:init', () => {
         sessionId: '',
         metaAccountId: '',
         telegramAccountId: '',
+        instagramAccountId: '',
+        facebookAccountId: '',
+        gbmAccountId: '',
+        discordAccountId: '',
+        tiktokAccountId: '',
+        lineAccountId: '',
+        twitterAccountId: '',
+        twilioAccountId: '',
+        sendgridAccountId: '',
         campaignName: '',
         submitting: false,
 
@@ -232,6 +349,42 @@ document.addEventListener('alpine:init', () => {
                 }
                 if (this.channel === 'telegram' && !this.telegramAccountId) {
                     alert('{{ __('campaigns.alert_select_telegram') }}');
+                    return;
+                }
+                if (this.channel === 'instagram' && !this.instagramAccountId) {
+                    alert('Pilih Instagram Account terlebih dahulu');
+                    return;
+                }
+                if (this.channel === 'facebook' && !this.facebookAccountId) {
+                    alert('Pilih Facebook Account terlebih dahulu');
+                    return;
+                }
+                if (this.channel === 'gbm' && !this.gbmAccountId) {
+                    alert('Pilih GBM Account terlebih dahulu');
+                    return;
+                }
+                if (this.channel === 'discord' && !this.discordAccountId) {
+                    alert('Pilih Discord Account terlebih dahulu');
+                    return;
+                }
+                if (this.channel === 'tiktok' && !this.tiktokAccountId) {
+                    alert('Pilih TikTok Account terlebih dahulu');
+                    return;
+                }
+                if (this.channel === 'line' && !this.lineAccountId) {
+                    alert('Pilih LINE Account terlebih dahulu');
+                    return;
+                }
+                if (this.channel === 'twitter' && !this.twitterAccountId) {
+                    alert('Pilih X/Twitter Account terlebih dahulu');
+                    return;
+                }
+                if (this.channel === 'sms' && !this.twilioAccountId) {
+                    alert('Pilih Twilio Account terlebih dahulu');
+                    return;
+                }
+                if (this.channel === 'email' && !this.sendgridAccountId) {
+                    alert('Pilih SendGrid Account terlebih dahulu');
                     return;
                 }
                 if (!this.campaignName.trim()) {

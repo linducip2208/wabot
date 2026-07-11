@@ -6,8 +6,11 @@ use App\Models\WaPost;
 use App\Models\WaPostCampaign;
 use App\Models\WaPostLabel;
 use App\Models\WaCaptionLibrary;
+use App\Models\WaFacebookAccount;
+use App\Models\WaInstagramAccount;
 use App\Models\WaRssSchedule;
-use App\Models\WaSocialAccount;
+use App\Models\WaTiktokAccount;
+use App\Models\WaTwitterAccount;
 use App\Services\SocialPublishingService;
 use Illuminate\Http\Request;
 
@@ -15,14 +18,21 @@ class PublishingController extends Controller
 {
     public function index()
     {
-        $accounts = WaSocialAccount::where('user_id', auth()->id())->where('is_active', true)->get();
+        $facebookAccounts = WaFacebookAccount::where('user_id', auth()->id())->where('is_active', true)->get();
+        $instagramAccounts = WaInstagramAccount::where('user_id', auth()->id())->where('is_active', true)->get();
+        $twitterAccounts = WaTwitterAccount::where('user_id', auth()->id())->where('is_active', true)->get();
+        $tiktokAccounts = WaTiktokAccount::where('user_id', auth()->id())->where('is_active', true)->get();
+        $accountsCount = $facebookAccounts->count() + $instagramAccounts->count() + $twitterAccounts->count() + $tiktokAccounts->count();
+
         $campaigns = WaPostCampaign::where('user_id', auth()->id())->get();
         $labels = WaPostLabel::where('user_id', auth()->id())->get();
         $captions = WaCaptionLibrary::where('user_id', auth()->id())->get();
         $recentPosts = WaPost::where('user_id', auth()->id())->latest()->take(10)->get();
-        $accountsCount = $accounts->count();
 
-        return view('publishing.index', compact('accounts', 'campaigns', 'labels', 'captions', 'recentPosts', 'accountsCount'));
+        return view('publishing.index', compact(
+            'facebookAccounts', 'instagramAccounts', 'twitterAccounts', 'tiktokAccounts',
+            'campaigns', 'labels', 'captions', 'recentPosts', 'accountsCount'
+        ));
     }
 
     public function calendar(Request $request)
@@ -315,9 +325,14 @@ class PublishingController extends Controller
             ->latest()
             ->get();
 
-        $accounts = WaSocialAccount::where('user_id', auth()->id())->where('is_active', true)->get();
+        $facebookAccounts = WaFacebookAccount::where('user_id', auth()->id())->where('is_active', true)->get();
+        $instagramAccounts = WaInstagramAccount::where('user_id', auth()->id())->where('is_active', true)->get();
+        $twitterAccounts = WaTwitterAccount::where('user_id', auth()->id())->where('is_active', true)->get();
+        $tiktokAccounts = WaTiktokAccount::where('user_id', auth()->id())->where('is_active', true)->get();
 
-        return view('publishing.rss', compact('schedules', 'accounts'));
+        return view('publishing.rss', compact('schedules',
+            'facebookAccounts', 'instagramAccounts', 'twitterAccounts', 'tiktokAccounts'
+        ));
     }
 
     public function updateRssSchedule(Request $request, WaRssSchedule $schedule)

@@ -26,6 +26,7 @@ class FlowEngineService
     protected DiscordService $discord;
     protected GbmService $gbm;
     protected FacebookService $facebook;
+    protected CreditService $credit;
 
     public function __construct(
         AiService $ai,
@@ -37,6 +38,7 @@ class FlowEngineService
         DiscordService $discord,
         GbmService $gbm,
         FacebookService $facebook,
+        CreditService $credit,
     ) {
         $this->ai = $ai;
         $this->baileys = $baileys;
@@ -47,21 +49,12 @@ class FlowEngineService
         $this->discord = $discord;
         $this->gbm = $gbm;
         $this->facebook = $facebook;
+        $this->credit = $credit;
     }
 
     protected function detectChannel(WaContact $contact): string
     {
-        if (str_starts_with($contact->phone, 'ig:')) return 'instagram';
-        if (str_starts_with($contact->phone, 'tg:')) return 'telegram';
-        if (str_starts_with($contact->phone, 'fb:')) return 'facebook';
-        if (str_starts_with($contact->phone, 'sms:')) return 'sms';
-        if (str_starts_with($contact->phone, 'email:')) return 'email';
-        if (str_starts_with($contact->phone, 'gbm:')) return 'gbm';
-        if (str_starts_with($contact->phone, 'dc:')) return 'discord';
-        if (str_starts_with($contact->phone, 'tt:')) return 'tiktok';
-        if (str_starts_with($contact->phone, 'line:')) return 'line';
-        if (str_starts_with($contact->phone, 'x:')) return 'twitter';
-        return 'baileys';
+        return ChannelRegistry::getByPhone($contact->phone);
     }
 
     protected function sendViaChannel(WaSession $session, WaContact $contact, string $message, ?string $forcedChannel = null): array
@@ -239,7 +232,7 @@ class FlowEngineService
             'name' => $contact->name, 'phone' => $contact->phone,
         ]);
 
-        $channel = $this->detectChannel($contact);
+        $channel = $node->channel ?: $this->detectChannel($contact);
 
         switch ($channel) {
             case 'instagram':
@@ -256,6 +249,35 @@ class FlowEngineService
                 if ($account) {
                     $chatId = str_replace('tg:', '', $contact->phone);
                     $this->telegram->sendPhoto($account, $chatId, $node->media_url, $caption);
+                }
+                break;
+            case 'facebook':
+                $account = WaFacebookAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if ($account) {
+                    $fbId = str_replace('fb:', '', $contact->phone);
+                    $this->facebook->sendMessage($account, $fbId, $node->media_url . "\n" . $caption);
+                }
+                break;
+            case 'gbm':
+            case 'discord':
+            case 'tiktok':
+            case 'line':
+            case 'twitter':
+            case 'sms':
+            case 'email':
+                $result = $this->sendViaChannel($session, $contact, $caption . "\n" . $node->media_url, $channel);
+                if ($result['ok'] ?? false) {
+                    WaMessage::create([
+                        'user_id' => $session->user_id,
+                        'session_id' => $session->id,
+                        'contact_id' => $contact->id,
+                        'direction' => 'out',
+                        'channel' => $channel,
+                        'message' => $caption,
+                        'phone' => $contact->phone,
+                        'status' => 'sent',
+                    ]);
                 }
                 break;
             default:
@@ -303,6 +325,13 @@ class FlowEngineService
     protected function handleAi(WaFlowNode $node, WaSession $session, WaContact $contact, string $context): bool
     {
         if (!$node->aiKey) return $this->goNext($node, true);
+
+        try {
+            $user = \App\Models\User::find($session->user_id);
+            if ($user && $this->credit->hasCredits($user, 1)) {
+                $this->credit->deductCredits($user, 1, 'Flow AI node — ' . ($node->name ?? $node->id), \App\Models\WaFlowNode::class, $node->id);
+            }
+        } catch (\Throwable) {}
 
         $aiService = app(AiService::class);
         $kb = $aiService->getKnowledgeContext($session->user_id);

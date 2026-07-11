@@ -103,15 +103,25 @@
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <label class="block text-sm font-semibold text-gray-700 mb-3">{{ __('publishing.platforms') }}</label>
             <div class="space-y-2">
-                @foreach(App\Models\WaSocialAccount::platforms() as $key => $name)
-                @php $hasAccount = $accounts->where('platform', $key)->count() > 0; @endphp
+                @php
+                $platformAccounts = [
+                    'facebook_page' => ['name' => 'Facebook Page', 'icon' => 'fab fa-facebook text-blue-600', 'accounts' => $facebookAccounts],
+                    'instagram_professional' => ['name' => 'Instagram Professional', 'icon' => 'fab fa-instagram text-pink-600', 'accounts' => $instagramAccounts],
+                    'x_twitter' => ['name' => 'X / Twitter', 'icon' => 'fab fa-x-twitter text-gray-800', 'accounts' => $twitterAccounts],
+                    'tiktok' => ['name' => 'TikTok', 'icon' => 'fab fa-tiktok text-gray-800', 'accounts' => $tiktokAccounts],
+                ];
+                @endphp
+                @foreach($platformAccounts as $key => $p)
+                @php $hasAccount = $p['accounts']->count() > 0; @endphp
                 <label class="flex items-center gap-3 p-2.5 rounded-xl border {{ $hasAccount ? 'border-gray-200 hover:bg-gray-50' : 'border-gray-100 bg-gray-50 opacity-50' }} cursor-pointer transition">
                     <input type="checkbox" name="platform_targets[]" value="{{ $key }}" {{ $hasAccount ? '' : 'disabled' }} class="rounded text-brand-600 focus:ring-brand-500">
-                    <i class="{{ $key === 'facebook_page' ? 'fab fa-facebook text-blue-600' : ($key === 'instagram_professional' ? 'fab fa-instagram text-pink-600' : ($key === 'x_twitter' ? 'fab fa-x-twitter text-gray-800' : ($key === 'tiktok' ? 'fab fa-tiktok text-gray-800' : 'fab fa-linkedin text-blue-700'))) }} w-5 text-center"></i>
+                    <i class="{{ $p['icon'] }} w-5 text-center"></i>
                     <div>
-                        <div class="text-sm font-medium text-gray-800">{{ $name }}</div>
+                        <div class="text-sm font-medium text-gray-800">{{ $p['name'] }}</div>
                         @if(!$hasAccount)
                         <div class="text-[11px] text-gray-400">{{ __('publishing.no_connected_account') }}</div>
+                        @else
+                        <div class="text-[11px] text-gray-500">{{ $p['accounts']->first()->name ?? $p['accounts']->first()->page_name ?? $p['name'] }}</div>
                         @endif
                     </div>
                 </label>

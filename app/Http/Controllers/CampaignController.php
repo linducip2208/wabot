@@ -8,9 +8,15 @@ use App\Models\WaMetaAccount;
 use App\Models\WaSession;
 use App\Models\WaTelegramAccount;
 use App\Services\BaileysService;
+use App\Services\DiscordService;
+use App\Services\FacebookService;
+use App\Services\GbmService;
+use App\Services\InstagramService;
 use App\Services\MetaApiService;
+use App\Services\SendGridService;
 use App\Services\SpintaxService;
 use App\Services\TelegramService;
+use App\Services\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,12 +27,18 @@ class CampaignController extends Controller
         protected SpintaxService $spintax,
         protected MetaApiService $metaApi,
         protected TelegramService $telegram,
+        protected InstagramService $instagram,
+        protected FacebookService $facebook,
+        protected GbmService $gbm,
+        protected DiscordService $discord,
+        protected TwilioService $twilio,
+        protected SendGridService $sendgrid,
     ) {}
 
     public function index()
     {
         $campaigns = WaCampaign::where('user_id', Auth::id())
-            ->with('session', 'metaAccount', 'telegramAccount')
+            ->with(['session', 'metaAccount', 'telegramAccount', 'instagramAccount', 'facebookAccount', 'gbmAccount', 'discordAccount', 'tiktokAccount', 'lineAccount', 'twitterAccount', 'twilioAccount', 'sendgridAccount'])
             ->latest()
             ->get();
 
@@ -50,7 +62,30 @@ class CampaignController extends Controller
             ->where('is_active', true)
             ->get();
 
-        return view('campaigns.create', compact('sessions', 'contacts', 'metaAccounts', 'telegramAccounts'));
+        $instagramAccounts = \App\Models\WaInstagramAccount::where('user_id', Auth::id())
+            ->where('is_active', true)->get();
+        $facebookAccounts = \App\Models\WaFacebookAccount::where('user_id', Auth::id())
+            ->where('is_active', true)->get();
+        $gbmAccounts = \App\Models\WaGbmAccount::where('user_id', Auth::id())
+            ->where('is_active', true)->get();
+        $discordAccounts = \App\Models\WaDiscordAccount::where('user_id', Auth::id())
+            ->where('is_active', true)->get();
+        $tiktokAccounts = \App\Models\WaTiktokAccount::where('user_id', Auth::id())
+            ->where('is_active', true)->get();
+        $lineAccounts = \App\Models\WaLineAccount::where('user_id', Auth::id())
+            ->where('is_active', true)->get();
+        $twitterAccounts = \App\Models\WaTwitterAccount::where('user_id', Auth::id())
+            ->where('is_active', true)->get();
+        $twilioAccounts = \App\Models\WaTwilioAccount::where('user_id', Auth::id())
+            ->where('is_active', true)->get();
+        $sendgridAccounts = \App\Models\WaSendGridAccount::where('user_id', Auth::id())
+            ->where('is_active', true)->get();
+
+        return view('campaigns.create', compact(
+            'sessions', 'contacts', 'metaAccounts', 'telegramAccounts',
+            'instagramAccounts', 'facebookAccounts', 'gbmAccounts', 'discordAccounts',
+            'tiktokAccounts', 'lineAccounts', 'twitterAccounts', 'twilioAccounts', 'sendgridAccounts'
+        ));
     }
 
     public function store(Request $request)
@@ -59,7 +94,7 @@ class CampaignController extends Controller
         $maxRecipients = $plan?->max_campaign_recipients ?? 50;
 
         $rules = [
-            'channel' => 'required|in:whatsapp,meta,telegram',
+            'channel' => 'required|in:whatsapp,meta,telegram,instagram,facebook,gbm,discord,tiktok,line,twitter,sms,email',
             'name' => 'required|string|max:255',
             'message' => 'required|string|max:5000',
             'delay_seconds' => 'nullable|integer|min:1|max:60',
@@ -73,6 +108,15 @@ class CampaignController extends Controller
         $rules['session_id'] = 'required_if:channel,whatsapp|nullable|exists:wa_sessions,id';
         $rules['meta_account_id'] = 'required_if:channel,meta|nullable|exists:wa_meta_accounts,id';
         $rules['telegram_account_id'] = 'required_if:channel,telegram|nullable|exists:wa_telegram_accounts,id';
+        $rules['instagram_account_id'] = 'required_if:channel,instagram|nullable|exists:wa_instagram_accounts,id';
+        $rules['facebook_account_id'] = 'required_if:channel,facebook|nullable|exists:wa_facebook_accounts,id';
+        $rules['gbm_account_id'] = 'required_if:channel,gbm|nullable|exists:wa_gbm_accounts,id';
+        $rules['discord_account_id'] = 'required_if:channel,discord|nullable|exists:wa_discord_accounts,id';
+        $rules['tiktok_account_id'] = 'required_if:channel,tiktok|nullable|exists:wa_tiktok_accounts,id';
+        $rules['line_account_id'] = 'required_if:channel,line|nullable|exists:wa_line_accounts,id';
+        $rules['twitter_account_id'] = 'required_if:channel,twitter|nullable|exists:wa_twitter_accounts,id';
+        $rules['twilio_account_id'] = 'required_if:channel,sms|nullable|exists:wa_twilio_accounts,id';
+        $rules['sendgrid_account_id'] = 'required_if:channel,email|nullable|exists:wa_send_grid_accounts,id';
 
         $validated = $request->validate($rules);
 
@@ -120,6 +164,15 @@ class CampaignController extends Controller
             'session_id' => $validated['session_id'] ?? null,
             'meta_account_id' => $validated['meta_account_id'] ?? null,
             'telegram_account_id' => $validated['telegram_account_id'] ?? null,
+            'instagram_account_id' => $validated['instagram_account_id'] ?? null,
+            'facebook_account_id' => $validated['facebook_account_id'] ?? null,
+            'gbm_account_id' => $validated['gbm_account_id'] ?? null,
+            'discord_account_id' => $validated['discord_account_id'] ?? null,
+            'tiktok_account_id' => $validated['tiktok_account_id'] ?? null,
+            'line_account_id' => $validated['line_account_id'] ?? null,
+            'twitter_account_id' => $validated['twitter_account_id'] ?? null,
+            'twilio_account_id' => $validated['twilio_account_id'] ?? null,
+            'sendgrid_account_id' => $validated['sendgrid_account_id'] ?? null,
             'name' => $validated['name'],
             'message' => $validated['message'],
             'delay_seconds' => $validated['delay_seconds'] ?? 3,
@@ -180,6 +233,78 @@ class CampaignController extends Controller
             }
         }
 
+        if ($channel === 'instagram') {
+            $igAccount = $campaign->instagramAccount;
+            if (!$igAccount || !$igAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
+        if ($channel === 'facebook') {
+            $fbAccount = $campaign->facebookAccount;
+            if (!$fbAccount || !$fbAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
+        if ($channel === 'gbm') {
+            $gbmAccount = $campaign->gbmAccount;
+            if (!$gbmAccount || !$gbmAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
+        if ($channel === 'discord') {
+            $dcAccount = $campaign->discordAccount;
+            if (!$dcAccount || !$dcAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
+        if ($channel === 'tiktok') {
+            $ttAccount = $campaign->tiktokAccount;
+            if (!$ttAccount || !$ttAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
+        if ($channel === 'line') {
+            $lineAccount = $campaign->lineAccount;
+            if (!$lineAccount || !$lineAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
+        if ($channel === 'twitter') {
+            $twAccount = $campaign->twitterAccount;
+            if (!$twAccount || !$twAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
+        if ($channel === 'sms') {
+            $smsAccount = $campaign->twilioAccount;
+            if (!$smsAccount || !$smsAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
+        if ($channel === 'email') {
+            $sgAccount = $campaign->sendgridAccount;
+            if (!$sgAccount || !$sgAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
         $phones = $recipients->pluck('phone')->toArray();
         $variables = [];
         foreach ($recipients as $r) {
@@ -209,6 +334,15 @@ class CampaignController extends Controller
             $result = match ($channel) {
                 'meta' => $this->sendMetaMessage($campaign->metaAccount, $to, $msg),
                 'telegram' => $this->sendTelegramMessage($campaign->telegramAccount, $to, $msg),
+                'instagram' => $this->sendInstagramMessage($campaign->instagramAccount, $to, $msg),
+                'facebook' => $this->sendFacebookMessage($campaign->facebookAccount, $to, $msg),
+                'gbm' => $this->sendGbmMessage($campaign->gbmAccount, $to, $msg),
+                'discord' => $this->sendDiscordMessage($campaign->discordAccount, $to, $msg),
+                'tiktok' => $this->sendTiktokMessage($campaign->tiktokAccount, $to, $msg),
+                'line' => $this->sendLineMessage($campaign->lineAccount, $to, $msg),
+                'twitter' => $this->sendTwitterMessage($campaign->twitterAccount, $to, $msg),
+                'sms' => $this->sendSmsMessage($campaign->twilioAccount, $to, $msg),
+                'email' => $this->sendEmailMessage($campaign->sendgridAccount, $to, $msg),
                 default => $this->sendBaileysMessage($campaign->session, $to, $msg),
             };
 
@@ -249,6 +383,60 @@ class CampaignController extends Controller
     protected function sendTelegramMessage($tgAccount, string $to, string $message): bool
     {
         $result = $this->telegram->sendMessage($tgAccount, $to, $message);
+        return $result['ok'] ?? false;
+    }
+
+    protected function sendInstagramMessage($igAccount, string $to, string $message): bool
+    {
+        $result = $this->instagram->sendDM($igAccount->instagram_id, $igAccount->access_token, $message, $to);
+        return empty($result['error']);
+    }
+
+    protected function sendFacebookMessage($fbAccount, string $to, string $message): bool
+    {
+        $result = $this->facebook->sendMessage($fbAccount, $to, $message);
+        return empty($result['error']);
+    }
+
+    protected function sendGbmMessage($gbmAccount, string $to, string $message): bool
+    {
+        $result = $this->gbm->sendMessage($gbmAccount, $to, $message);
+        return $result['ok'] ?? false;
+    }
+
+    protected function sendDiscordMessage($dcAccount, string $to, string $message): bool
+    {
+        $result = $this->discord->sendMessage($dcAccount, $to, $message);
+        return $result['ok'] ?? false;
+    }
+
+    protected function sendTiktokMessage($ttAccount, string $to, string $message): bool
+    {
+        $result = app(\App\Services\TikTokService::class)->sendMessage($ttAccount->access_token, $to, $message);
+        return $result['ok'] ?? false;
+    }
+
+    protected function sendLineMessage($lineAccount, string $to, string $message): bool
+    {
+        $result = app(\App\Services\LineService::class)->pushMessage($lineAccount, $to, $message);
+        return $result['ok'] ?? false;
+    }
+
+    protected function sendTwitterMessage($twAccount, string $to, string $message): bool
+    {
+        $result = app(\App\Services\TwitterService::class)->sendDM($twAccount->access_token, $to, $message);
+        return $result['ok'] ?? false;
+    }
+
+    protected function sendSmsMessage($smsAccount, string $to, string $message): bool
+    {
+        $result = $this->twilio->sendSms($smsAccount, $to, $message);
+        return !($result['error'] ?? false) && empty($result['error_code']);
+    }
+
+    protected function sendEmailMessage($sgAccount, string $to, string $message): bool
+    {
+        $result = $this->sendgrid->sendEmail($sgAccount, $to, 'WABot Campaign', $message);
         return $result['ok'] ?? false;
     }
 

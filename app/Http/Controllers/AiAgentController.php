@@ -34,7 +34,7 @@ class AiAgentController extends Controller
             'personality_prompt' => 'nullable|string',
             'trigger_keywords' => 'nullable|string|max:500',
             'channels' => 'nullable|array',
-            'channels.*' => 'string|in:whatsapp,meta,instagram,telegram,facebook,gbm,discord',
+            'channels.*' => 'string|in:whatsapp,meta,instagram,telegram,facebook,gbm,discord,tiktok,line,twitter,sms,email',
         ]);
 
         $aiKey = WaAiKey::findOrFail($validated['ai_key_id']);
@@ -66,7 +66,7 @@ class AiAgentController extends Controller
             'personality_prompt' => 'nullable|string',
             'trigger_keywords' => 'nullable|string|max:500',
             'channels' => 'nullable|array',
-            'channels.*' => 'string|in:whatsapp,meta,instagram,telegram,facebook,gbm,discord',
+            'channels.*' => 'string|in:whatsapp,meta,instagram,telegram,facebook,gbm,discord,tiktok,line,twitter,sms,email',
         ]);
 
         $aiKey = WaAiKey::findOrFail($validated['ai_key_id']);

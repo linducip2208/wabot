@@ -169,16 +169,42 @@
                             </label>
                             <input type="hidden" name="channels" :value="JSON.stringify(form.channels)">
                             <div class="space-y-2">
-                                <template x-for="(ch, i) in [{type:'whatsapp',label:'WhatsApp'},{type:'telegram',label:'Telegram'},{type:'instagram',label:'Instagram'},{type:'messenger',label:'Messenger'}]" :key="ch.type">
-                                    <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-xl hover:border-indigo-300 transition cursor-pointer"
-                                        @click="toggleChannel(ch)">
-                                        <input type="checkbox" :checked="hasChannel(ch.type)" class="w-4 h-4 rounded text-indigo-600 pointer-events-none">
-                                        <span class="text-sm font-medium text-gray-700" x-text="ch.label"></span>
-                                        <input type="text" x-show="hasChannel(ch.type)" x-model="getChannel(ch.type).id"
-                                            class="ml-auto w-48 border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition"
-                                            :placeholder="'Account ID / Number'">
-                                    </div>
-                                </template>
+                                @php
+                                    $allChannels = App\Services\ChannelRegistry::all();
+                                    $availChannels = [];
+                                    foreach ($allChannels as $key => $cfg) {
+                                        if (!empty($connectedAccounts[$key])) {
+                                            $availChannels[] = ['type' => $key, 'label' => $cfg['label'], 'accounts' => $connectedAccounts[$key]];
+                                        }
+                                    }
+                                @endphp
+                                @if(empty($availChannels))
+                                <p class="text-xs text-amber-600">{{ __('widgets.no_connected_accounts') }}</p>
+                                @else
+                                @foreach($availChannels as $ch)
+                                @php $chJson = json_encode(['type' => $ch['type'], 'label' => $ch['label']]); @endphp
+                                <div class="flex items-center gap-3 p-3 border border-gray-200 rounded-xl hover:border-indigo-300 transition cursor-pointer"
+                                    @click="toggleChannel({{ $chJson }})">
+                                    <input type="checkbox" :checked="hasChannel('{{ $ch['type'] }}')" class="w-4 h-4 rounded text-indigo-600 pointer-events-none">
+                                    <span class="text-sm font-medium text-gray-700">{{ $ch['label'] }}</span>
+                                    @if(is_array($ch['accounts']) && count($ch['accounts']) > 1)
+                                    <select x-show="hasChannel('{{ $ch['type'] }}')"
+                                        @change="setChannelId('{{ $ch['type'] }}', $el.value)"
+                                        class="ml-auto w-48 border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition">
+                                        <option value="">{{ __('widgets.select_account') }}</option>
+                                        @foreach($ch['accounts'] as $acc)
+                                        <option value="{{ $acc['id'] }}">{{ $acc['name'] ?? ($acc['bot_username'] ?? ($acc['username'] ?? ($acc['page_id'] ?? ($acc['phone_number'] ?? (is_string($acc) ? $acc : ''))))) }}</option>
+                                        @endforeach
+                                    </select>
+                                    @else
+                                    <input type="text" x-show="hasChannel('{{ $ch['type'] }}')" x-model="getChannel('{{ $ch['type'] }}').id"
+                                        class="ml-auto w-48 border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition"
+                                        value="{{ is_array($ch['accounts']) && isset($ch['accounts'][0]) ? ($ch['accounts'][0]['id'] ?? '') : '' }}"
+                                        readonly>
+                                    @endif
+                                </div>
+                                @endforeach
+                                @endif
                             </div>
                         </div>
 
@@ -262,6 +288,10 @@
                 },
                 getChannel(type) {
                     return this.form.channels.find(c => c.type === type) || { id: '' };
+                },
+                setChannelId(type, id) {
+                    const ch = this.form.channels.find(c => c.type === type);
+                    if (ch) ch.id = id;
                 },
                 resetForm() {
                     this.form = {

@@ -17,7 +17,7 @@ class SentimentController extends Controller
         }
 
         $channel = $request->get('channel', 'all');
-        $validChannels = ['all', 'whatsapp', 'meta', 'instagram', 'telegram'];
+        $validChannels = ['all', 'whatsapp', 'meta', 'instagram', 'telegram', 'facebook', 'gbm', 'discord', 'tiktok', 'line', 'twitter', 'sms', 'email'];
         if (!in_array($channel, $validChannels)) {
             $channel = 'all';
         }

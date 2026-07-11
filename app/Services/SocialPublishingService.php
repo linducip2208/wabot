@@ -2,12 +2,23 @@
 
 namespace App\Services;
 
+use App\Models\WaFacebookAccount;
+use App\Models\WaInstagramAccount;
 use App\Models\WaPost;
 use App\Models\WaSocialAccount;
+use App\Models\WaTiktokAccount;
+use App\Models\WaTwitterAccount;
 use App\Jobs\PublishPostJob;
 
 class SocialPublishingService
 {
+    public function __construct(
+        protected FacebookService $facebookService,
+        protected InstagramService $instagramService,
+        protected TwitterService $twitterService,
+        protected TikTokService $tiktokService,
+    ) {}
+
     public function createPost(array $data, int $userId): WaPost
     {
         return WaPost::create([
@@ -47,114 +58,57 @@ class SocialPublishingService
         return $count;
     }
 
-    public function publishToPlatform(WaPost $post, string $platform, WaSocialAccount $account): array
+    public function publishToFacebook(WaPost $post, WaFacebookAccount $account): array
     {
-        $result = ['platform' => $platform, 'success' => false, 'message' => '', 'post_id' => null];
-
-        try {
-            switch ($platform) {
-                case WaSocialAccount::PLATFORM_FACEBOOK_PAGE:
-                    $result = $this->publishToFacebook($post, $account);
-                    break;
-                case WaSocialAccount::PLATFORM_INSTAGRAM_PROFESSIONAL:
-                    $result = $this->publishToInstagram($post, $account);
-                    break;
-                case WaSocialAccount::PLATFORM_X_TWITTER:
-                    $result = $this->publishToTwitter($post, $account);
-                    break;
-                case WaSocialAccount::PLATFORM_TIKTOK:
-                    $result = $this->publishToTikTok($post, $account);
-                    break;
-                case WaSocialAccount::PLATFORM_LINKEDIN_PAGE:
-                    $result = $this->publishToLinkedIn($post, $account);
-                    break;
-                default:
-                    $result['message'] = "Unsupported platform: {$platform}";
-            }
-        } catch (\Throwable $e) {
-            $result['message'] = $e->getMessage();
-        }
-
-        return $result;
-    }
-
-    protected function publishToFacebook(WaPost $post, WaSocialAccount $account): array
-    {
-        $fbService = new FacebookService();
-
         $responses = [];
         $hasImage = !empty($post->media_urls) && is_array($post->media_urls);
 
         if ($hasImage) {
             foreach ($post->media_urls as $mediaUrl) {
-                $responses[] = $fbService->sendImage(
-                    new \App\Models\WaFacebookAccount([
-                        'page_id' => $account->platform_id,
-                    ]),
-                    '',
-                    $mediaUrl
-                );
+                $responses[] = $this->facebookService->sendImage($account, '', $mediaUrl);
             }
         }
 
         if ($post->content) {
-            $responses[] = $fbService->sendMessage(
-                new \App\Models\WaFacebookAccount([
-                    'page_id' => $account->platform_id,
-                ]),
-                '',
-                $post->content
-            );
+            $responses[] = $this->facebookService->sendMessage($account, '', $post->content);
         }
 
         return [
             'platform' => 'facebook_page',
             'success' => true,
             'message' => 'Published to Facebook Page',
-            'post_id' => $account->platform_id,
+            'post_id' => $account->page_id,
             'responses' => $responses,
         ];
     }
 
-    protected function publishToInstagram(WaPost $post, WaSocialAccount $account): array
+    public function publishToInstagram(WaPost $post, WaInstagramAccount $account): array
     {
-        $igService = new InstagramService();
-
         $responses = [];
         $hasImage = !empty($post->media_urls) && is_array($post->media_urls);
 
         if ($hasImage) {
             foreach ($post->media_urls as $mediaUrl) {
-                $responses[] = $igService->sendImage(
-                    $account->platform_id,
+                $responses[] = $this->instagramService->sendImage(
+                    $account->instagram_id,
                     $account->access_token,
                     $mediaUrl
                 );
             }
         }
 
-        if ($post->content) {
-            $responses[] = $igService->sendDM(
-                $account->platform_id,
-                $account->access_token,
-                $post->content
-            );
-        }
-
         return [
             'platform' => 'instagram_professional',
             'success' => !isset($responses[0]['error']),
             'message' => 'Published to Instagram',
-            'post_id' => $account->platform_id,
+            'post_id' => $account->instagram_id,
             'responses' => $responses,
         ];
     }
 
-    protected function publishToTwitter(WaPost $post, WaSocialAccount $account): array
+    public function publishToTwitter(WaPost $post, WaTwitterAccount $account): array
     {
-        $twitterService = new TwitterService();
-
-        $response = $twitterService->sendTweet($account->access_token, $post->content);
+        $response = $this->twitterService->sendTweet($account->access_token, $post->content);
 
         return [
             'platform' => 'x_twitter',
@@ -165,13 +119,11 @@ class SocialPublishingService
         ];
     }
 
-    protected function publishToTikTok(WaPost $post, WaSocialAccount $account): array
+    public function publishToTikTok(WaPost $post, WaTiktokAccount $account): array
     {
-        $tiktokService = new TikTokService();
-
-        $response = $tiktokService->sendMessage(
+        $response = $this->tiktokService->sendMessage(
             $account->access_token,
-            $account->platform_id,
+            $account->open_id ?? '',
             $post->content
         );
 
@@ -180,15 +132,6 @@ class SocialPublishingService
             'success' => ($response['ok'] ?? false),
             'message' => ($response['ok'] ?? false) ? 'TikTok message sent' : ($response['error'] ?? 'Failed'),
             'response' => $response,
-        ];
-    }
-
-    protected function publishToLinkedIn(WaPost $post, WaSocialAccount $account): array
-    {
-        return [
-            'platform' => 'linkedin_page',
-            'success' => false,
-            'message' => 'LinkedIn publishing requires OAuth 2.0 setup. Configure your LinkedIn app credentials.',
         ];
     }
 }

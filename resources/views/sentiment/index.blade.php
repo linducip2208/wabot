@@ -9,7 +9,7 @@
     </div>
     <div class="flex items-center gap-2">
         <select id="channelFilter" class="text-sm rounded-xl border border-gray-300 px-3 py-2 bg-white text-gray-700 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" onchange="window.location.href='?channel='+this.value+'&period={{ $period }}'">
-            @php $chLabels = ['all'=>'All Channels','whatsapp'=>'WhatsApp','meta'=>'Meta','instagram'=>'Instagram','telegram'=>'Telegram']; @endphp
+            @php $chLabels = ['all'=>'All Channels','whatsapp'=>'WhatsApp','meta'=>'Meta','instagram'=>'Instagram','telegram'=>'Telegram','facebook'=>'Facebook','gbm'=>'GBM','discord'=>'Discord','tiktok'=>'TikTok','line'=>'LINE','twitter'=>'X/Twitter','sms'=>'SMS','email'=>'Email']; @endphp
             @foreach($chLabels as $val => $label)
             <option value="{{ $val }}" {{ $channel === $val ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
@@ -93,11 +93,15 @@ document.addEventListener('DOMContentLoaded', function () {
         new Chart(document.getElementById('channelChart'), {
             type: 'bar',
             data: {
-                labels: ['WhatsApp','Meta','Instagram','Telegram'],
+                labels: ['WhatsApp','Meta','Instagram','Telegram','Facebook','GBM','Discord','TikTok','LINE','X/Twitter','SMS','Email'],
                 datasets: [{
                     label: 'Messages',
-                    data: [chd.whatsapp||0, chd.meta||0, chd.instagram||0, chd.telegram||0],
-                    backgroundColor: ['#25d366','#1877f2','#e4405f','#0088cc'],
+                    data: [
+                        chd.whatsapp||0, chd.meta||0, chd.instagram||0, chd.telegram||0,
+                        chd.facebook||0, chd.gbm||0, chd.discord||0, chd.tiktok||0,
+                        chd.line||0, chd.twitter||0, chd.sms||0, chd.email||0,
+                    ],
+                    backgroundColor: ['#25d366','#1877f2','#e4405f','#0088cc','#1877f2','#34a853','#5865f2','#000000','#06c755','#000000','#f22f46','#00a8e8'],
                     borderRadius: 8,
                 }]
             },

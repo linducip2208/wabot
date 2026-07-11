@@ -2,8 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Models\WaFacebookAccount;
+use App\Models\WaInstagramAccount;
 use App\Models\WaPost;
-use App\Models\WaSocialAccount;
+use App\Models\WaTiktokAccount;
+use App\Models\WaTwitterAccount;
 use App\Services\SocialPublishingService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -50,22 +53,45 @@ class PublishPostJob implements ShouldQueue
         $allSuccess = true;
 
         foreach ($platforms as $platform) {
-            $account = WaSocialAccount::where('user_id', $post->user_id)
-                ->where('platform', $platform)
-                ->where('is_active', true)
-                ->first();
+            $result = ['platform' => $platform, 'success' => false, 'message' => "No active account found for {$platform}"];
 
-            if (!$account) {
-                $results[] = [
-                    'platform' => $platform,
-                    'success' => false,
-                    'message' => "No active account found for {$platform}",
-                ];
-                $allSuccess = false;
-                continue;
+            switch ($platform) {
+                case 'facebook_page':
+                    $account = WaFacebookAccount::where('user_id', $post->user_id)
+                        ->where('is_active', true)->first();
+                    if ($account) {
+                        $result = $service->publishToFacebook($post, $account);
+                    }
+                    break;
+
+                case 'instagram_professional':
+                    $account = WaInstagramAccount::where('user_id', $post->user_id)
+                        ->where('is_active', true)->first();
+                    if ($account) {
+                        $result = $service->publishToInstagram($post, $account);
+                    }
+                    break;
+
+                case 'x_twitter':
+                    $account = WaTwitterAccount::where('user_id', $post->user_id)
+                        ->where('is_active', true)->first();
+                    if ($account) {
+                        $result = $service->publishToTwitter($post, $account);
+                    }
+                    break;
+
+                case 'tiktok':
+                    $account = WaTiktokAccount::where('user_id', $post->user_id)
+                        ->where('is_active', true)->first();
+                    if ($account) {
+                        $result = $service->publishToTikTok($post, $account);
+                    }
+                    break;
+
+                default:
+                    $result['message'] = "Unsupported platform: {$platform}";
             }
 
-            $result = $service->publishToPlatform($post, $platform, $account);
             $results[] = $result;
 
             if (!$result['success']) {

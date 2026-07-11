@@ -13,6 +13,7 @@ use App\Models\WaMetaAccount;
 use App\Models\WaSession;
 use App\Models\WaTelegramAccount;
 use App\Services\BaileysService;
+use App\Services\ChannelRegistry;
 use App\Services\DiscordService;
 use App\Services\GbmService;
 use App\Services\FacebookService;
@@ -36,37 +37,7 @@ class ChatController extends Controller
 
     protected function detectChannel(WaContact $contact): string
     {
-        if (str_starts_with($contact->phone, 'ig:')) {
-            return 'instagram';
-        }
-        if (str_starts_with($contact->phone, 'tg:')) {
-            return 'telegram';
-        }
-        if (str_starts_with($contact->phone, 'fb:')) {
-            return 'facebook';
-        }
-        if (str_starts_with($contact->phone, 'sms:')) {
-            return 'sms';
-        }
-        if (str_starts_with($contact->phone, 'email:')) {
-            return 'email';
-        }
-        if (str_starts_with($contact->phone, 'gbm:')) {
-            return 'gbm';
-        }
-        if (str_starts_with($contact->phone, 'dc:')) {
-            return 'discord';
-        }
-        if (str_starts_with($contact->phone, 'tt:')) {
-            return 'tiktok';
-        }
-        if (str_starts_with($contact->phone, 'line:')) {
-            return 'line';
-        }
-        if (str_starts_with($contact->phone, 'x:')) {
-            return 'twitter';
-        }
-        return 'baileys';
+        return ChannelRegistry::detectChannel($contact);
     }
 
     public function index(Request $request)
@@ -84,17 +55,10 @@ class ChatController extends Controller
             ->where(function ($q) use ($connectedSessionIds) {
                 $q->whereHas('messages', function ($q) use ($connectedSessionIds) {
                     $q->whereIn('session_id', $connectedSessionIds);
-                })->orWhere(function ($q) {
-                    $q->where('phone', 'like', 'ig:%')
-                      ->orWhere('phone', 'like', 'tg:%')
-                      ->orWhere('phone', 'like', 'fb:%')
-                      ->orWhere('phone', 'like', 'sms:%')
-                      ->orWhere('phone', 'like', 'email:%')
-                      ->orWhere('phone', 'like', 'gbm:%')
-                      ->orWhere('phone', 'like', 'dc:%')
-                      ->orWhere('phone', 'like', 'tt:%')
-                      ->orWhere('phone', 'like', 'line:%')
-                      ->orWhere('phone', 'like', 'x:%');
+                })->orWhere(function ($q) use ($connectedSessionIds) {
+                    foreach (ChannelRegistry::channelPhonePatterns() as $pattern) {
+                        $q->orWhere('phone', 'like', $pattern);
+                    }
                 });
             })
             ->orderByDesc(
@@ -112,7 +76,7 @@ class ChatController extends Controller
                 $contact->last_time = $lastMsg?->created_at;
                 $contact->last_direction = $lastMsg?->direction;
                 $contact->last_session_id = $lastMsg?->session_id;
-                $contact->channel = $this->detectChannel($contact);
+                $contact->channel = ChannelRegistry::getByPhone($contact->phone);
                 return $contact;
             });
 
@@ -185,7 +149,7 @@ class ChatController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        if (in_array($channel, ['instagram', 'telegram', 'facebook', 'gbm', 'discord'])) {
+        if (in_array($channel, ['instagram', 'telegram', 'facebook', 'gbm', 'discord', 'tiktok', 'line', 'twitter'])) {
             WaMessage::where('contact_id', $contact->id)
                 ->where('direction', 'in')
                 ->whereNull('read_at')
@@ -297,6 +261,14 @@ class ChatController extends Controller
                 'twitter' => $twitterAccounts->map(fn($a) => [
                     'id' => 'x_'.$a->id, 'name' => $a->name, 'username' => $a->username,
                 ])->values(),
+                'sms' => \App\Models\WaTwilioAccount::where('user_id', Auth::id())
+                    ->where('is_active', true)->get()->map(fn($a) => [
+                        'id' => 'sms_'.$a->id, 'name' => $a->name, 'phone_number' => $a->phone_number,
+                    ])->values(),
+                'email' => \App\Models\WaSendGridAccount::where('user_id', Auth::id())
+                    ->where('is_active', true)->get()->map(fn($a) => [
+                        'id' => 'email_'.$a->id, 'name' => $a->name, 'from_email' => $a->from_email,
+                    ])->values(),
             ],
         ]);
     }
@@ -308,7 +280,7 @@ class ChatController extends Controller
         $channel = $this->detectChannel($contact);
         $userId = Auth::id();
 
-        $isWhatsApp = !in_array($channel, ['instagram', 'telegram', 'sms', 'email', 'gbm', 'discord', 'facebook', 'tiktok', 'line', 'twitter']);
+        $isWhatsApp = ChannelRegistry::isWhatsAppVariant($channel);
         $rules = ['message' => 'required|string|max:5000'];
         if ($isWhatsApp) {
             $rules['session_id'] = 'required|exists:wa_sessions,session_id';
@@ -398,6 +370,28 @@ class ChatController extends Controller
                 $twId = str_replace('x:', '', $contact->phone);
                 $result = app(\App\Services\TwitterService::class)->sendDM($twAccount->access_token, $twId, $request->message);
                 $messageType = 'twitter';
+                break;
+
+            case 'sms':
+                $smsAccount = \App\Models\WaTwilioAccount::where('user_id', $userId)->where('is_active', true)->first();
+                if (!$smsAccount) {
+                    return response()->json(['ok' => false, 'error' => 'Akun SMS/Twilio tidak tersedia'], 422);
+                }
+                $smsTo = str_replace('sms:', '', $contact->phone);
+                $smsResult = app(\App\Services\TwilioService::class)->sendSms($smsAccount, $smsTo, $request->message);
+                $result = ['ok' => !($smsResult['error'] ?? false) && empty($smsResult['error_code']), 'error' => $smsResult['error_message'] ?? null];
+                $messageType = 'sms';
+                break;
+
+            case 'email':
+                $sgAccount = \App\Models\WaSendGridAccount::where('user_id', $userId)->where('is_active', true)->first();
+                if (!$sgAccount) {
+                    return response()->json(['ok' => false, 'error' => 'Akun Email/SendGrid tidak tersedia'], 422);
+                }
+                $emailTo = str_replace('email:', '', $contact->phone);
+                $emailResult = app(\App\Services\SendGridService::class)->sendEmail($sgAccount, $emailTo, 'Message from WABot', $request->message);
+                $result = ['ok' => $emailResult['ok'] ?? false, 'error' => $emailResult['error'] ?? null];
+                $messageType = 'email';
                 break;
 
             default:
@@ -502,16 +496,9 @@ class ChatController extends Controller
                 $q->whereHas('messages', function ($q) use ($connectedSessionIds) {
                     $q->whereIn('session_id', $connectedSessionIds);
                 })->orWhere(function ($q) {
-                    $q->where('phone', 'like', 'ig:%')
-                      ->orWhere('phone', 'like', 'tg:%')
-                      ->orWhere('phone', 'like', 'fb:%')
-                      ->orWhere('phone', 'like', 'sms:%')
-                      ->orWhere('phone', 'like', 'email:%')
-                      ->orWhere('phone', 'like', 'gbm:%')
-                      ->orWhere('phone', 'like', 'dc:%')
-                      ->orWhere('phone', 'like', 'tt:%')
-                      ->orWhere('phone', 'like', 'line:%')
-                      ->orWhere('phone', 'like', 'x:%');
+                    foreach (ChannelRegistry::channelPhonePatterns() as $pattern) {
+                        $q->orWhere('phone', 'like', $pattern);
+                    }
                 });
             })
             ->get()
@@ -535,7 +522,7 @@ class ChatController extends Controller
                     'last_time' => $lastMsg?->created_at?->format('H:i'),
                     'last_direction' => $lastMsg?->direction,
                     'last_session_id' => $lastMsg?->session_id,
-                    'channel' => $this->detectChannel($contact),
+                    'channel' => ChannelRegistry::getByPhone($contact->phone),
                 ];
             })
             ->sortByDesc('last_time')
