@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(PlanSeeder::class);
         $this->call(RoleSeeder::class);
+        $this->call(LanguageSeeder::class);
 
         $adminRole = Role::where('name', 'admin')->first();
 

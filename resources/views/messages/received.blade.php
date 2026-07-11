@@ -1,21 +1,21 @@
 @extends('layouts.app')
-@section('title', 'Pesan Masuk — WABot')
+@section('title', __('messages.received_title') . ' — ' . config('app.name'))
 @section('content')
 
 <div class="flex items-center justify-between mb-4">
     <div>
-        <h1 class="text-xl font-extrabold text-gray-900">Pesan Masuk</h1>
-        <p class="text-sm text-gray-500 mt-0.5">{{ $messages->total() }} pesan diterima</p>
+        <h1 class="text-xl font-extrabold text-gray-900">{{ __('messages.received_title') }}</h1>
+        <p class="text-sm text-gray-500 mt-0.5">{{ $messages->total() }} {{ __('common.message') }} {{ __('messages.received_count') }}</p>
     </div>
     <div class="flex gap-2">
         <a href="{{ route('messages.received') }}" class="bg-sky-600 text-white px-3 py-2 rounded-xl text-sm font-medium">
-            <i class="fas fa-inbox mr-1"></i> Masuk
+            <i class="fas fa-inbox mr-1"></i> {{ __('messages.inbox') }}
         </a>
         <a href="{{ route('messages.sent') }}" class="bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
-            <i class="fas fa-paper-plane mr-1"></i> Terkirim
+            <i class="fas fa-paper-plane mr-1"></i> {{ __('common.sent') }}
         </a>
         <a href="{{ route('messages.queue') }}" class="bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
-            <i class="fas fa-clock mr-1"></i> Antrian
+            <i class="fas fa-clock mr-1"></i> {{ __('messages.queue') }}
         </a>
     </div>
 </div>
@@ -26,7 +26,7 @@
 </form>
 <div class="mb-4">
     <button onclick="bulkDelete()" class="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-xl hover:bg-red-100 transition font-medium">
-        <i class="fas fa-trash mr-1"></i> Hapus Dipilih
+        <i class="fas fa-trash mr-1"></i> {{ __('common.delete_selected') }}
     </button>
 </div>
 
@@ -42,11 +42,11 @@
                 <div class="flex items-center gap-2 mb-1">
                     <span class="font-semibold text-sm text-gray-900">{{ $m->contact?->name ?? preg_replace('/@.*$/', '', $m->phone) }}</span>
                     <span class="text-[11px] text-gray-400 font-mono">{{ preg_replace('/@.*$/', '', $m->phone) }}</span>
-                    <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-sky-50 text-sky-700 font-medium ml-auto">Masuk</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-sky-50 text-sky-700 font-medium ml-auto">{{ __('messages.inbox') }}</span>
                 </div>
                 <p class="text-sm text-gray-700 mb-1 cursor-pointer hover:text-brand-600 line-clamp-1"
                     onclick="this.classList.toggle('line-clamp-none'); this.classList.toggle('line-clamp-1')"
-                    title="Klik untuk lihat semua">{{ $m->message }}</p>
+                    title="{{ __('messages.click_to_view_all') }}">{{ $m->message }}</p>
                 <div class="flex items-center gap-3 text-[11px] text-gray-400 flex-wrap">
                     <span class="font-mono text-gray-500">{{ $m->contact?->phone ?? preg_replace('/@.*$/', '', $m->phone) }}</span>
                     <i class="fas fa-arrow-right text-[8px]"></i>
@@ -54,9 +54,9 @@
                     <span class="text-gray-400">({{ $m->session?->name ?? '-' }})</span>
                     <span class="ml-auto">{{ $m->created_at->format('d M Y H:i') }}</span>
                     <a href="{{ route('chat.conversation', $m->contact_id) }}" class="text-brand-600 hover:underline">
-                        <i class="fas fa-reply mr-1"></i> Balas
+                        <i class="fas fa-reply mr-1"></i> {{ __('messages.reply') }}
                     </a>
-                    <form method="POST" action="{{ route('messages.destroy', $m) }}" class="inline" onsubmit="return confirm('Hapus?')">
+                    <form method="POST" action="{{ route('messages.destroy', $m) }}" class="inline" onsubmit="return confirm('{{ __('common.delete') }}?')">
                         @csrf @method('DELETE')
                         <button class="text-gray-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
                     </form>
@@ -65,7 +65,7 @@
         </div>
     </div>
     @empty
-    <div class="bg-white rounded-xl border border-gray-200 p-16 text-center text-gray-500">Belum ada pesan masuk.</div>
+    <div class="bg-white rounded-xl border border-gray-200 p-16 text-center text-gray-500">{{ __('messages.empty_received') }}</div>
     @endforelse
 </div>
 
@@ -75,8 +75,8 @@
 function toggleAll(el) { document.querySelectorAll('.msg-check').forEach(cb => cb.checked = el.checked); }
 function bulkDelete() {
     const ids = Array.from(document.querySelectorAll('.msg-check:checked')).map(cb => cb.value);
-    if (!ids.length) return alert('Pilih pesan dulu');
-    if (!confirm('Hapus ' + ids.length + ' pesan?')) return;
+    if (!ids.length) return alert('{{ __('messages.select_first') }}');
+    if (!confirm('{{ __('common.delete') }} ' + ids.length + ' {{ __('common.message') }}?')) return;
     document.getElementById('bulkIds').value = JSON.stringify(ids);
     document.getElementById('bulkForm').submit();
 }

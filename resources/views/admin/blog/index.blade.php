@@ -5,11 +5,11 @@
 <div class="flex items-center justify-between mb-5">
     <div>
         <h1 class="text-xl font-extrabold text-gray-900">Manajemen Blog</h1>
-        <p class="text-sm text-gray-500 mt-0.5">{{ $posts->count() }} artikel · {{ $categories->count() }} kategori</p>
+        <p class="text-sm text-gray-500 mt-0.5">{{ $posts->count() }} artikel · {{ $categories->count() }} {{ __('common.category') }}</p>
     </div>
     <button onclick="togglePostModal()"
         class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2">
-        <i class="fas fa-plus text-xs"></i> Tambah Artikel
+        <i class="fas fa-plus text-xs"></i> {{ __('common.create') }} Artikel
     </button>
 </div>
 
@@ -18,12 +18,12 @@
     <table class="w-full text-sm">
         <thead>
             <tr class="bg-gray-50 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                <th class="px-5 py-3">Judul</th>
-                <th class="px-5 py-3 hidden md:table-cell">Kategori</th>
-                <th class="px-5 py-3">Status</th>
+                <th class="px-5 py-3">{{ __('common.title') }}</th>
+                <th class="px-5 py-3 hidden md:table-cell">{{ __('common.category') }}</th>
+                <th class="px-5 py-3">{{ __('common.status') }}</th>
                 <th class="px-5 py-3 hidden lg:table-cell">Penulis</th>
-                <th class="px-5 py-3 hidden lg:table-cell">Dibuat</th>
-                <th class="px-5 py-3 w-28 text-right">Aksi</th>
+                <th class="px-5 py-3 hidden lg:table-cell">{{ __('common.created') }}</th>
+                <th class="px-5 py-3 w-28 text-right">{{ __('common.action') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -41,17 +41,17 @@
                 </td>
                 <td class="px-5 py-3">
                     <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ $post->is_published ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500' }}">
-                        {{ $post->is_published ? 'Publish' : 'Draft' }}
+                        {{ $post->is_published ? __('common.published') : __('common.draft') }}
                     </span>
                 </td>
                 <td class="px-5 py-3 hidden lg:table-cell text-sm text-gray-600">{{ $post->author?->name ?? '—' }}</td>
                 <td class="px-5 py-3 hidden lg:table-cell text-xs text-gray-400">{{ $post->created_at->format('d M Y') }}</td>
                 <td class="px-5 py-3 text-right">
-                    <a href="{{ url('/blog/' . $post->slug) }}" target="_blank" class="p-1.5 rounded-lg hover:bg-sky-50 text-gray-400 hover:text-sky-600 inline-block" title="Lihat">
+                    <a href="{{ url('/blog/' . $post->slug) }}" target="_blank" class="p-1.5 rounded-lg hover:bg-sky-50 text-gray-400 hover:text-sky-600 inline-block" title="{{ __('common.view') }}">
                         <i class="fas fa-eye text-xs"></i>
                     </a>
                     <button onclick='editPost({{ json_encode($post->toArray()) }})' class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-brand-600"><i class="fas fa-edit text-xs"></i></button>
-                    <form method="POST" action="{{ route('admin.blog.destroy', $post) }}" class="inline" onsubmit="return confirm('Hapus artikel ini?')">
+                    <form method="POST" action="{{ route('admin.blog.destroy', $post) }}" class="inline" onsubmit="return confirm('{{ __('common.delete') }} artikel ini?')">
                         @csrf @method('DELETE')
                         <button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button>
                     </form>
@@ -67,9 +67,9 @@
 {{-- Categories --}}
 <div class="bg-white rounded-xl border border-gray-200 p-5">
     <div class="flex items-center justify-between mb-4">
-        <h2 class="font-bold text-gray-900">Kategori</h2>
+        <h2 class="font-bold text-gray-900">{{ __('common.category') }}</h2>
         <button onclick="toggleCatModal()" class="text-xs text-brand-600 hover:underline font-semibold">
-            <i class="fas fa-plus text-[10px]"></i> Tambah Kategori
+            <i class="fas fa-plus text-[10px]"></i> {{ __('common.create') }} {{ __('common.category') }}
         </button>
     </div>
     <div class="flex flex-wrap gap-2">
@@ -78,13 +78,13 @@
             <span class="text-gray-700">{{ $cat->name }}</span>
             <button onclick="editCat({{ $cat->id }}, '{{ addslashes($cat->name) }}', '{{ $cat->slug }}')" class="text-gray-400 hover:text-brand-500"><i class="fas fa-edit text-[10px]"></i></button>
             <form method="POST" action="{{ route('admin.blog.categories.update', $cat) }}" class="inline hidden" id="catForm{{ $cat->id }}">@csrf @method('PUT')</form>
-            <form method="POST" action="{{ route('admin.blog.categories.destroy', $cat) }}" class="inline" onsubmit="return confirm('Hapus kategori ini?')">
+            <form method="POST" action="{{ route('admin.blog.categories.destroy', $cat) }}" class="inline" onsubmit="return confirm('{{ __('common.delete') }} {{ __('common.category') }} ini?')">
                 @csrf @method('DELETE')
                 <button class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-[10px]"></i></button>
             </form>
         </div>
         @empty
-        <p class="text-sm text-gray-400">Belum ada kategori.</p>
+        <p class="text-sm text-gray-400">Belum ada {{ __('common.category') }}.</p>
         @endforelse
     </div>
 </div>
@@ -92,13 +92,13 @@
 {{-- Post Modal --}}
 <div id="postModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-xl shadow-xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-        <h2 class="text-lg font-bold mb-4" id="postModalTitle">Tambah Artikel</h2>
+        <h2 class="text-lg font-bold mb-4" id="postModalTitle">{{ __('common.create') }} Artikel</h2>
         <form method="POST" action="{{ route('admin.blog.store') }}" class="space-y-3" id="postForm">
             @csrf
             <div id="postMethodField"></div>
             <div>
-                <label class="text-xs font-medium text-gray-500 block mb-1">Judul</label>
-                <input type="text" name="title" placeholder="Judul artikel" required
+                <label class="text-xs font-medium text-gray-500 block mb-1">{{ __('common.title') }}</label>
+                <input type="text" name="title" placeholder="{{ __('common.title') }} artikel" required
                     class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
@@ -107,9 +107,9 @@
                     class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500 block mb-1">Kategori</label>
+                <label class="text-xs font-medium text-gray-500 block mb-1">{{ __('common.category') }}</label>
                 <select name="category_id" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm">
-                    <option value="">Tanpa Kategori</option>
+                    <option value="">Tanpa {{ __('common.category') }}</option>
                     @foreach($categories as $cat)
                     <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                     @endforeach
@@ -147,8 +147,8 @@
                 <label for="isPublished" class="text-sm font-medium text-gray-700">Publikasikan</label>
             </div>
             <div class="flex gap-2 pt-1">
-                <button type="button" onclick="togglePostModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">Batal</button>
-                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">Simpan</button>
+                <button type="button" onclick="togglePostModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">{{ __('common.cancel') }}</button>
+                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">{{ __('common.save') }}</button>
             </div>
         </form>
     </div>
@@ -157,23 +157,23 @@
 {{-- Category Modal --}}
 <div id="catModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl" onclick="event.stopPropagation()">
-        <h2 class="text-lg font-bold mb-4" id="catModalTitle">Tambah Kategori</h2>
+        <h2 class="text-lg font-bold mb-4" id="catModalTitle">{{ __('common.create') }} {{ __('common.category') }}</h2>
         <form method="POST" action="{{ route('admin.blog.categories.store') }}" class="space-y-3" id="catForm">
             @csrf
             <div id="catMethodField"></div>
             <div>
-                <label class="text-xs font-medium text-gray-500 block mb-1">Nama Kategori</label>
-                <input type="text" name="name" placeholder="Nama kategori" required
+                <label class="text-xs font-medium text-gray-500 block mb-1">{{ __('common.name') }} {{ __('common.category') }}</label>
+                <input type="text" name="name" placeholder="{{ __('common.name') }} {{ __('common.category') }}" required
                     class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
                 <label class="text-xs font-medium text-gray-500 block mb-1">Slug <span class="text-gray-400">(auto-generate)</span></label>
-                <input type="text" name="slug" placeholder="slug-kategori"
+                <input type="text" name="slug" placeholder="slug-{{ __('common.category') }}"
                     class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div class="flex gap-2 pt-1">
-                <button type="button" onclick="toggleCatModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">Batal</button>
-                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">Simpan</button>
+                <button type="button" onclick="toggleCatModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">{{ __('common.cancel') }}</button>
+                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">{{ __('common.save') }}</button>
             </div>
         </form>
     </div>
@@ -184,7 +184,7 @@ function togglePostModal() {
     const m = document.getElementById('postModal');
     m.classList.toggle('hidden');
     if (!m.classList.contains('hidden')) {
-        document.getElementById('postModalTitle').textContent = 'Tambah Artikel';
+        document.getElementById('postModalTitle').textContent = '{{ __('common.create') }} Artikel';
         const f = document.getElementById('postForm');
         f.action = '{{ route('admin.blog.store') }}';
         f.reset();
@@ -214,7 +214,7 @@ function toggleCatModal() {
     const m = document.getElementById('catModal');
     m.classList.toggle('hidden');
     if (!m.classList.contains('hidden')) {
-        document.getElementById('catModalTitle').textContent = 'Tambah Kategori';
+        document.getElementById('catModalTitle').textContent = '{{ __('common.create') }} {{ __('common.category') }}';
         const f = document.getElementById('catForm');
         f.action = '{{ route('admin.blog.categories.store') }}';
         f.reset();
@@ -225,7 +225,7 @@ function toggleCatModal() {
 function editCat(id, name, slug) {
     const m = document.getElementById('catModal');
     m.classList.remove('hidden');
-    document.getElementById('catModalTitle').textContent = 'Edit Kategori';
+    document.getElementById('catModalTitle').textContent = 'Edit {{ __('common.category') }}';
     const f = document.getElementById('catForm');
     f.action = '{{ url('/admin/blog/categories') }}/' + id;
     f.querySelector('input[name="name"]').value = name;

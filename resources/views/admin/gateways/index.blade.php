@@ -9,7 +9,7 @@
     </div>
     <button onclick="openCreate()"
         class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2">
-        <i class="fas fa-plus text-xs"></i> Tambah Gateway
+        <i class="fas fa-plus text-xs"></i> {{ __('common.create') }} Gateway
     </button>
 </div>
 
@@ -24,20 +24,20 @@
                 <span class="font-semibold text-sm text-gray-900">{{ $g->name }}</span>
             </div>
             <span class="text-[10px] px-1.5 py-0.5 rounded font-medium {{ $g->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500' }}">
-                {{ $g->is_active ? 'Aktif' : 'Nonaktif' }}
+                {{ $g->is_active ? __('common.active') : __('common.inactive') }}
             </span>
         </div>
         <div class="text-xs text-gray-500 space-y-0.5 mb-3">
             @if($g->account_number)<div><span class="text-gray-400">Rek:</span> {{ $g->account_number }}</div>@endif
-            @if($g->account_holder)<div><span class="text-gray-400">Nama:</span> {{ $g->account_holder }}</div>@endif
+            @if($g->account_holder)<div><span class="text-gray-400">{{ __('common.name') }}:</span> {{ $g->account_holder }}</div>@endif
         </div>
         <div class="text-[11px] text-gray-400 bg-gray-50 rounded-lg p-2 max-h-20 overflow-y-auto whitespace-pre-line mb-3">{{ \Str::limit($g->instructions, 80) }}</div>
         <div class="flex gap-1">
             <button onclick="editGateway({{ $g->id }}, {{ json_encode($g->name) }}, '{{ $g->code }}', {{ json_encode($g->account_number) }}, {{ json_encode($g->account_holder) }}, {{ json_encode($g->instructions) }}, '{{ $g->logo_color }}', {{ $g->sort_order }})"
-                class="flex-1 text-[11px] bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg py-1.5 font-medium text-center">Edit</button>
-            <form method="POST" action="{{ route('admin.gateways.destroy', $g) }}" class="flex-1" onsubmit="return confirm('Hapus?')">
+                class="flex-1 text-[11px] bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg py-1.5 font-medium text-center">{{ __('common.edit') }}</button>
+            <form method="POST" action="{{ route('admin.gateways.destroy', $g) }}" class="flex-1" onsubmit="return confirm('{{ __('common.delete') }}?')">
                 @csrf @method('DELETE')
-                <button class="w-full text-[11px] bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-1.5 font-medium">Hapus</button>
+                <button class="w-full text-[11px] bg-red-50 text-red-600 hover:bg-red-100 rounded-lg py-1.5 font-medium">{{ __('common.delete') }}</button>
             </form>
         </div>
     </div>
@@ -47,13 +47,13 @@
 {{-- Modal --}}
 <div id="gwModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl" onclick="event.stopPropagation()">
-        <h2 class="text-lg font-bold mb-4" id="gwModalTitle">Tambah Gateway</h2>
+        <h2 class="text-lg font-bold mb-4" id="gwModalTitle">{{ __('common.create') }} Gateway</h2>
         <form method="POST" action="{{ route('admin.gateways.store') }}" class="space-y-3" id="gwForm">
             @csrf
             <div id="gwMethodField"></div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Nama</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('common.name') }}</label>
                     <input type="text" name="name" required class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
                 <div>
@@ -67,17 +67,17 @@
                     <input type="text" name="account_number" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Nama Pemilik</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('common.name') }} Pemilik</label>
                     <input type="text" name="account_holder" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Instruksi Pembayaran <span class="text-gray-400">({'{no_rek}'}, {'{nama}'} = variable)</span></label>
+                <label class="text-xs font-medium text-gray-500">Instruksi {{ __('common.payment') }} <span class="text-gray-400">({'{no_rek}'}, {'{nama}'} = variable)</span></label>
                 <textarea name="instructions" rows="4" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Warna</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('common.color') }}</label>
                     <input type="color" name="logo_color" value="#3b82f6" class="w-full h-10 rounded-xl border border-gray-300 px-2 py-1">
                 </div>
                 <div>
@@ -86,8 +86,8 @@
                 </div>
             </div>
             <div class="flex gap-2 pt-1">
-                <button type="button" onclick="document.getElementById('gwModal').classList.add('hidden')" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">Batal</button>
-                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">Simpan</button>
+                <button type="button" onclick="document.getElementById('gwModal').classList.add('hidden')" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">{{ __('common.cancel') }}</button>
+                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">{{ __('common.save') }}</button>
             </div>
         </form>
     </div>
@@ -96,7 +96,7 @@
 @push('scripts')
 <script>
 function openCreate() {
-    document.getElementById('gwModalTitle').textContent = 'Tambah Gateway';
+    document.getElementById('gwModalTitle').textContent = '{{ __('common.create') }} Gateway';
     const f = document.getElementById('gwForm');
     f.action = '{{ route('admin.gateways.store') }}';
     f.reset();

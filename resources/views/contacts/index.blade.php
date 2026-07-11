@@ -1,20 +1,20 @@
 @extends('layouts.app')
-@section('title', 'Kontak — WABot')
+@section('title', __('common.contact') . ' — WABot')
 @section('content')
 
 <div class="flex items-center justify-between mb-5">
     <div>
-        <h1 class="text-xl font-extrabold text-gray-900">Kontak</h1>
-        <p class="text-sm text-gray-500 mt-0.5">{{ $contacts->total() }} kontak tersimpan</p>
+        <h1 class="text-xl font-extrabold text-gray-900">{{ __('common.contact') }}</h1>
+        <p class="text-sm text-gray-500 mt-0.5">{{ $contacts->total() }} {{ __('common.contact') }} {{ __('contacts.stored') }}</p>
     </div>
     <div class="flex gap-2">
         <button onclick="document.getElementById('importModal').classList.remove('hidden')"
             class="bg-white border border-gray-300 text-gray-700 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2">
-            <i class="fas fa-upload text-xs"></i> Import CSV
+            <i class="fas fa-upload text-xs"></i> {{ __('contacts.import_csv') }}
         </button>
         <button onclick="toggleAddModal()"
             class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2">
-            <i class="fas fa-plus text-xs"></i> Tambah
+            <i class="fas fa-plus text-xs"></i> {{ __('common.create') }}
         </button>
     </div>
 </div>
@@ -23,11 +23,11 @@
     <table class="w-full text-sm">
         <thead>
             <tr class="bg-gray-50 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                <th class="px-5 py-3">Kontak</th>
-                <th class="px-5 py-3">Nomor</th>
+                <th class="px-5 py-3">{{ __('common.contact') }}</th>
+                <th class="px-5 py-3">{{ __('contacts.number') }}</th>
                 <th class="px-5 py-3 hidden md:table-cell">Tags</th>
-                <th class="px-5 py-3 hidden lg:table-cell">Terakhir Chat</th>
-                <th class="px-5 py-3 w-20 text-right">Aksi</th>
+                <th class="px-5 py-3 hidden lg:table-cell">{{ __('contacts.last_chat') }}</th>
+                <th class="px-5 py-3 w-20 text-right">{{ __('common.action') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -57,7 +57,7 @@
                 <td class="px-5 py-3 text-right">
                     <button onclick='editContact({{ $c->id }}, "{{ addslashes($c->name) }}", "{{ $c->phone }}", {{ json_encode($c->tags ? implode(',', $c->tags) : '') }})'
                         class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-brand-600"><i class="fas fa-edit text-xs"></i></button>
-                    <form method="POST" action="{{ route('contacts.destroy', $c) }}" class="inline" onsubmit="return confirm('Hapus?')">
+                    <form method="POST" action="{{ route('contacts.destroy', $c) }}" class="inline" onsubmit="return confirm('{{ __('common.delete') }}?')">
                         @csrf @method('DELETE')
                         <button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button>
                     </form>
@@ -68,8 +68,8 @@
                 <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
                     <i class="fas fa-address-book text-gray-400 text-lg"></i>
                 </div>
-                <p class="text-gray-500 font-medium">Belum ada kontak</p>
-                <p class="text-sm text-gray-400 mt-1">Tambah atau import kontak untuk memulai</p>
+                <p class="text-gray-500 font-medium">{{ __('contacts.empty_title') }}</p>
+                <p class="text-sm text-gray-400 mt-1">{{ __('contacts.empty_desc') }}</p>
             </td></tr>
             @endforelse
         </tbody>
@@ -78,28 +78,28 @@
 
 <div class="mt-4">{{ $contacts->links() }}</div>
 
-{{-- Add/Edit Modal --}}
+{{-- Add/{{ __('common.edit') }} Modal --}}
 <div id="contactModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl" onclick="event.stopPropagation()">
-        <h2 class="text-lg font-bold mb-4" id="contactModalTitle">Tambah Kontak</h2>
+        <h2 class="text-lg font-bold mb-4" id="contactModalTitle">{{ __('common.create') }} {{ __('common.contact') }}</h2>
         <form method="POST" action="{{ route('contacts.store') }}" class="space-y-3" id="contactForm">
             @csrf
             <div id="contactMethodField"></div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Nama</label>
-                <input type="text" name="name" placeholder="Nama kontak" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                <label class="text-xs font-medium text-gray-500">{{ __('common.name') }}</label>
+                <input type="text" name="name" placeholder="{{ __('common.name') }} {{ __('common.contact') }}" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Nomor HP</label>
+                <label class="text-xs font-medium text-gray-500">{{ __('contacts.phone') }}</label>
                 <input type="text" name="phone" placeholder="6281234567890" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm font-mono focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Tags <span class="text-gray-400">(pisah koma)</span></label>
+                <label class="text-xs font-medium text-gray-500">{{ __('contacts.tags') }} <span class="text-gray-400">{{ __('contacts.tags_hint') }}</span></label>
                 <input type="text" name="tags" placeholder="VIP, Leads" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div class="flex gap-2 pt-1">
-                <button type="button" onclick="toggleAddModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">Batal</button>
-                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">Simpan</button>
+                <button type="button" onclick="toggleAddModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">{{ __('common.cancel') }}</button>
+                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">{{ __('common.save') }}</button>
             </div>
         </form>
     </div>
@@ -108,17 +108,17 @@
 {{-- Import Modal --}}
 <div id="importModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl" onclick="event.stopPropagation()">
-        <h2 class="text-lg font-bold mb-4">Import CSV Kontak</h2>
+        <h2 class="text-lg font-bold mb-4">{{ __('contacts.import_csv_title') }}</h2>
         <form method="POST" action="{{ route('contacts.import') }}" enctype="multipart/form-data" class="space-y-3">
             @csrf
             <div class="bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
-                <p class="font-medium mb-2">Format file:</p>
-                <code class="text-xs bg-white px-2 py-1 rounded border border-gray-200 block">nama, nomor, tag1,tag2</code>
+                <p class="font-medium mb-2">{{ __('contacts.file_format') }}</p>
+                <code class="text-xs bg-white px-2 py-1 rounded border border-gray-200 block">{{ __('common.name') }}, nomor, tag1,tag2</code>
             </div>
             <input type="file" name="file" accept=".csv,.txt" required class="w-full text-sm">
             <div class="flex gap-2 pt-1">
-                <button type="button" onclick="document.getElementById('importModal').classList.add('hidden')" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">Batal</button>
-                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700"><i class="fas fa-upload mr-1"></i> Import</button>
+                <button type="button" onclick="document.getElementById('importModal').classList.add('hidden')" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">{{ __('common.cancel') }}</button>
+                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700"><i class="fas fa-upload mr-1"></i> {{ __('common.import') }}</button>
             </div>
         </form>
     </div>
@@ -129,7 +129,7 @@ function toggleAddModal() {
     const m = document.getElementById('contactModal');
     m.classList.toggle('hidden');
     if (!m.classList.contains('hidden')) {
-        document.getElementById('contactModalTitle').textContent = 'Tambah Kontak';
+        document.getElementById('contactModalTitle').textContent = '{{ __('common.create') }} {{ __('common.contact') }}';
         const f = document.getElementById('contactForm');
         f.action = '{{ route('contacts.store') }}';
         f.querySelector('input[name="name"]').value = '';
@@ -141,7 +141,7 @@ function toggleAddModal() {
 function editContact(id, name, phone, tags) {
     const m = document.getElementById('contactModal');
     m.classList.remove('hidden');
-    document.getElementById('contactModalTitle').textContent = 'Edit Kontak';
+    document.getElementById('contactModalTitle').textContent = '{{ __('common.edit') }} {{ __('common.contact') }}';
     const f = document.getElementById('contactForm');
     f.action = '/contacts/' + id;
     f.querySelector('input[name="name"]').value = name;

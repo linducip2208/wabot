@@ -5,7 +5,7 @@
 <div class="flex items-center justify-between mb-5">
     <div>
         <h1 class="text-xl font-extrabold text-gray-900">Conversation Ratings</h1>
-        <p class="text-sm text-gray-500 mt-0.5">{{ $totalRatings }} penilaian dari pelanggan</p>
+        <p class="text-sm text-gray-500 mt-0.5">{{ __('ratings.ratings_total', ['total' => $totalRatings]) }}</p>
     </div>
 </div>
 
@@ -14,7 +14,7 @@
         <div class="w-14 h-14 rounded-xl bg-amber-50 flex items-center justify-center"><i class="fas fa-star text-amber-500 text-2xl"></i></div>
         <div>
             <div class="text-3xl font-extrabold text-gray-900">{{ $average }}</div>
-            <div class="text-xs text-gray-500">Rata-rata dari 5</div>
+            <div class="text-xs text-gray-500">{{ __('ratings.average_out_of_5') }}</div>
         </div>
     </div>
     <div class="md:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
@@ -35,18 +35,18 @@
     <div>
         <label class="text-xs font-medium text-gray-500">Rating</label>
         <select name="rating" class="rounded-xl border border-gray-300 px-3 py-2 text-sm">
-            <option value="">Semua</option>
-            @for($i=5;$i>=1;$i--)<option value="{{ $i }}" {{ request('rating')==$i ? 'selected':'' }}>{{ $i }} bintang</option>@endfor
+            <option value="">{{ __('common.all') }}</option>
+            @for($i=5;$i>=1;$i--)<option value="{{ $i }}" {{ request('rating')==$i ? 'selected':'' }}>{{ $i }} {{ __('ratings.stars') }}</option>@endfor
         </select>
     </div>
-    <div><label class="text-xs font-medium text-gray-500">Dari</label><input type="date" name="date_from" value="{{ request('date_from') }}" class="rounded-xl border border-gray-300 px-3 py-2 text-sm"></div>
-    <div><label class="text-xs font-medium text-gray-500">Sampai</label><input type="date" name="date_to" value="{{ request('date_to') }}" class="rounded-xl border border-gray-300 px-3 py-2 text-sm"></div>
-    <button type="submit" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-brand-700"><i class="fas fa-filter mr-1"></i> Filter</button>
+            <div><label class="text-xs font-medium text-gray-500">{{ __('ratings.from') }}</label><input type="date" name="date_from" value="{{ request('date_from') }}" class="rounded-xl border border-gray-300 px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-medium text-gray-500">{{ __('ratings.to') }}</label><input type="date" name="date_to" value="{{ request('date_to') }}" class="rounded-xl border border-gray-300 px-3 py-2 text-sm"></div>
+            <button type="submit" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-brand-700"><i class="fas fa-filter mr-1"></i> {{ __('common.filter') }}</button>
 </form>
 
 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
     <table class="w-full text-sm">
-        <thead><tr class="bg-gray-50 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider"><th class="px-5 py-3">Kontak</th><th class="px-5 py-3">Rating</th><th class="px-5 py-3">Komentar</th><th class="px-5 py-3 hidden md:table-cell">Tanggal</th><th class="px-5 py-3 w-16 text-right">Aksi</th></tr></thead>
+        <thead><tr class="bg-gray-50 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider"><th class="px-5 py-3">{{ __('common.contact') }}</th><th class="px-5 py-3">{{ __('ratings.rating') }}</th><th class="px-5 py-3">{{ __('ratings.comment') }}</th><th class="px-5 py-3 hidden md:table-cell">{{ __('common.date') }}</th><th class="px-5 py-3 w-16 text-right">{{ __('common.action') }}</th></tr></thead>
         <tbody class="divide-y divide-gray-100">
             @forelse($ratings as $r)
             <tr class="hover:bg-gray-50/50">
@@ -61,7 +61,7 @@
             @empty
             <tr><td colspan="5" class="px-5 py-16 text-center">
                 <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3"><i class="fas fa-star text-gray-400 text-lg"></i></div>
-                <p class="text-gray-500 font-medium">Belum ada rating</p>
+                <p class="text-gray-500 font-medium">{{ __('ratings.no_ratings') }}</p>
             </td></tr>
             @endforelse
         </tbody>

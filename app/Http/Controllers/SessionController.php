@@ -76,7 +76,7 @@ class SessionController extends Controller
         $server = WaServer::where('is_active', true)->findOrFail($validated['server_id']);
 
         if (!$this->baileys->check($server)) {
-            return back()->with('error', 'Tidak bisa terhubung ke server Baileys. Periksa host dan port.');
+            return back()->with('error', __('messages.error.cannot_connect_baileys'));
         }
 
         $sessionId = uniqid('wa_', true);
@@ -93,10 +93,10 @@ class SessionController extends Controller
 
         if ($result['ok'] ?? false) {
             return redirect()->route('sessions.show', $session)
-                ->with('success', 'Sesi berhasil dibuat. Scan QR untuk menghubungkan.');
+                ->with('success', __('messages.success.session_created'));
         }
 
-        return back()->with('error', 'Gagal membuat sesi: ' . ($result['message'] ?? 'Unknown error'));
+        return back()->with('error', __('messages.error.session_create_failed', ['error' => ($result['message'] ?? 'Unknown error')]));
     }
 
     public function show(WaSession $session)
@@ -171,7 +171,7 @@ class SessionController extends Controller
     {
         abort_if($session->user_id !== Auth::id(), 403);
         $session->update($request->validate(['name' => 'required|string|max:255']));
-        return back()->with('success', 'Sesi diperbarui.');
+        return back()->with('success', __('messages.success.session_updated'));
     }
 
     public function destroy(WaSession $session)
@@ -181,7 +181,7 @@ class SessionController extends Controller
             $this->baileys->deleteSession($session->server, $session->session_id);
         }
         $session->delete();
-        return redirect()->route('sessions.index')->with('success', 'Sesi WhatsApp dihapus.');
+        return redirect()->route('sessions.index')->with('success', __('messages.success.session_deleted'));
     }
 
     public function status(WaSession $session)

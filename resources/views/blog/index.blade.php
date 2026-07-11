@@ -50,10 +50,10 @@
     <div class="max-w-6xl mx-auto flex items-center justify-between px-5 h-16">
         <a href="/" class="flex items-center gap-2 text-xl font-extrabold tracking-tight"><i class="fas fa-paper-plane text-brand-500"></i> WABot</a>
         <div class="flex items-center gap-4">
-            <a href="/docs" class="text-sm text-gray-600 hover:text-brand-600 font-medium">Dokumentasi</a>
-            <a href="/blog" class="text-sm text-brand-600 font-semibold">Blog</a>
-            <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-brand-600 font-medium">Masuk</a>
-            <a href="{{ route('register') }}" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">Daftar Gratis</a>
+            <a href="/docs" class="text-sm text-gray-600 hover:text-brand-600 font-medium">{{ __('nav.docs') }}</a>
+            <a href="/blog" class="text-sm text-brand-600 font-semibold">{{ __('nav.blog') }}</a>
+            <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-brand-600 font-medium">{{ __('nav.login') }}</a>
+            <a href="{{ route('register') }}" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">{{ __('nav.register') }}</a>
         </div>
     </div>
 </nav>
@@ -62,7 +62,7 @@
 <section class="bg-gradient-to-r from-brand-600 to-brand-800 py-12 lg:py-16">
     <div class="max-w-6xl mx-auto px-5 text-white text-center">
         <h1 class="text-3xl lg:text-4xl font-extrabold mb-3">Blog WABot</h1>
-        <p class="text-brand-200 text-lg">Tips, tutorial, dan update terbaru seputar WhatsApp Marketing</p>
+        <p class="text-brand-200 text-lg">{{ __('blog.hero_description') }}</p>
     </div>
 </section>
 
@@ -125,7 +125,7 @@
             @else
             <div class="text-center py-20 text-gray-500">
                 <i class="fas fa-newspaper text-5xl text-gray-300 mb-4 block"></i>
-                <p class="text-lg">Belum ada artikel.</p>
+                <p class="text-lg">{{ __('blog.no_articles') }}</p>
             </div>
             @endif
         </div>
@@ -135,7 +135,7 @@
             {{-- Categories --}}
             @if(isset($categories) && $categories->count())
             <div class="bg-white border border-gray-200 rounded-xl p-5">
-                <h3 class="font-bold text-gray-900 mb-3">Kategori</h3>
+                <h3 class="font-bold text-gray-900 mb-3">{{ __('common.category') }}</h3>
                 <ul class="space-y-1.5">
                     @foreach($categories as $cat)
                     <li>
@@ -151,9 +151,9 @@
 
             {{-- CTA --}}
             <div class="bg-gradient-to-br from-brand-600 to-brand-800 rounded-xl p-5 text-white text-center">
-                <h3 class="font-bold mb-2">Siap Otomatiskan WhatsApp?</h3>
-                <p class="text-brand-200 text-sm mb-4">Daftar gratis dan langsung pakai.</p>
-                <a href="{{ route('register') }}" class="block w-full bg-white text-brand-700 rounded-xl py-2.5 text-sm font-semibold hover:shadow-lg transition">Daftar Gratis</a>
+                <h3 class="font-bold mb-2">{{ __('cta.heading') }}</h3>
+                <p class="text-brand-200 text-sm mb-4">{{ __('blog.cta_subtitle') }}</p>
+                <a href="{{ route('register') }}" class="block w-full bg-white text-brand-700 rounded-xl py-2.5 text-sm font-semibold hover:shadow-lg transition">{{ __('nav.register') }}</a>
             </div>
         </div>
     </div>
@@ -162,11 +162,11 @@
 {{-- Footer --}}
 <footer class="bg-gray-900 text-gray-400 py-10 text-sm">
     <div class="max-w-6xl mx-auto px-5 flex flex-col md:flex-row justify-between gap-6">
-        <div><span class="text-white font-bold text-lg">WABot</span><p class="mt-1">WhatsApp Marketing SaaS</p></div>
+        <div><span class="text-white font-bold text-lg">WABot</span><p class="mt-1">{{ __('app.tagline') }}</p></div>
         <div class="flex gap-6">
-            <a href="/docs" class="hover:text-white">Dokumentasi</a>
-            <a href="/blog" class="hover:text-white">Blog</a>
-            <a href="{{ route('login') }}" class="hover:text-white">Login</a>
+            <a href="/docs" class="hover:text-white">{{ __('nav.docs') }}</a>
+            <a href="/blog" class="hover:text-white">{{ __('nav.blog') }}</a>
+            <a href="{{ route('login') }}" class="hover:text-white">{{ __('footer.login') }}</a>
         </div>
     </div>
 </footer>

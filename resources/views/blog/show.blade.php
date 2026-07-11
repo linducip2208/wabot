@@ -69,10 +69,10 @@
     <div class="max-w-6xl mx-auto flex items-center justify-between px-5 h-16">
         <a href="/" class="flex items-center gap-2 text-xl font-extrabold tracking-tight"><i class="fas fa-paper-plane text-brand-500"></i> WABot</a>
         <div class="flex items-center gap-4">
-            <a href="/docs" class="text-sm text-gray-600 hover:text-brand-600 font-medium">Dokumentasi</a>
-            <a href="/blog" class="text-sm text-brand-600 font-semibold">Blog</a>
-            <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-brand-600 font-medium">Masuk</a>
-            <a href="{{ route('register') }}" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">Daftar Gratis</a>
+            <a href="/docs" class="text-sm text-gray-600 hover:text-brand-600 font-medium">{{ __('nav.docs') }}</a>
+            <a href="/blog" class="text-sm text-brand-600 font-semibold">{{ __('nav.blog') }}</a>
+            <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-brand-600 font-medium">{{ __('nav.login') }}</a>
+            <a href="{{ route('register') }}" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">{{ __('nav.register') }}</a>
         </div>
     </div>
 </nav>
@@ -109,7 +109,7 @@
 
     {{-- Share --}}
     <div class="mt-12 pt-6 border-t border-gray-200 flex items-center gap-3">
-        <span class="text-sm text-gray-500 font-medium">Bagikan:</span>
+        <span class="text-sm text-gray-500 font-medium">{{ __('blog.share') }}</span>
         <a href="https://wa.me/?text={{ urlencode($post->title . ' ' . url('/blog/' . $post->slug)) }}" target="_blank" rel="noopener" class="w-9 h-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 transition" title="WhatsApp">
             <i class="fab fa-whatsapp"></i>
         </a>
@@ -126,7 +126,7 @@
 @if(isset($relatedPosts) && $relatedPosts->count())
 <section class="bg-gray-50 py-12">
     <div class="max-w-4xl mx-auto px-5">
-        <h2 class="text-xl font-extrabold mb-6">Artikel Terkait</h2>
+        <h2 class="text-xl font-extrabold mb-6">{{ __('blog.related_articles') }}</h2>
         <div class="grid md:grid-cols-3 gap-5">
             @foreach($relatedPosts as $rel)
             <a href="{{ url('/blog/' . $rel->slug) }}" class="bg-white rounded-xl border border-gray-200 p-5 card-lift block hover:border-brand-200 transition">
@@ -142,11 +142,11 @@
 {{-- Footer --}}
 <footer class="bg-gray-900 text-gray-400 py-10 text-sm">
     <div class="max-w-6xl mx-auto px-5 flex flex-col md:flex-row justify-between gap-6">
-        <div><span class="text-white font-bold text-lg">WABot</span><p class="mt-1">WhatsApp Marketing SaaS</p></div>
+        <div><span class="text-white font-bold text-lg">WABot</span><p class="mt-1">{{ __('app.tagline') }}</p></div>
         <div class="flex gap-6">
-            <a href="/docs" class="hover:text-white">Dokumentasi</a>
-            <a href="/blog" class="hover:text-white">Blog</a>
-            <a href="{{ route('login') }}" class="hover:text-white">Login</a>
+            <a href="/docs" class="hover:text-white">{{ __('nav.docs') }}</a>
+            <a href="/blog" class="hover:text-white">{{ __('nav.blog') }}</a>
+            <a href="{{ route('login') }}" class="hover:text-white">{{ __('footer.login') }}</a>
         </div>
     </div>
 </footer>

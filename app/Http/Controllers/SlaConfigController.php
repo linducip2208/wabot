@@ -37,7 +37,7 @@ class SlaConfigController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Konfigurasi SLA berhasil disimpan.');
+        return back()->with('success', __('messages.success.sla_config_saved'));
     }
 
     public function update(Request $request, WaSlaConfig $config)
@@ -58,7 +58,7 @@ class SlaConfigController extends Controller
             'business_hours_only' => $request->boolean('business_hours_only'),
         ]);
 
-        return back()->with('success', 'Konfigurasi SLA berhasil diperbarui.');
+        return back()->with('success', __('messages.success.sla_config_updated'));
     }
 
     public function destroy(WaSlaConfig $config)
@@ -66,7 +66,7 @@ class SlaConfigController extends Controller
         abort_if($config->user_id !== Auth::id(), 403);
         $config->delete();
 
-        return back()->with('success', 'Konfigurasi SLA dihapus.');
+        return back()->with('success', __('messages.success.sla_config_deleted'));
     }
 
     public function logs(Request $request)

@@ -46,7 +46,7 @@ class CatalogController extends Controller
             'is_active' => true,
         ]);
 
-        return redirect()->route('catalogs.index')->with('success', 'Katalog berhasil dibuat.');
+        return redirect()->route('catalogs.index')->with('success', __('messages.success.catalog_created'));
     }
 
     public function edit(WaCatalog $catalog)
@@ -76,7 +76,7 @@ class CatalogController extends Controller
             'session_id' => $validated['session_id'],
         ]);
 
-        return redirect()->route('catalogs.index')->with('success', 'Katalog diperbarui.');
+        return redirect()->route('catalogs.index')->with('success', __('messages.success.catalog_updated'));
     }
 
     public function destroy(WaCatalog $catalog)
@@ -84,7 +84,7 @@ class CatalogController extends Controller
         abort_if($catalog->user_id !== Auth::id(), 403);
         $catalog->delete();
 
-        return back()->with('success', 'Katalog dihapus.');
+        return back()->with('success', __('messages.success.catalog_deleted'));
     }
 
     public function items(WaCatalog $catalog)
@@ -123,7 +123,7 @@ class CatalogController extends Controller
             'sort_order' => $maxOrder + 1,
         ]);
 
-        return back()->with('success', 'Item katalog ditambahkan.');
+        return back()->with('success', __('messages.success.catalog_item_added'));
     }
 
     public function itemsUpdate(Request $request, WaCatalog $catalog, WaCatalogItem $item)
@@ -149,7 +149,7 @@ class CatalogController extends Controller
             'sort_order' => $validated['sort_order'] ?? $item->sort_order,
         ]);
 
-        return back()->with('success', 'Item katalog diperbarui.');
+        return back()->with('success', __('messages.success.catalog_item_updated'));
     }
 
     public function itemsDestroy(WaCatalog $catalog, WaCatalogItem $item)
@@ -159,6 +159,6 @@ class CatalogController extends Controller
 
         $item->delete();
 
-        return back()->with('success', 'Item katalog dihapus.');
+        return back()->with('success', __('messages.success.catalog_item_deleted'));
     }
 }

@@ -35,7 +35,7 @@ class ContactController extends Controller
             ]
         );
 
-        return back()->with('success', 'Kontak disimpan.');
+        return back()->with('success', __('messages.success.contact_saved'));
     }
 
     public function update(Request $request, WaContact $contact)
@@ -54,7 +54,7 @@ class ContactController extends Controller
             'tags' => $validated['tags'] ? explode(',', $validated['tags']) : null,
         ]);
 
-        return back()->with('success', 'Kontak diperbarui.');
+        return back()->with('success', __('messages.success.contact_updated'));
     }
 
     public function destroy(WaContact $contact)
@@ -62,7 +62,7 @@ class ContactController extends Controller
         abort_if($contact->user_id !== Auth::id(), 403);
         $contact->delete();
 
-        return back()->with('success', 'Kontak dihapus.');
+        return back()->with('success', __('messages.success.contact_deleted'));
     }
 
     public function import(Request $request)
@@ -95,6 +95,6 @@ class ContactController extends Controller
 
         fclose($handle);
 
-        return back()->with('success', "{$count} kontak berhasil diimport.");
+        return back()->with('success', __('messages.success.contact_imported', ['count' => $count]));
     }
 }

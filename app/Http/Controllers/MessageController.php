@@ -35,7 +35,7 @@ class MessageController extends Controller
         $session = WaSession::where('user_id', Auth::id())->findOrFail($data['session_id']);
 
         if (!$session->server || $session->status !== 'connected') {
-            return back()->with('error', 'Sesi tidak terhubung.');
+            return back()->with('error', __('messages.error.session_not_connected'));
         }
 
         $phone = $data['phone'] ?? null;
@@ -65,10 +65,10 @@ class MessageController extends Controller
         ]);
 
         if ($result['ok'] ?? false) {
-            return redirect()->route('messages.sent')->with('success', 'Pesan terkirim.');
+            return redirect()->route('messages.sent')->with('success', __('messages.success.message_sent'));
         }
 
-        return back()->with('error', 'Gagal mengirim: ' . ($result['error'] ?? 'unknown'));
+        return back()->with('error', __('messages.error.send_failed', ['error' => ($result['error'] ?? 'unknown')]));
     }
     public function sent(Request $request)
     {
@@ -114,7 +114,7 @@ class MessageController extends Controller
 
         $session = $message->session;
         if (!$session || !$session->server || $session->status !== 'connected') {
-            return back()->with('error', 'Sesi tidak terhubung.');
+            return back()->with('error', __('messages.error.session_not_connected'));
         }
 
         $baileys = app(\App\Services\BaileysService::class);
@@ -130,23 +130,23 @@ class MessageController extends Controller
                 'phone' => $message->phone,
                 'status' => 'sent',
             ]);
-            return back()->with('success', 'Pesan dikirim ulang.');
+            return back()->with('success', __('messages.success.message_resent'));
         }
 
-        return back()->with('error', 'Gagal mengirim ulang: ' . ($result['error'] ?? 'unknown'));
+        return back()->with('error', __('messages.error.resend_failed', ['error' => ($result['error'] ?? 'unknown')]));
     }
 
     public function destroy(WaMessage $message)
     {
         abort_if($message->user_id !== Auth::id(), 403);
         $message->delete();
-        return back()->with('success', 'Pesan dihapus.');
+        return back()->with('success', __('messages.success.message_deleted'));
     }
 
     public function bulkDelete(Request $request)
     {
         $request->validate(['ids' => 'required|array']);
         WaMessage::where('user_id', Auth::id())->whereIn('id', $request->ids)->delete();
-        return back()->with('success', count($request->ids) . ' pesan dihapus.');
+        return back()->with('success', __('messages.success.messages_deleted_count', ['count' => count($request->ids)]));
     }
 }

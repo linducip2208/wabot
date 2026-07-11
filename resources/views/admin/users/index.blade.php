@@ -4,12 +4,12 @@
 
 <div class="flex items-center justify-between mb-5">
     <div>
-        <h1 class="text-xl font-extrabold text-gray-900">Manajemen User</h1>
-        <p class="text-sm text-gray-500 mt-0.5">{{ $users->count() }} user terdaftar</p>
+        <h1 class="text-xl font-extrabold text-gray-900">{{ __('admin.user_mgmt') }}</h1>
+        <p class="text-sm text-gray-500 mt-0.5">{{ __('admin.registered_users', ['count' => $users->count()]) }}</p>
     </div>
     <button onclick="toggleModal()"
         class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2">
-        <i class="fas fa-plus text-xs"></i> Tambah User
+        <i class="fas fa-plus text-xs"></i> {{ __('common.create') }} User
     </button>
 </div>
 
@@ -17,7 +17,7 @@
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
     <div class="bg-white rounded-xl border border-gray-200 p-4 card-lift flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center"><i class="fas fa-users text-sky-500"></i></div>
-        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Total User</div><div class="text-xl font-extrabold text-gray-900">{{ $users->count() }}</div></div>
+        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">{{ __('common.total') }} User</div><div class="text-xl font-extrabold text-gray-900">{{ $users->count() }}</div></div>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-4 card-lift flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center"><i class="fas fa-crown text-emerald-500"></i></div>
@@ -29,7 +29,7 @@
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-4 card-lift flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center"><i class="fas fa-calendar text-violet-500"></i></div>
-        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Bulan Ini</div><div class="text-xl font-extrabold text-gray-900">{{ $users->where('created_at', '>=', now()->startOfMonth())->count() }}</div></div>
+        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">{{ __('common.this_month') }}</div><div class="text-xl font-extrabold text-gray-900">{{ $users->where('created_at', '>=', now()->startOfMonth())->count() }}</div></div>
     </div>
 </div>
 
@@ -39,11 +39,11 @@
             <tr class="bg-gray-50 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
                 <th class="px-5 py-3">User</th>
                 <th class="px-5 py-3 hidden md:table-cell">Email</th>
-                <th class="px-5 py-3">Paket</th>
-                <th class="px-5 py-3">Role</th>
-                <th class="px-5 py-3 hidden lg:table-cell">Expired</th>
-                <th class="px-5 py-3 hidden lg:table-cell">Daftar</th>
-                <th class="px-5 py-3 w-24 text-right">Aksi</th>
+                <th class="px-5 py-3">{{ __('common.plan') }}</th>
+                <th class="px-5 py-3">{{ __('common.role') }}</th>
+                <th class="px-5 py-3 hidden lg:table-cell">{{ __('common.expired') }}</th>
+                <th class="px-5 py-3 hidden lg:table-cell">{{ __('common.registered') }}</th>
+                <th class="px-5 py-3 w-24 text-right">{{ __('common.action') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -65,7 +65,7 @@
                 </td>
                 <td class="px-5 py-3">
                     <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ is_object($u->role) && $u->role->name === 'admin' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700' }}">
-                        {{ is_object($u->role) ? $u->role->name : ucfirst($u->getAttribute('role') ?? 'user') }}
+                        {{ $u->role?->name ?? __('common.user') }}
                     </span>
                 </td>
                 <td class="px-5 py-3 hidden lg:table-cell text-xs {{ $u->expires_at && $u->expires_at->isPast() ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
@@ -79,7 +79,7 @@
                     </form>
                     <button onclick='editUser({{ $u->id }}, "{{ addslashes($u->name) }}", "{{ $u->email }}", {{ $u->role_id ?? 'null' }}, {{ $u->plan_id ?? 'null' }}, "{{ $u->expires_at?->format('Y-m-d\TH:i') ?? '' }}")'
                         class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-brand-600"><i class="fas fa-edit text-xs"></i></button>
-                    <form method="POST" action="{{ route('admin.users.destroy', $u) }}" class="inline" onsubmit="return confirm('Hapus user ini?')">
+                    <form method="POST" action="{{ route('admin.users.destroy', $u) }}" class="inline" onsubmit="return confirm('{{ __('common.delete') }} user?')">
                         @csrf @method('DELETE')
                         <button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button>
                     </form>
@@ -93,12 +93,12 @@
 {{-- Modal --}}
 <div id="userModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl" onclick="event.stopPropagation()">
-        <h2 class="text-lg font-bold mb-4" id="modalTitle">Tambah User</h2>
+        <h2 class="text-lg font-bold mb-4" id="modalTitle">{{ __('common.create') }} User</h2>
         <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-3" id="userForm">
             @csrf
             <div id="methodField"></div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Nama</label>
+                <label class="text-xs font-medium text-gray-500">{{ __('common.name') }}</label>
                 <input type="text" name="name" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
@@ -106,11 +106,11 @@
                 <input type="email" name="email" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Password</label>
+                <label class="text-xs font-medium text-gray-500">{{ __('common.password') }}</label>
                 <input type="password" name="password" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Role</label>
+                <label class="text-xs font-medium text-gray-500">{{ __('common.role') }}</label>
                 <select name="role_id" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm">
                     @foreach($roles as $r)
                         <option value="{{ $r->id }}">{{ $r->name }}</option>
@@ -118,9 +118,9 @@
                 </select>
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Paket</label>
+                <label class="text-xs font-medium text-gray-500">{{ __('common.plan') }}</label>
                 <select name="plan_id" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm">
-                    <option value="">Tanpa Paket</option>
+                    <option value="">{{ __('common.without') }} {{ __('common.plan') }}</option>
                     @foreach($plans as $p)
                         <option value="{{ $p->id }}">{{ $p->name }} {{ $p->price > 0 ? '(Rp '.number_format($p->price).')' : '' }}</option>
                     @endforeach
@@ -128,19 +128,19 @@
             </div>
             <div id="expiryFields" class="hidden space-y-3">
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Berakhir (ends_at)</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('admin.subscription_ends') }}</label>
                     <input type="datetime-local" name="ends_at" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                    <p class="text-[11px] text-gray-400 mt-0.5">Kapan langganan ini berakhir. Kosongkan = selamanya.</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ __('admin.subscription_ends_hint') }}</p>
                 </div>
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Akses Kadaluarsa (expires_at)</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('admin.access_expires') }}</label>
                     <input type="datetime-local" name="expires_at" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                    <p class="text-[11px] text-gray-400 mt-0.5">Setelah tanggal ini user tidak bisa akses.</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">{{ __('admin.access_expires_hint') }}</p>
                 </div>
             </div>
             <div class="flex gap-2 pt-1">
-                <button type="button" onclick="toggleModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">Batal</button>
-                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">Simpan</button>
+                <button type="button" onclick="toggleModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">{{ __('common.cancel') }}</button>
+                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">{{ __('common.save') }}</button>
             </div>
         </form>
     </div>
@@ -151,7 +151,7 @@ function toggleModal() {
     const m = document.getElementById('userModal');
     m.classList.toggle('hidden');
     if (!m.classList.contains('hidden')) {
-        document.getElementById('modalTitle').textContent = 'Tambah User';
+        document.getElementById('modalTitle').textContent = '{{ __('common.create') }} User';
         const f = document.getElementById('userForm');
         f.action = '{{ route('admin.users.store') }}';
         f.reset();
@@ -162,7 +162,7 @@ function toggleModal() {
 function editUser(id, name, email, roleId, planId, expiresAt) {
     const m = document.getElementById('userModal');
     m.classList.remove('hidden');
-    document.getElementById('modalTitle').textContent = 'Edit User';
+    document.getElementById('modalTitle').textContent = '{{ __('admin.edit_user') }}';
     const f = document.getElementById('userForm');
     f.action = '/admin/users/' + id;
     f.querySelector('input[name="name"]').value = name;

@@ -32,7 +32,7 @@
     <div class="p-7 space-y-5 fade-up">
 
       <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
-        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Produk</div>
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">{{ __('common.product') }}</div>
         <div class="flex items-baseline gap-3">
           <span class="text-2xl">📦</span>
           <div>
@@ -55,7 +55,7 @@
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
           <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            Support Aktif Sampai
+            Support {{ __('common.active') }} Sampai
           </div>
           <div class="font-medium text-sm text-slate-800">{{ \Illuminate\Support\Carbon::parse($data['license']['support_until'])->format('d M Y') }}</div>
         </div>
@@ -65,7 +65,7 @@
       <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-start gap-3">
         <svg class="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
         <div class="text-sm text-emerald-800 leading-relaxed">
-          <strong>Konfirmasi:</strong> nama produk di atas harus cocok dengan yang kamu beli. Kalau salah, klik "Revoke" di marketplace dan re-pair dengan key yang benar.
+          <strong>Konfirmasi:</strong> {{ __('common.name') }} {{ __('common.product') }} di atas harus cocok dengan yang kamu beli. Kalau salah, klik "Revoke" di marketplace dan re-pair dengan key yang benar.
         </div>
       </div>
 

@@ -24,13 +24,13 @@ class ApiTokenController extends Controller
             'token' => ApiToken::generate(),
         ]);
 
-        return back()->with('success', 'Token dibuat. Salin sekarang: ' . $token->token);
+        return back()->with('success', __('messages.success.token_created', ['token' => $token->token]));
     }
 
     public function destroy(ApiToken $token)
     {
         abort_if($token->user_id !== Auth::id(), 403);
         $token->delete();
-        return back()->with('success', 'Token dihapus.');
+        return back()->with('success', __('messages.success.token_deleted'));
     }
 }

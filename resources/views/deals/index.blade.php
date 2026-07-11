@@ -5,12 +5,12 @@
 <div class="flex items-center justify-between mb-5">
     <div>
         <h1 class="text-xl font-extrabold text-gray-900">Deals</h1>
-        <p class="text-sm text-gray-500 mt-0.5">{{ $deals->count() }} deal · total nilai Rp {{ number_format($deals->sum('value'), 0, ',', '.') }}</p>
+        <p class="text-sm text-gray-500 mt-0.5">{{ __('deals.subtitle', ['count' => $deals->count(), 'value' => number_format($deals->sum('value'), 0, ',', '.')]) }}</p>
     </div>
     <div class="flex gap-2">
         <a href="{{ route('deal-stages.index') }}" class="bg-white border border-gray-300 text-gray-700 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2"><i class="fas fa-layer-group text-xs"></i> Stages</a>
         <a href="{{ route('deals.board') }}" class="bg-white border border-gray-300 text-gray-700 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2"><i class="fas fa-columns text-xs"></i> Kanban</a>
-        <a href="{{ route('deals.create') }}" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2"><i class="fas fa-plus text-xs"></i> Deal Baru</a>
+        <a href="{{ route('deals.create') }}" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2"><i class="fas fa-plus text-xs"></i> {{ __('deals.new_deal') }}</a>
     </div>
 </div>
 
@@ -19,11 +19,11 @@
         <thead>
             <tr class="bg-gray-50 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
                 <th class="px-5 py-3">Deal</th>
-                <th class="px-5 py-3">Kontak</th>
+                <th class="px-5 py-3">{{ __('common.contact') }}</th>
                 <th class="px-5 py-3">Stage</th>
-                <th class="px-5 py-3">Nilai</th>
-                <th class="px-5 py-3 hidden md:table-cell">Target Close</th>
-                <th class="px-5 py-3 w-24 text-right">Aksi</th>
+                <th class="px-5 py-3">{{ __('deals.value') }}</th>
+                <th class="px-5 py-3 hidden md:table-cell">{{ __('deals.target_close') }}</th>
+                <th class="px-5 py-3 w-24 text-right">{{ __('common.action') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -36,14 +36,14 @@
                 <td class="px-5 py-3 hidden md:table-cell text-xs text-gray-400">{{ $d->expected_close_date?->format('d M Y') ?? '-' }}</td>
                 <td class="px-5 py-3 text-right">
                     <a href="{{ route('deals.edit', $d) }}" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-brand-600"><i class="fas fa-edit text-xs"></i></a>
-                    <form method="POST" action="{{ route('deals.destroy', $d) }}" class="inline" onsubmit="return confirm('Hapus deal?')">@csrf @method('DELETE')<button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button></form>
+                    <form method="POST" action="{{ route('deals.destroy', $d) }}" class="inline" onsubmit="return confirm('{{ __('deals.delete_confirm') }}')">@csrf @method('DELETE')<button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button></form>
                 </td>
             </tr>
             @empty
             <tr><td colspan="6" class="px-5 py-16 text-center">
                 <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3"><i class="fas fa-handshake text-gray-400 text-lg"></i></div>
-                <p class="text-gray-500 font-medium">Belum ada deal</p>
-                <p class="text-sm text-gray-400 mt-1">Lacak peluang penjualan Anda</p>
+                <p class="text-gray-500 font-medium">{{ __('deals.no_deals') }}</p>
+                <p class="text-sm text-gray-400 mt-1">{{ __('deals.no_deals_hint') }}</p>
             </td></tr>
             @endforelse
         </tbody>

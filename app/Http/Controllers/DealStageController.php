@@ -35,7 +35,7 @@ class DealStageController extends Controller
             'sort_order' => $validated['sort_order'] ?? $maxOrder + 1,
         ]);
 
-        return back()->with('success', 'Stage baru ditambahkan.');
+        return back()->with('success', __('messages.success.stage_added'));
     }
 
     public function update(Request $request, WaDealStage $stage)
@@ -54,7 +54,7 @@ class DealStageController extends Controller
             'sort_order' => $validated['sort_order'] ?? $stage->sort_order,
         ]);
 
-        return back()->with('success', 'Stage diperbarui.');
+        return back()->with('success', __('messages.success.stage_updated'));
     }
 
     public function destroy(WaDealStage $stage)
@@ -62,12 +62,12 @@ class DealStageController extends Controller
         abort_if($stage->user_id !== Auth::id(), 403);
 
         if ($stage->deals()->count() > 0) {
-            return back()->with('error', 'Stage tidak dapat dihapus karena masih memiliki deal.');
+            return back()->with('error', __('messages.error.stage_has_deals'));
         }
 
         $stage->delete();
 
-        return back()->with('success', 'Stage dihapus.');
+        return back()->with('success', __('messages.success.stage_deleted'));
     }
 
     public function reorder(Request $request)
@@ -84,6 +84,6 @@ class DealStageController extends Controller
                 ->update(['sort_order' => $item['sort_order']]);
         }
 
-        return back()->with('success', 'Urutan stage diperbarui.');
+        return back()->with('success', __('messages.success.stage_order_updated'));
     }
 }

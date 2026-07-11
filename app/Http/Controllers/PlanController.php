@@ -25,7 +25,7 @@ class PlanController extends Controller
     public function subscribe(Request $request, Plan $plan)
     {
         if (!$plan->is_active) {
-            return back()->with('error', 'Paket tidak tersedia.');
+            return back()->with('error', __('messages.error.plan_unavailable'));
         }
 
         $user = Auth::user();
@@ -60,7 +60,7 @@ class PlanController extends Controller
             'expires_at' => null,
         ]);
 
-        return back()->with('success', "Paket {$plan->name} diaktifkan.");
+        return back()->with('success', __('messages.success.plan_activated', ['name' => $plan->name]));
     }
 
     public function payment(Subscription $subscription)
@@ -99,6 +99,6 @@ class PlanController extends Controller
         Auth::user()->update(['plan_id' => $subscription->plan_id]);
 
         return redirect()->route('subscriptions.index')
-            ->with('success', 'Pembayaran berhasil dikonfirmasi. Paket Anda aktif.');
+            ->with('success', __('messages.success.payment_confirmed'));
     }
 }

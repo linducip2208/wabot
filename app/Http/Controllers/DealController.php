@@ -70,7 +70,7 @@ class DealController extends Controller
             'status' => 'open',
         ]);
 
-        return redirect()->route('deals.index')->with('success', 'Deal berhasil dibuat.');
+        return redirect()->route('deals.index')->with('success', __('messages.success.deal_created'));
     }
 
     public function edit(WaDeal $deal)
@@ -105,7 +105,7 @@ class DealController extends Controller
             'notes' => $validated['notes'] ?? null,
         ]);
 
-        return redirect()->route('deals.index')->with('success', 'Deal diperbarui.');
+        return redirect()->route('deals.index')->with('success', __('messages.success.deal_updated'));
     }
 
     public function destroy(WaDeal $deal)
@@ -113,7 +113,7 @@ class DealController extends Controller
         abort_if($deal->user_id !== Auth::id(), 403);
         $deal->delete();
 
-        return back()->with('success', 'Deal dihapus.');
+        return back()->with('success', __('messages.success.deal_deleted'));
     }
 
     public function move(Request $request, WaDeal $deal)
@@ -132,6 +132,6 @@ class DealController extends Controller
 
         $deal->update(['stage_id' => $validated['stage_id']]);
 
-        return back()->with('success', 'Deal dipindahkan.');
+        return back()->with('success', __('messages.success.deal_moved'));
     }
 }

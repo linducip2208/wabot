@@ -74,7 +74,7 @@ class WebhookController extends Controller
             'is_active' => $request->boolean('is_active', true),
         ]);
 
-        return back()->with('success', 'Webhook berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.webhook_added'));
     }
 
     public function update(Request $request, WaWebhook $webhook)
@@ -95,7 +95,7 @@ class WebhookController extends Controller
             'is_active' => $request->boolean('is_active', true),
         ]);
 
-        return back()->with('success', 'Webhook diperbarui.');
+        return back()->with('success', __('messages.success.webhook_updated'));
     }
 
     public function destroy(WaWebhook $webhook)
@@ -103,7 +103,7 @@ class WebhookController extends Controller
         abort_if($webhook->user_id !== Auth::id(), 403);
         $webhook->delete();
 
-        return back()->with('success', 'Webhook dihapus.');
+        return back()->with('success', __('messages.success.webhook_deleted'));
     }
 
     public function test(WaWebhook $webhook)
@@ -114,7 +114,7 @@ class WebhookController extends Controller
             'event' => 'test',
             'webhook_id' => $webhook->id,
             'name' => $webhook->name,
-            'message' => 'Ini adalah payload test dari WABot.',
+            'message' => __('messages.webhook.test_payload'),
             'timestamp' => now()->toIso8601String(),
         ];
 
@@ -134,10 +134,10 @@ class WebhookController extends Controller
             $webhook->update(['last_triggered_at' => now()]);
 
             if ($response->successful()) {
-                return back()->with('success', 'Test webhook terkirim (HTTP ' . $response->status() . ').');
+                return back()->with('success', __('messages.success.webhook_test_sent', ['status' => $response->status()]));
             }
 
-            return back()->with('warning', 'Webhook merespon dengan HTTP ' . $response->status() . '.');
+            return back()->with('warning', __('messages.warning.webhook_response_http', ['status' => $response->status()]));
         } catch (\Throwable $e) {
             WaWebhookLog::create([
                 'webhook_id' => $webhook->id,
@@ -147,7 +147,7 @@ class WebhookController extends Controller
                 'error' => mb_substr($e->getMessage(), 0, 2000),
             ]);
 
-            return back()->with('error', 'Gagal mengirim test: ' . $e->getMessage());
+            return back()->with('error', __('messages.error.webhook_test_failed', ['error' => $e->getMessage()]));
         }
     }
 

@@ -28,7 +28,7 @@ class PaymentGatewayController extends Controller
 
         PaymentGateway::create($data);
 
-        return back()->with('success', 'Payment gateway ditambahkan.');
+        return back()->with('success', __('messages.success.payment_gateway_added'));
     }
 
     public function update(Request $request, PaymentGateway $gateway)
@@ -45,12 +45,12 @@ class PaymentGatewayController extends Controller
 
         $gateway->update($data);
 
-        return back()->with('success', 'Payment gateway diperbarui.');
+        return back()->with('success', __('messages.success.payment_gateway_updated'));
     }
 
     public function destroy(PaymentGateway $gateway)
     {
         $gateway->delete();
-        return back()->with('success', 'Payment gateway dihapus.');
+        return back()->with('success', __('messages.success.payment_gateway_deleted'));
     }
 }

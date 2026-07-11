@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'role_id', 'plan_id', 'trial_ends_at', 'expires_at'])]
+#[Fillable(['name', 'email', 'password', 'role', 'role_id', 'plan_id', 'trial_ends_at', 'expires_at', 'language_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -187,5 +187,10 @@ class User extends Authenticatable
     public function payouts(): HasMany
     {
         return $this->hasMany(Payout::class);
+    }
+
+    public function language(): BelongsTo
+    {
+        return $this->belongsTo(Language::class);
     }
 }

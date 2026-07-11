@@ -41,13 +41,13 @@ class KnowledgeController extends Controller
                 }
             }
             if (!$rows) {
-                return back()->with('error', 'FAQ minimal memiliki 1 pasangan pertanyaan & jawaban.');
+                return back()->with('error', __('messages.error.faq_min_1_pair'));
             }
             $content = json_encode(['rows' => $rows], JSON_UNESCAPED_UNICODE);
         } else {
             $summary = trim($validated['summary'] ?? '');
             if (mb_strlen($summary) < 20) {
-                return back()->with('error', 'Summary minimal 20 karakter.');
+                return back()->with('error', __('messages.error.summary_min_20'));
             }
             $content = json_encode(['rows' => [['content' => $summary]]], JSON_UNESCAPED_UNICODE);
         }
@@ -60,7 +60,7 @@ class KnowledgeController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Knowledge berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.knowledge_added'));
     }
 
     public function importCsv(Request $request)
@@ -92,7 +92,7 @@ class KnowledgeController extends Controller
         fclose($handle);
 
         if (!$rows) {
-            return back()->with('error', 'CSV tidak punya baris valid (perlu kolom question & answer).');
+            return back()->with('error', __('messages.error.csv_no_valid_rows'));
         }
 
         WaKnowledge::create([
@@ -103,7 +103,7 @@ class KnowledgeController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', count($rows) . ' baris berhasil diimport.');
+        return back()->with('success', __('messages.success.knowledge_imported', ['count' => count($rows)]));
     }
 
     public function toggle(WaKnowledge $knowledge)
@@ -111,7 +111,7 @@ class KnowledgeController extends Controller
         abort_if($knowledge->user_id !== Auth::id(), 403);
         $knowledge->update(['is_active' => !$knowledge->is_active]);
 
-        return back()->with('success', $knowledge->is_active ? 'Diaktifkan.' : 'Dinonaktifkan.');
+        return back()->with('success', $knowledge->is_active ? __('messages.success.activated') : __('messages.success.deactivated'));
     }
 
     public function destroy(WaKnowledge $knowledge)
@@ -119,6 +119,6 @@ class KnowledgeController extends Controller
         abort_if($knowledge->user_id !== Auth::id(), 403);
         $knowledge->delete();
 
-        return back()->with('success', 'Knowledge dihapus.');
+        return back()->with('success', __('messages.success.knowledge_deleted'));
     }
 }

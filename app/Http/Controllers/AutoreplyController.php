@@ -52,7 +52,7 @@ class AutoreplyController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Auto-reply berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.autoreply_added'));
     }
 
     public function update(Request $request, WaAutoreply $autoreply)
@@ -80,7 +80,7 @@ class AutoreplyController extends Controller
 
         $autoreply->update($validated);
 
-        return back()->with('success', 'Auto-reply diperbarui.');
+        return back()->with('success', __('messages.success.autoreply_updated'));
     }
 
     public function destroy(WaAutoreply $autoreply)
@@ -88,6 +88,6 @@ class AutoreplyController extends Controller
         abort_if($autoreply->user_id !== Auth::id(), 403);
         $autoreply->delete();
 
-        return back()->with('success', 'Auto-reply dihapus.');
+        return back()->with('success', __('messages.success.autoreply_deleted'));
     }
 }

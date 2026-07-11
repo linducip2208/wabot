@@ -4,12 +4,12 @@
 
 <div class="flex items-center justify-between mb-5">
     <div>
-        <h1 class="text-xl font-extrabold text-gray-900">AI Provider Keys</h1>
-        <p class="text-sm text-gray-500 mt-0.5">Kelola kunci API AI untuk auto-reply & asisten</p>
+        <h1 class="text-xl font-extrabold text-gray-900">{{ __('aikeys.heading') }}</h1>
+        <p class="text-sm text-gray-500 mt-0.5">{{ __('aikeys.subtitle') }}</p>
     </div>
     <button onclick="toggleModal()"
         class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2">
-        <i class="fas fa-plus text-xs"></i> Tambah AI Key
+        <i class="fas fa-plus text-xs"></i> {{ __('aikeys.new_key') }}
     </button>
 </div>
 
@@ -17,11 +17,11 @@
     <table class="w-full text-sm">
         <thead>
             <tr class="bg-gray-50 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                <th class="px-5 py-3">Nama</th>
-                <th class="px-5 py-3">Provider</th>
-                <th class="px-5 py-3 hidden md:table-cell">Model</th>
-                <th class="px-5 py-3 hidden lg:table-cell">Max Token</th>
-                <th class="px-5 py-3 w-32 text-right">Aksi</th>
+                <th class="px-5 py-3">{{ __('common.name') }}</th>
+                <th class="px-5 py-3">{{ __('aikeys.provider') }}</th>
+                <th class="px-5 py-3 hidden md:table-cell">{{ __('aikeys.model') }}</th>
+                <th class="px-5 py-3 hidden lg:table-cell">{{ __('aikeys.max_tokens') }}</th>
+                <th class="px-5 py-3 w-32 text-right">{{ __('common.action') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -42,95 +42,95 @@
                 <td class="px-5 py-3 text-right">
                     <form method="POST" action="{{ route('ai-keys.test', $k) }}" class="inline">
                         @csrf
-                        <button class="p-1.5 rounded-lg hover:bg-emerald-50 text-gray-400 hover:text-emerald-600" title="Test koneksi">
+                        <button class="p-1.5 rounded-lg hover:bg-emerald-50 text-gray-400 hover:text-emerald-600" title="{{ __('aikeys.test_connection') }}">
                             <i class="fas fa-flask text-xs"></i>
                         </button>
                     </form>
                     <button onclick='editKey({{ $k->id }}, {{ json_encode($k->name) }}, "{{ $k->provider }}", {{ json_encode($k->model) }}, {{ json_encode($k->base_url) }}, {{ json_encode($k->system_prompt) }}, {{ $k->max_tokens }}, {{ $k->temperature }})'
                         class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-brand-600"><i class="fas fa-edit text-xs"></i></button>
-                    <form method="POST" action="{{ route('ai-keys.destroy', $k) }}" class="inline" onsubmit="return confirm('Hapus AI key ini?')">
+                    <form method="POST" action="{{ route('ai-keys.destroy', $k) }}" class="inline" onsubmit="return confirm('{{ __('aikeys.confirm_delete') }}')">
                         @csrf @method('DELETE')
                         <button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button>
                     </form>
                 </td>
             </tr>
             @empty
-            <tr><td colspan="5" class="px-5 py-16 text-center text-gray-500">Belum ada AI Provider Key. Tambahkan untuk mengaktifkan fitur AI.</td></tr>
+            <tr><td colspan="5" class="px-5 py-16 text-center text-gray-500">{{ __('aikeys.empty') }}</td></tr>
             @endforelse
         </tbody>
     </table>
 </div>
 
 <div class="mt-4 bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
-    <p class="font-medium mb-2"><i class="fas fa-info-circle text-brand-500 mr-1"></i> Provider yang didukung:</p>
+    <p class="font-medium mb-2"><i class="fas fa-info-circle text-brand-500 mr-1"></i> {{ __('aikeys.supported_providers') }}</p>
     <div class="grid md:grid-cols-2 gap-2 text-xs">
-        <div><span class="font-semibold">OpenAI</span> — GPT-4o, GPT-4o-mini, GPT-4-turbo</div>
-        <div><span class="font-semibold">Gemini</span> — gemini-1.5-pro, gemini-1.5-flash</div>
-        <div><span class="font-semibold">Anthropic</span> — claude-3-opus, claude-3-5-sonnet</div>
-        <div><span class="font-semibold">DeepSeek</span> — deepseek-chat, deepseek-reasoner, deepseek-v4</div>
-        <div><span class="font-semibold">OpenAI Compatible</span> — Groq, Ollama, vLLM, Mistral, dll</div>
+        <div><span class="font-semibold">OpenAI</span> &mdash; {{ __('aikeys.provider_openai_desc') }}</div>
+        <div><span class="font-semibold">Gemini</span> &mdash; {{ __('aikeys.provider_gemini_desc') }}</div>
+        <div><span class="font-semibold">Anthropic</span> &mdash; {{ __('aikeys.provider_anthropic_desc') }}</div>
+        <div><span class="font-semibold">DeepSeek</span> &mdash; {{ __('aikeys.provider_deepseek_desc') }}</div>
+        <div><span class="font-semibold">{{ __('aikeys.provider_compatible_label') }}</span> &mdash; {{ __('aikeys.provider_compatible_desc') }}</div>
     </div>
 </div>
 
 {{-- Modal --}}
 <div id="keyModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-        <h2 class="text-lg font-bold mb-4" id="modalTitle">Tambah AI Key</h2>
+        <h2 class="text-lg font-bold mb-4" id="modalTitle">{{ __('aikeys.new_key') }}</h2>
         <form method="POST" action="{{ route('ai-keys.store') }}" class="space-y-3" id="keyForm">
             @csrf
             <div id="methodField"></div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Nama</label>
-                <input type="text" name="name" placeholder="contoh: OpenAI Production" required
+                <label class="text-xs font-medium text-gray-500">{{ __('common.name') }}</label>
+                <input type="text" name="name" placeholder="{{ __('aikeys.name_placeholder') }}" required
                     class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Provider</label>
+                <label class="text-xs font-medium text-gray-500">{{ __('aikeys.provider') }}</label>
                 <select name="provider" id="providerSelect" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm" onchange="toggleBaseUrl()">
-                    <option value="">Pilih Provider</option>
+                    <option value="">{{ __('aikeys.select_provider') }}</option>
                     <option value="openai">OpenAI</option>
                     <option value="deepseek">DeepSeek</option>
                     <option value="gemini">Gemini</option>
-                    <option value="anthropic">Anthropic (Claude)</option>
-                    <option value="openai_compatible">OpenAI Compatible (custom)</option>
+                    <option value="anthropic">{{ __('aikeys.provider_anthropic_label') }}</option>
+                    <option value="openai_compatible">{{ __('aikeys.provider_compatible_label') }}</option>
                 </select>
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Model</label>
-                <input type="text" name="model" placeholder="contoh: gpt-4o" required
+                <label class="text-xs font-medium text-gray-500">{{ __('aikeys.model') }}</label>
+                <input type="text" name="model" placeholder="{{ __('aikeys.model_placeholder') }}" required
                     class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div id="baseUrlGroup" class="hidden">
-                <label class="text-xs font-medium text-gray-500">Base URL (OpenAI Compatible)</label>
+                <label class="text-xs font-medium text-gray-500">{{ __('aikeys.base_url') }}</label>
                 <input type="text" name="base_url" placeholder="https://api.openai.com/v1"
                     class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
             <div>
                 <label class="text-xs font-medium text-gray-500">API Key</label>
-                <input type="password" name="api_key" placeholder="sk-..." required
+                <input type="{{ __('common.password') }}" name="api_key" placeholder="sk-..." required
                     class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                <p class="text-[11px] text-gray-400 mt-0.5">Dienskripsi sebelum disimpan. Kosongkan saat edit jika tidak ingin mengubah.</p>
+                <p class="text-[11px] text-gray-400 mt-0.5">{{ __('aikeys.encrypted_notice') }}</p>
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">System Prompt (opsional)</label>
-                <textarea name="system_prompt" rows="2" placeholder="Instruksi sistem untuk AI..." maxlength="2000"
+                <label class="text-xs font-medium text-gray-500">{{ __('aikeys.system_prompt') }}</label>
+                <textarea name="system_prompt" rows="2" placeholder="{{ __('aikeys.system_prompt_placeholder') }}" maxlength="2000"
                     class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Max Tokens</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('aikeys.max_tokens') }}</label>
                     <input type="number" name="max_tokens" value="1024" min="1" max="128000"
                         class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Temperature</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('aikeys.temperature') }}</label>
                     <input type="number" name="temperature" value="0.7" step="0.1" min="0" max="2"
                         class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
             </div>
             <div class="flex gap-2 pt-1">
-                <button type="button" onclick="toggleModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">Batal</button>
-                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">Simpan</button>
+                <button type="button" onclick="toggleModal()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">{{ __('common.cancel') }}</button>
+                <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">{{ __('common.save') }}</button>
             </div>
         </form>
     </div>
@@ -141,7 +141,7 @@ function toggleModal() {
     const m = document.getElementById('keyModal');
     m.classList.toggle('hidden');
     if (!m.classList.contains('hidden')) {
-        document.getElementById('modalTitle').textContent = 'Tambah AI Key';
+        document.getElementById('modalTitle').textContent = '{{ __('aikeys.new_key') }}';
         const f = document.getElementById('keyForm');
         f.action = '{{ route('ai-keys.store') }}';
         f.reset();
@@ -165,7 +165,7 @@ function toggleBaseUrl() {
 function editKey(id, name, provider, model, baseUrl, systemPrompt, maxTokens, temperature) {
     const m = document.getElementById('keyModal');
     m.classList.remove('hidden');
-    document.getElementById('modalTitle').textContent = 'Edit AI Key';
+    document.getElementById('modalTitle').textContent = '{{ __('aikeys.edit_key') }}';
     const f = document.getElementById('keyForm');
     f.action = '/ai-keys/' + id;
     f.querySelector('input[name="name"]').value = name;

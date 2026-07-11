@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Detail Rating — WABot')
+@section('title', __('common.detail') . ' Rating — WABot')
 @section('content')
 
 <div class="flex items-center gap-3 mb-5">
     <a href="{{ route('ratings.index') }}" class="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-brand-600"><i class="fas fa-arrow-left"></i></a>
     <div>
-        <h1 class="text-xl font-extrabold text-gray-900">Detail Rating</h1>
+        <h1 class="text-xl font-extrabold text-gray-900">{{ __('common.detail') }} Rating</h1>
         <p class="text-sm text-gray-500 mt-0.5">{{ $rating->created_at->format('d M Y H:i') }}</p>
     </div>
 </div>
@@ -20,19 +20,19 @@
         </div>
         @if($rating->comment)
         <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <div class="text-xs font-semibold text-gray-500 mb-2">Komentar Pelanggan</div>
+            <div class="text-xs font-semibold text-gray-500 mb-2">{{ __('ratings.comment_from') }}</div>
             <p class="text-sm text-gray-700 whitespace-pre-line">{{ $rating->comment }}</p>
         </div>
         @endif
         @if($rating->message)
         <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <div class="text-xs font-semibold text-gray-500 mb-2">Pesan Terkait</div>
+            <div class="text-xs font-semibold text-gray-500 mb-2">{{ __('ratings.related_message') }}</div>
             <p class="text-sm text-gray-700">{{ $rating->message->message ?? '-' }}</p>
         </div>
         @endif
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-5 h-fit">
-        <div class="text-xs font-semibold text-gray-500 mb-2">Kontak</div>
+        <div class="text-xs font-semibold text-gray-500 mb-2">{{ __('common.contact') }}</div>
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">{{ strtoupper(substr($rating->contact?->name ?? 'NA', 0, 2)) }}</div>
             <div>

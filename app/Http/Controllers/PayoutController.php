@@ -33,6 +33,6 @@ class PayoutController extends Controller
             'status' => 'pending',
         ]);
 
-        return back()->with('success', 'Permintaan payout berhasil dikirim. Menunggu review admin.');
+        return back()->with('success', __('messages.success.payout_requested'));
     }
 }

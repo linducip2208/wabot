@@ -53,7 +53,7 @@ class RecurringController extends Controller
         $schedule = WaRecurring::create($data);
         $schedule->computeNextRun();
 
-        return back()->with('success', 'Jadwal berulang dibuat.');
+        return back()->with('success', __('messages.success.recurring_created'));
     }
 
     public function update(Request $request, WaRecurring $schedule)
@@ -76,20 +76,20 @@ class RecurringController extends Controller
         $schedule->update($data);
         $schedule->computeNextRun();
 
-        return back()->with('success', 'Jadwal diperbarui.');
+        return back()->with('success', __('messages.success.recurring_updated'));
     }
 
     public function destroy(WaRecurring $schedule)
     {
         abort_if($schedule->user_id !== Auth::id(), 403);
         $schedule->delete();
-        return back()->with('success', 'Jadwal dihapus.');
+        return back()->with('success', __('messages.success.recurring_deleted'));
     }
 
     public function toggle(WaRecurring $schedule)
     {
         abort_if($schedule->user_id !== Auth::id(), 403);
         $schedule->update(['is_active' => !$schedule->is_active]);
-        return back()->with('success', $schedule->is_active ? 'Diaktifkan.' : 'Dinonaktifkan.');
+        return back()->with('success', $schedule->is_active ? __('messages.success.activated') : __('messages.success.deactivated'));
     }
 }

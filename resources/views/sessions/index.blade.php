@@ -1,16 +1,16 @@
 @extends('layouts.app')
-@section('title', 'Sesi WhatsApp — WABot')
+@section('title', __('common.session') . ' WhatsApp — WABot')
 @section('content')
 
 <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-extrabold text-gray-900">Sesi WhatsApp</h1>
+    <h1 class="text-2xl font-extrabold text-gray-900">{{ __('common.session') }} WhatsApp</h1>
     <div class="flex gap-2">
         <a href="{{ route('sessions.index') }}" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
-            Refresh Status
+            Refresh {{ __('common.status') }}
         </a>
         <button onclick="document.getElementById('createSessionModal').classList.remove('hidden')"
             class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">
-            + Tambah Sesi
+            + {{ __('common.create') }} {{ __('common.session') }}
         </button>
     </div>
 </div>
@@ -33,7 +33,7 @@
                 </div>
                 <div>
                     <div class="font-semibold text-gray-900">{{ $s->name }}</div>
-                    <div class="text-sm text-gray-500">{{ $s->phone ?? 'Belum terhubung' }}</div>
+                    <div class="text-sm text-gray-500">{{ $s->phone ?? __('sessions.not_connected') }}</div>
                     @if($s->server)
                     <div class="text-xs text-gray-400 mt-0.5">{{ $s->server->name }} ({{ $s->server->host }})</div>
                     @endif
@@ -52,8 +52,8 @@
     </a>
     @empty
     <div class="bg-white rounded-xl border border-gray-200 p-12 text-center">
-        <p class="text-gray-500 mb-2">Belum ada sesi WhatsApp.</p>
-        <p class="text-sm text-gray-400">Tambah server Baileys dulu, lalu buat sesi baru.</p>
+        <p class="text-gray-500 mb-2">{{ __('sessions.empty') }}</p>
+        <p class="text-sm text-gray-400">{{ __('sessions.empty_hint') }}</p>
     </div>
     @endforelse
 </div>
@@ -61,19 +61,19 @@
 {{-- Create Modal --}}
 <div id="createSessionModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-        <h2 class="text-lg font-bold mb-4">Tambah Sesi WhatsApp</h2>
+        <h2 class="text-lg font-bold mb-4">{{ __('common.create') }} {{ __('common.session') }} WhatsApp</h2>
         <form method="POST" action="{{ route('sessions.store') }}" class="space-y-4">
             @csrf
             <select name="server_id" required class="w-full rounded-xl border-gray-300 px-4 py-2.5 border text-sm">
-                <option value="">Pilih Server Baileys</option>
+                <option value="">{{ __('common.select') }} {{ __('common.server') }} Baileys</option>
                 @foreach($servers as $srv)
                 <option value="{{ $srv->id }}">{{ $srv->name }} ({{ $srv->host }}:{{ $srv->port }})</option>
                 @endforeach
             </select>
-            <input type="text" name="name" placeholder="Nama sesi (contoh: WA Marketing)" required
+            <input type="text" name="name" placeholder="{{ __('sessions.name_placeholder') }}" required
                 class="w-full rounded-xl border-gray-300 px-4 py-2.5 border text-sm">
             <button type="submit" class="w-full bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">
-                Buat Sesi
+                {{ __('sessions.create_session') }}
             </button>
         </form>
     </div>

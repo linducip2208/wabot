@@ -32,12 +32,12 @@ class CommerceOrderController extends Controller
         abort_if($order->user_id !== Auth::id(), 403);
 
         if ($order->status !== 'pending') {
-            return back()->with('error', 'Hanya pesanan pending yang dapat dikonfirmasi.');
+            return back()->with('error', __('messages.error.only_pending_confirmable'));
         }
 
         $order->update(['status' => 'confirmed']);
 
-        return back()->with('success', 'Pesanan berhasil dikonfirmasi.');
+        return back()->with('success', __('messages.success.order_confirmed'));
     }
 
     public function paid(Request $request, WaCommerceOrder $order)
@@ -45,7 +45,7 @@ class CommerceOrderController extends Controller
         abort_if($order->user_id !== Auth::id(), 403);
 
         if (!in_array($order->status, ['confirmed'])) {
-            return back()->with('error', 'Pesanan harus dikonfirmasi terlebih dahulu.');
+            return back()->with('error', __('messages.error.order_must_be_confirmed'));
         }
 
         $validated = $request->validate([
@@ -60,7 +60,7 @@ class CommerceOrderController extends Controller
             'paid_at' => now(),
         ]);
 
-        return back()->with('success', 'Pembayaran berhasil dicatat.');
+        return back()->with('success', __('messages.success.payment_recorded'));
     }
 
     public function ship(WaCommerceOrder $order)
@@ -68,12 +68,12 @@ class CommerceOrderController extends Controller
         abort_if($order->user_id !== Auth::id(), 403);
 
         if ($order->status !== 'paid') {
-            return back()->with('error', 'Pesanan harus sudah dibayar sebelum dikirim.');
+            return back()->with('error', __('messages.error.order_must_be_paid'));
         }
 
         $order->update(['status' => 'shipped']);
 
-        return back()->with('success', 'Status pesanan diubah menjadi dikirim.');
+        return back()->with('success', __('messages.success.order_shipped'));
     }
 
     public function cancel(WaCommerceOrder $order)
@@ -81,11 +81,11 @@ class CommerceOrderController extends Controller
         abort_if($order->user_id !== Auth::id(), 403);
 
         if (in_array($order->status, ['shipped', 'delivered'])) {
-            return back()->with('error', 'Pesanan yang sudah dikirim tidak dapat dibatalkan.');
+            return back()->with('error', __('messages.error.shipped_cannot_cancel'));
         }
 
         $order->update(['status' => 'cancelled']);
 
-        return back()->with('success', 'Pesanan dibatalkan.');
+        return back()->with('success', __('messages.success.order_cancelled'));
     }
 }

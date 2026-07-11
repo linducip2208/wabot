@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if(session('language_rtl')) dir="rtl" @endif>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'WABot') — WhatsApp SaaS</title>
+    <title>@yield('title', config('app.name')) — WhatsApp SaaS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.3.2/css/flag-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     @stack('styles')
     <style>
@@ -62,250 +63,264 @@
     :class="sidebarOpen && 'open'">
     <div class="flex items-center gap-3 px-5 h-16 border-b border-white/10 flex-shrink-0">
         <i class="fas fa-paper-plane text-brand-400 text-lg"></i>
-        <span class="text-white font-extrabold text-lg tracking-tight">WABot</span>
+        <span class="text-white font-extrabold text-lg tracking-tight">{{ config('app.name') }}</span>
     </div>
 
     <nav class="flex-1 overflow-y-auto py-3 px-3 space-y-1">
-        {{-- MAIN --}}
+        @php $langs = \App\Models\Language::active()->ordered()->get(); $cur = app()->getLocale(); @endphp
+
+        {{-- OVERVIEW --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
-            <span>Utama</span>
+            <span>{{ __('sidebar.overview') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
-        <div class="nav-group-body space-y-0.5" style="max-height: 300px;">
-            <a href="{{ route('chat.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('chat*') || request()->is('/') && !request()->is('dashboard*') ? 'active' : '' }}">
-                <i class="fas fa-comments w-4 text-center"></i> Chat
-            </a>
+        <div class="nav-group-body space-y-0.5" style="max-height: 200px;">
             <a href="{{ route('dashboard.stats') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('dashboard*') ? 'active' : '' }}">
-                <i class="fas fa-chart-pie w-4 text-center"></i> Dashboard
+                <i class="fas fa-chart-pie w-4 text-center"></i> {{ __('sidebar.dashboard') }}
+            </a>
+            <a href="{{ route('logger.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('logger*') ? 'active' : '' }}">
+                <i class="fas fa-history w-4 text-center"></i> {{ __('sidebar.activity_feed') }}
             </a>
         </div>
 
-        {{-- WHATSAPP --}}
+        {{-- INBOX --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
-            <span>WhatsApp</span>
+            <span>{{ __('sidebar.inbox') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
         <div class="nav-group-body space-y-0.5" style="max-height: 500px;">
-            <a href="{{ route('messages.send.form') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('messages/send*') ? 'active' : '' }}">
-                <i class="fas fa-paper-plane w-4 text-center"></i> Kirim Pesan
+            <a href="{{ route('chat.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('chat*') || request()->is('/') && !request()->is('dashboard*') ? 'active' : '' }}">
+                <i class="fas fa-comments w-4 text-center"></i> {{ __('sidebar.live_chat') }}
             </a>
             <a href="{{ route('messages.received') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('messages/received*') ? 'active' : '' }}">
-                <i class="fas fa-inbox w-4 text-center"></i> Pesan Masuk
-            </a>
-            <a href="{{ route('messages.sent') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('messages/sent*') ? 'active' : '' }}">
-                <i class="fas fa-check-double w-4 text-center"></i> Pesan Terkirim
+                <i class="fas fa-inbox w-4 text-center"></i> {{ __('sidebar.conversations') }}
             </a>
             <a href="{{ route('messages.queue') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('messages/queue*') ? 'active' : '' }}">
-                <i class="fas fa-clock w-4 text-center"></i> Antrian
+                <i class="fas fa-clock w-4 text-center"></i> {{ __('sidebar.queue') }}
             </a>
-            <a href="{{ route('sessions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sessions*') ? 'active' : '' }}">
-                <i class="fas fa-mobile-alt w-4 text-center"></i> Sesi / Agen
+            <a href="{{ route('messages.sent') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('messages/sent*') ? 'active' : '' }}">
+                <i class="fas fa-check-double w-4 text-center"></i> {{ __('sidebar.sent_messages') }}
             </a>
             <a href="{{ route('contacts.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('contacts*') ? 'active' : '' }}">
-                <i class="fas fa-address-book w-4 text-center"></i> Kontak
+                <i class="fas fa-address-book w-4 text-center"></i> {{ __('sidebar.contacts') }}
             </a>
             <a href="{{ route('groups.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('groups*') ? 'active' : '' }}">
-                <i class="fas fa-layer-group w-4 text-center"></i> Grup
-            </a>
-            <a href="{{ route('campaigns.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('campaigns*') ? 'active' : '' }}">
-                <i class="fas fa-bullhorn w-4 text-center"></i> Kampanye
-            </a>
-            <a href="{{ route('recurrings.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('recurrings*') ? 'active' : '' }}">
-                <i class="fas fa-clock w-4 text-center"></i> Jadwal
-            </a>
-            <a href="{{ route('autoreplies.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('autoreplies*') ? 'active' : '' }}">
-                <i class="fas fa-robot w-4 text-center"></i> Auto-Reply
-            </a>
-            <a href="{{ route('knowledge.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('knowledge*') ? 'active' : '' }}">
-                <i class="fas fa-database w-4 text-center"></i> Knowledge
-            </a>
-            <a href="{{ route('ai-keys.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-keys*') ? 'active' : '' }}">
-                <i class="fas fa-key w-4 text-center"></i> AI Keys
-            </a>
-            <a href="{{ route('templates.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('templates*') ? 'active' : '' }}">
-                <i class="fas fa-file-lines w-4 text-center"></i> Template
-            </a>
-            <a href="{{ route('webhooks.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('webhooks*') ? 'active' : '' }}">
-                <i class="fas fa-bolt w-4 text-center"></i> Webhook
-            </a>
-            <a href="{{ route('ai-keys.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-keys*') ? 'active' : '' }}">
-                <i class="fas fa-brain w-4 text-center"></i> AI Keys
-            </a>
-        </div>
-
-        {{-- CHATBOT --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
-            <span>🤖 Chatbot</span>
-            <i class="fas fa-chevron-right text-[9px] chevron"></i>
-        </div>
-        <div class="nav-group-body space-y-0.5" style="max-height: 300px;">
-            <a href="{{ route('flows.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('flows*') ? 'active' : '' }}">
-                <i class="fas fa-project-diagram w-4 text-center"></i> Flow Builder
-            </a>
-            <a href="{{ route('ai-agents.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-agents*') ? 'active' : '' }}">
-                <i class="fas fa-robot w-4 text-center"></i> AI Agents
-            </a>
-            <a href="{{ route('intents.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('intents*') ? 'active' : '' }}">
-                <i class="fas fa-brain w-4 text-center"></i> Intent
-            </a>
-            <a href="{{ route('ai-keys.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-keys*') ? 'active' : '' }}">
-                <i class="fas fa-key w-4 text-center"></i> AI Keys
-            </a>
-            <a href="{{ route('knowledge.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('knowledge*') ? 'active' : '' }}">
-                <i class="fas fa-database w-4 text-center"></i> Knowledge
+                <i class="fas fa-layer-group w-4 text-center"></i> {{ __('sidebar.groups') }}
             </a>
         </div>
 
         {{-- MARKETING --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
-            <span>📢 Marketing</span>
+            <span>{{ __('sidebar.marketing') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
-        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 400px;' : 'max-height: 0;'">
+            <a href="{{ route('messages.send.form') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('messages/send*') ? 'active' : '' }}">
+                <i class="fas fa-paper-plane w-4 text-center"></i> {{ __('sidebar.broadcast') }}
+            </a>
             <a href="{{ route('campaigns.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('campaigns*') ? 'active' : '' }}">
-                <i class="fas fa-bullhorn w-4 text-center"></i> Broadcast
+                <i class="fas fa-bullhorn w-4 text-center"></i> {{ __('sidebar.campaigns') }}
+            </a>
+            <a href="{{ route('recurrings.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('recurrings*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-alt w-4 text-center"></i> {{ __('sidebar.scheduled_messages') }}
             </a>
             <a href="{{ route('drips.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('drips*') ? 'active' : '' }}">
-                <i class="fas fa-clock w-4 text-center"></i> Drip Campaign
+                <i class="fas fa-water w-4 text-center"></i> {{ __('sidebar.drip_campaign') }}
             </a>
             <a href="{{ route('ab-tests.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ab-tests*') ? 'active' : '' }}">
-                <i class="fas fa-flask w-4 text-center"></i> A/B Test
+                <i class="fas fa-flask w-4 text-center"></i> {{ __('sidebar.ab_testing') }}
             </a>
             <a href="{{ route('click-stats.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('click-stats*') ? 'active' : '' }}">
-                <i class="fas fa-mouse-pointer w-4 text-center"></i> Click Track
+                <i class="fas fa-mouse-pointer w-4 text-center"></i> {{ __('sidebar.click_tracking') }}
+            </a>
+            <a href="{{ route('templates.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('templates*') ? 'active' : '' }}">
+                <i class="fas fa-file-lines w-4 text-center"></i> {{ __('sidebar.templates') }}
             </a>
         </div>
 
-        {{-- INTERACTIVE --}}
+        {{-- AI AUTOMATION --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
-            <span>💬 Interactive</span>
+            <span>{{ __('sidebar.ai_automation') }}</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 400px;' : 'max-height: 0;'">
+            <a href="{{ route('ai-agents.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-agents*') ? 'active' : '' }}">
+                <i class="fas fa-robot w-4 text-center"></i> {{ __('sidebar.ai_agents') }}
+            </a>
+            <a href="{{ route('intents.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('intents*') ? 'active' : '' }}">
+                <i class="fas fa-brain w-4 text-center"></i> {{ __('sidebar.intent') }}
+            </a>
+            <a href="{{ route('autoreplies.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('autoreplies*') ? 'active' : '' }}">
+                <i class="fas fa-reply w-4 text-center"></i> {{ __('sidebar.auto_reply') }}
+            </a>
+            <a href="{{ route('knowledge.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('knowledge*') ? 'active' : '' }}">
+                <i class="fas fa-database w-4 text-center"></i> {{ __('sidebar.knowledge_base') }}
+            </a>
+            <a href="{{ route('ai-keys.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-keys*') ? 'active' : '' }}">
+                <i class="fas fa-key w-4 text-center"></i> {{ __('sidebar.ai_api_keys') }}
+            </a>
+        </div>
+
+        {{-- COMMERCE --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>{{ __('sidebar.commerce') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
         <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('catalogs.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('catalogs*') ? 'active' : '' }}">
+                <i class="fas fa-shopping-bag w-4 text-center"></i> {{ __('sidebar.catalog') }}
+                <span class="ml-auto text-[9px] text-blue-400 border border-blue-400/40 rounded px-1.5 py-0">Meta</span>
+            </a>
+            <a href="{{ route('commerce.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('commerce*') ? 'active' : '' }}">
+                <i class="fas fa-shopping-cart w-4 text-center"></i> {{ __('sidebar.orders') }}
+            </a>
             <a href="{{ route('buttons.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('buttons*') ? 'active' : '' }}">
-                <i class="fas fa-hand-pointer w-4 text-center"></i> Buttons
+                <i class="fas fa-hand-pointer w-4 text-center"></i> {{ __('sidebar.buttons') }}
+            </a>
+            <a href="{{ route('forms.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('forms*') ? 'active' : '' }}">
+                <i class="fas fa-wpforms w-4 text-center"></i> {{ __('sidebar.forms') }}
+                <span class="ml-auto text-[9px] text-blue-400 border border-blue-400/40 rounded px-1.5 py-0">Meta</span>
             </a>
             <a href="{{ route('media-templates.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('media-templates*') ? 'active' : '' }}">
-                <i class="fas fa-photo-video w-4 text-center"></i> Media
-            </a>
-            <a href="{{ route('catalogs.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('catalogs*') ? 'active' : '' }}">
-                <i class="fas fa-shopping-bag w-4 text-center"></i> Catalog
-            </a>
-            <a href="{{ route('templates.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('templates*') ? 'active' : '' }}">
-                <i class="fas fa-file-alt w-4 text-center"></i> Template
+                <i class="fas fa-photo-video w-4 text-center"></i> {{ __('sidebar.media') }}
             </a>
         </div>
 
-        {{-- SALES & CRM --}}
+        {{-- CRM --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
-            <span>💼 Sales & CRM</span>
+            <span>{{ __('sidebar.crm') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
         <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
             <a href="{{ route('deals.board') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('deals-board*') ? 'active' : '' }}">
-                <i class="fas fa-funnel-dollar w-4 text-center"></i> Pipeline
+                <i class="fas fa-funnel-dollar w-4 text-center"></i> {{ __('sidebar.pipeline') }}
             </a>
-            <a href="{{ route('deals.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('deals') || request()->is('deals/*') ? 'active' : '' }}">
-                <i class="fas fa-handshake w-4 text-center"></i> Deals
+            <a href="{{ route('deals.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('deals') || request()->is('deals/*') && !request()->is('deals-board*') ? 'active' : '' }}">
+                <i class="fas fa-handshake w-4 text-center"></i> {{ __('sidebar.deals') }}
             </a>
-            <a href="{{ route('commerce.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('commerce*') ? 'active' : '' }}">
-                <i class="fas fa-shopping-cart w-4 text-center"></i> Orders
+            <a href="{{ route('kanban.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('kanban*') ? 'active' : '' }}">
+                <i class="fas fa-columns w-4 text-center"></i> {{ __('sidebar.kanban') }}
             </a>
             <a href="{{ route('contact-tags.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('contact-tags*') ? 'active' : '' }}">
-                <i class="fas fa-tags w-4 text-center"></i> Tags
+                <i class="fas fa-tags w-4 text-center"></i> {{ __('sidebar.tags') }}
+            </a>
+        </div>
+
+        {{-- CHANNELS --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>{{ __('sidebar.channels') }}</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('meta.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('meta*') ? 'active' : '' }}">
+                <i class="fab fa-meta w-4 text-center"></i> {{ __('sidebar.whatsapp_cloud_api') }}
+            </a>
+            <a href="{{ route('calls.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('calls*') ? 'active' : '' }}">
+                <i class="fas fa-phone-volume w-4 text-center"></i> {{ __('sidebar.whatsapp_calling') }}
+                <span class="ml-auto text-[9px] text-blue-400 border border-blue-400/40 rounded px-1.5 py-0">Meta</span>
+            </a>
+            <a href="{{ route('instagram.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('instagram*') ? 'active' : '' }}">
+                <i class="fab fa-instagram w-4 text-center"></i> {{ __('sidebar.instagram') }}
+                <span class="ml-auto text-[9px] text-blue-400 border border-blue-400/40 rounded px-1.5 py-0">Meta</span>
+            </a>
+            <a href="{{ route('webhooks.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('webhooks*') ? 'active' : '' }}">
+                <i class="fas fa-bolt w-4 text-center"></i> {{ __('sidebar.webhooks') }}
+            </a>
+            <a href="{{ route('telegram.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('telegram*') ? 'active' : '' }}">
+                <i class="fab fa-telegram w-4 text-center"></i> {{ __('sidebar.telegram') }}
             </a>
         </div>
 
         {{-- TEAM --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
-            <span>👥 Team</span>
+            <span>{{ __('sidebar.team') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
         <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
             <a href="{{ route('inbox.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('inbox*') ? 'active' : '' }}">
-                <i class="fas fa-inbox w-4 text-center"></i> Inbox
+                <i class="fas fa-inbox w-4 text-center"></i> {{ __('sidebar.shared_inbox') }}
             </a>
             <a href="{{ route('team-members.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('team-members*') ? 'active' : '' }}">
-                <i class="fas fa-users w-4 text-center"></i> Members
+                <i class="fas fa-users w-4 text-center"></i> {{ __('sidebar.members') }}
             </a>
             <a href="{{ route('sla.dashboard') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sla-dashboard*') ? 'active' : '' }}">
-                <i class="fas fa-tachometer-alt w-4 text-center"></i> SLA
+                <i class="fas fa-tachometer-alt w-4 text-center"></i> {{ __('sidebar.sla') }}
             </a>
             <a href="{{ route('sla-configs.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sla-configs*') || request()->is('sla-logs*') ? 'active' : '' }}">
-                <i class="fas fa-stopwatch w-4 text-center"></i> SLA Config
+                <i class="fas fa-stopwatch w-4 text-center"></i> {{ __('sidebar.sla_settings') }}
             </a>
         </div>
 
         {{-- ANALYTICS --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
-            <span>📊 Analytics</span>
+            <span>{{ __('sidebar.analytics') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
         <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('dashboard.stats') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('dashboard*') ? 'active' : '' }}">
+                <i class="fas fa-chart-bar w-4 text-center"></i> {{ __('sidebar.dashboard') }}
+            </a>
             <a href="{{ route('sentiment.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sentiment*') ? 'active' : '' }}">
-                <i class="fas fa-smile w-4 text-center"></i> Sentiment
+                <i class="fas fa-smile w-4 text-center"></i> {{ __('sidebar.sentiment') }}
             </a>
             <a href="{{ route('ratings.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ratings*') ? 'active' : '' }}">
-                <i class="fas fa-star w-4 text-center"></i> Ratings
+                <i class="fas fa-star w-4 text-center"></i> {{ __('sidebar.ratings') }}
             </a>
             <a href="{{ route('logger.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('logger*') ? 'active' : '' }}">
-                <i class="fas fa-history w-4 text-center"></i> Activity Log
+                <i class="fas fa-history w-4 text-center"></i> {{ __('sidebar.activity_logs') }}
             </a>
         </div>
 
-        {{-- SISTEM --}}
+        {{-- SETTINGS --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
-            <span>Sistem</span>
+            <span>{{ __('sidebar.settings') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
         <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 500px;' : 'max-height: 0;'">
             <a href="{{ route('servers.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('servers*') ? 'active' : '' }}">
-                <i class="fas fa-server w-4 text-center"></i> Server
-            </a>
-            <a href="{{ route('plans.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('plans*') ? 'active' : '' }}">
-                <i class="fas fa-box w-4 text-center"></i> Paket
-            </a>
-            <a href="{{ route('tokens.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('tokens*') ? 'active' : '' }}">
-                <i class="fas fa-key w-4 text-center"></i> API Token
-            </a>
-            @if(Auth::user()->isAdmin())
-            <a href="{{ route('admin.users.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/users*') ? 'active' : '' }}">
-                <i class="fas fa-users-cog w-4 text-center"></i> User
-            </a>
-            <a href="{{ route('admin.vouchers.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/vouchers*') ? 'active' : '' }}">
-                <i class="fas fa-ticket-alt w-4 text-center"></i> Voucher
-            </a>
-            <a href="{{ route('admin.transactions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/transactions*') ? 'active' : '' }}">
-                <i class="fas fa-exchange-alt w-4 text-center"></i> Transaksi
-            </a>
-            <a href="{{ route('admin.shorteners.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/shorteners*') ? 'active' : '' }}">
-                <i class="fas fa-link w-4 text-center"></i> Shortener
-            </a>
-            <a href="{{ route('admin.pages.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/pages*') ? 'active' : '' }}">
-                <i class="fas fa-file-alt w-4 text-center"></i> CMS Pages
-            </a>
-            <a href="{{ route('admin.blog.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/blog*') ? 'active' : '' }}">
-                <i class="fas fa-blog w-4 text-center"></i> Blog
-            </a>
-            <a href="{{ route('admin.payouts.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/payouts*') ? 'active' : '' }}">
-                <i class="fas fa-hand-holding-usd w-4 text-center"></i> Payout Admin
-            </a>
-            @endif
-            <a href="{{ route('plans.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('plans*') ? 'active' : '' }}">
-                <i class="fas fa-box w-4 text-center"></i> Paket
+                <i class="fas fa-server w-4 text-center"></i> {{ __('sidebar.server') }}
             </a>
             <a href="{{ route('subscriptions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('subscriptions*') ? 'active' : '' }}">
-                <i class="fas fa-id-card w-4 text-center"></i> Langganan
+                <i class="fas fa-id-card w-4 text-center"></i> {{ __('sidebar.subscription') }}
+            </a>
+            <a href="{{ route('plans.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('plans*') && !request()->is('admin*') ? 'active' : '' }}">
+                <i class="fas fa-box w-4 text-center"></i> {{ __('sidebar.plans') }}
             </a>
             <a href="{{ route('tokens.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('tokens*') ? 'active' : '' }}">
-                <i class="fas fa-key w-4 text-center"></i> API Token
+                <i class="fas fa-key w-4 text-center"></i> {{ __('sidebar.api_tokens') }}
             </a>
             <a href="{{ route('payouts.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('payouts*') && !request()->is('admin*') ? 'active' : '' }}">
-                <i class="fas fa-wallet w-4 text-center"></i> Payout
+                <i class="fas fa-wallet w-4 text-center"></i> {{ __('sidebar.payout') }}
             </a>
-            <a href="{{ route('logger.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('logger*') ? 'active' : '' }}">
-                <i class="fas fa-history w-4 text-center"></i> Log
+            @if(Auth::user()->isAdmin())
+            <div class="mt-2 pt-2 border-t border-white/10">
+                <div class="px-3 py-1 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">{{ __('sidebar.admin') }}</div>
+            </div>
+            <a href="{{ route('admin.users.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/users*') ? 'active' : '' }}">
+                <i class="fas fa-users-cog w-4 text-center"></i> {{ __('sidebar.users') }}
             </a>
+            <a href="{{ route('admin.plans.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/plans*') ? 'active' : '' }}">
+                <i class="fas fa-box w-4 text-center"></i> {{ __('sidebar.plans') }}
+            </a>
+            <a href="{{ route('admin.vouchers.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/vouchers*') ? 'active' : '' }}">
+                <i class="fas fa-ticket-alt w-4 text-center"></i> {{ __('sidebar.vouchers') }}
+            </a>
+            <a href="{{ route('admin.transactions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/transactions*') ? 'active' : '' }}">
+                <i class="fas fa-exchange-alt w-4 text-center"></i> {{ __('sidebar.transactions') }}
+            </a>
+            <a href="{{ route('admin.shorteners.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/shorteners*') ? 'active' : '' }}">
+                <i class="fas fa-link w-4 text-center"></i> {{ __('sidebar.url_shortener') }}
+            </a>
+            <a href="{{ route('admin.pages.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/pages*') ? 'active' : '' }}">
+                <i class="fas fa-file-alt w-4 text-center"></i> {{ __('sidebar.cms') }}
+            </a>
+            <a href="{{ route('admin.blog.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/blog*') ? 'active' : '' }}">
+                <i class="fas fa-blog w-4 text-center"></i> {{ __('sidebar.blog') }}
+            </a>
+            <a href="{{ route('admin.payouts.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/payouts*') ? 'active' : '' }}">
+                <i class="fas fa-hand-holding-usd w-4 text-center"></i> {{ __('sidebar.payout_approval') }}
+            </a>
+            @endif
         </div>
     </nav>
 
@@ -315,7 +330,13 @@
         </div>
         <div class="flex-1 min-w-0">
             <div class="text-sm font-medium text-white truncate">{{ Auth::user()->name }}</div>
-            <div class="text-[11px] text-gray-500">Online</div>
+            <div class="text-[11px] text-gray-500">{{ __('sidebar.online') }}</div>
+        </div>
+        <div class="flex items-center gap-1">
+            @include('components.language-switcher', [
+                'languages' => $langs ?? \App\Models\Language::active()->ordered()->get(),
+                'currentLocale' => $cur ?? app()->getLocale(),
+            ])
         </div>
         <form action="{{ route('logout') }}" method="POST">
             @csrf
@@ -335,7 +356,7 @@
             <div class="flex items-center gap-4 ml-auto">
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 border border-green-200">
                     <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span class="text-xs font-medium text-green-700">{{ \App\Models\WaSession::where('user_id', Auth::id())->where('status','connected')->count() }} agen online</span>
+                    <span class="text-xs font-medium text-green-700">{{ \App\Models\WaSession::where('user_id', Auth::id())->where('status','connected')->count() }} {{ __('sidebar.agents_online') }}</span>
                 </div>
             </div>
         </div>

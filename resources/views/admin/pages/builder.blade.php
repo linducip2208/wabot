@@ -62,15 +62,15 @@
 <div id="topbar">
     <div class="flex items-center gap-3">
         <a href="{{ route('admin.pages.index') }}" class="text-gray-400 hover:text-white transition"><i class="fas fa-arrow-left"></i></a>
-        <span class="title">{{ isset($page) ? 'Edit: ' . $page->title : 'Halaman Baru' }}</span>
-        <input type="text" id="pageTitle" value="{{ $page->title ?? '' }}" placeholder="Judul halaman"
+        <span class="title">{{ isset($page) ? __('common.edit') . ': ' . $page->title : 'New Page' }}</span>
+        <input type="text" id="pageTitle" value="{{ $page->title ?? '' }}" placeholder="{{ __('common.title') }} halaman"
             class="bg-transparent border-none text-white text-sm font-medium w-56 placeholder-gray-500">
     </div>
     <div class="flex items-center gap-2">
         <input type="text" id="pageSlug" value="{{ $page->slug ?? '' }}" placeholder="slug-url"
             class="bg-slate-700 border border-slate-600 text-white text-xs rounded-lg px-3 py-1.5 w-36 outline-none focus:border-blue-500 placeholder-gray-500">
         @if(isset($page))
-        <a href="{{ url('/pages/' . $page->slug) }}" target="_blank" class="text-[11px] bg-slate-700 text-gray-300 px-3 py-1.5 rounded-lg hover:bg-slate-600 transition no-underline"><i class="fas fa-eye mr-1"></i> Preview</a>
+        <a href="{{ url('/pages/' . $page->slug) }}" target="_blank" class="text-[11px] bg-slate-700 text-gray-300 px-3 py-1.5 rounded-lg hover:bg-slate-600 transition no-underline"><i class="fas fa-eye mr-1"></i> {{ __('common.preview') }}</a>
         @endif
         <select id="viewMode" onchange="setViewport()" class="bg-slate-700 border border-slate-600 text-white text-xs rounded-lg px-2 py-1.5 outline-none">
             <option value="100%">Desktop</option>
@@ -78,7 +78,7 @@
             <option value="375px">Mobile</option>
         </select>
         <button onclick="savePage()" id="saveBtn" class="text-xs bg-blue-600 text-white px-4 py-1.5 rounded-lg font-semibold hover:bg-blue-700 transition border-none cursor-pointer">
-            <i class="fas fa-save mr-1"></i> Simpan
+            <i class="fas fa-save mr-1"></i> {{ __('common.save') }}
         </button>
     </div>
 </div>
@@ -102,9 +102,9 @@
         <div class="block-btn" draggable="true" data-block="spacer"><i class="fas fa-arrows-alt-v"></i> Spacer</div>
         
         <h3><i class="fas fa-tools"></i> Tools</h3>
-        <button onclick="deleteSelected()" class="block-btn" style="cursor:pointer"><i class="fas fa-trash text-red-400"></i> Hapus Elemen</button>
+        <button onclick="deleteSelected()" class="block-btn" style="cursor:pointer"><i class="fas fa-trash text-red-400"></i> {{ __('common.delete') }} Elemen</button>
         <button onclick="duplicateSelected()" class="block-btn" style="cursor:pointer"><i class="fas fa-copy text-yellow-400"></i> Duplikat</button>
-        <button onclick="exportHtml()" class="block-btn" style="cursor:pointer"><i class="fas fa-code text-green-400"></i> Lihat HTML</button>
+        <button onclick="exportHtml()" class="block-btn" style="cursor:pointer"><i class="fas fa-code text-green-400"></i> {{ __('common.view') }} HTML</button>
     </div>
 
     <div id="canvas-wrap" 
@@ -125,10 +125,10 @@ let elementCounter = 0;
 
 const BLOCKS = {
     section: `<section style="padding:60px 24px;background:#fff"><div style="max-width:800px;margin:0 auto"><h2 style="font-size:1.8rem;font-weight:800;margin-bottom:12px">Section Heading</h2><p style="color:#64748b;line-height:1.6">Konten section Anda di sini. Klik untuk mengedit teks.</p></div></section>`,
-    hero: `<section style="padding:80px 24px;background:linear-gradient(135deg,#1d4ed8,#1e3a8a);color:#fff;text-align:center"><h1 style="font-size:2.8rem;font-weight:800;margin-bottom:12px">Hero Headline</h1><p style="font-size:1.15rem;opacity:.9;margin-bottom:24px;max-width:600px;margin-left:auto;margin-right:auto">Deskripsi singkat tentang produk atau layanan Anda.</p><a href="#" style="display:inline-block;padding:14px 36px;background:#fff;color:#1d4ed8;border-radius:12px;font-weight:700;text-decoration:none;font-size:15px">Call to Action</a></section>`,
+    hero: `<section style="padding:80px 24px;background:linear-gradient(135deg,#1d4ed8,#1e3a8a);color:#fff;text-align:center"><h1 style="font-size:2.8rem;font-weight:800;margin-bottom:12px">Hero Headline</h1><p style="font-size:1.15rem;opacity:.9;margin-bottom:24px;max-width:600px;margin-left:auto;margin-right:auto">{{ __('common.description') }} singkat tentang {{ __('common.product') }} atau layanan Anda.</p><a href="#" style="display:inline-block;padding:14px 36px;background:#fff;color:#1d4ed8;border-radius:12px;font-weight:700;text-decoration:none;font-size:15px">Call to Action</a></section>`,
     cta: `<div style="margin:20px;padding:48px 32px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;text-align:center;border-radius:16px"><h2 style="font-size:1.8rem;font-weight:800;margin-bottom:8px">Siap Memulai?</h2><p style="opacity:.9;margin-bottom:20px">Bergabung dengan ribuan pengguna lainnya.</p><a href="#" style="display:inline-block;padding:13px 32px;background:#fff;color:#1d4ed8;border-radius:10px;font-weight:700;text-decoration:none">Daftar Sekarang</a></div>`,
     columns: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:20px;max-width:900px;margin:0 auto"><div style="padding:24px;background:#f8fafc;border-radius:12px"><h3 style="font-size:1.25rem;font-weight:700;margin-bottom:8px">Kolom Kiri</h3><p style="color:#64748b">Konten kolom kiri.</p></div><div style="padding:24px;background:#f8fafc;border-radius:12px"><h3 style="font-size:1.25rem;font-weight:700;margin-bottom:8px">Kolom Kanan</h3><p style="color:#64748b">Konten kolom kanan.</p></div></div>`,
-    cards: `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:20px;max-width:960px;margin:0 auto"><div style="padding:28px 20px;border:1px solid #e2e8f0;border-radius:12px;text-align:center"><div style="font-size:2.2rem;margin-bottom:10px">🚀</div><h3 style="font-weight:700;margin-bottom:6px">Fitur 1</h3><p style="color:#64748b;font-size:14px">Deskripsi singkat fitur</p></div><div style="padding:28px 20px;border:1px solid #e2e8f0;border-radius:12px;text-align:center"><div style="font-size:2.2rem;margin-bottom:10px">⚡</div><h3 style="font-weight:700;margin-bottom:6px">Fitur 2</h3><p style="color:#64748b;font-size:14px">Deskripsi singkat fitur</p></div><div style="padding:28px 20px;border:1px solid #e2e8f0;border-radius:12px;text-align:center"><div style="font-size:2.2rem;margin-bottom:10px">💎</div><h3 style="font-weight:700;margin-bottom:6px">Fitur 3</h3><p style="color:#64748b;font-size:14px">Deskripsi singkat fitur</p></div></div>`,
+    cards: `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:20px;max-width:960px;margin:0 auto"><div style="padding:28px 20px;border:1px solid #e2e8f0;border-radius:12px;text-align:center"><div style="font-size:2.2rem;margin-bottom:10px">🚀</div><h3 style="font-weight:700;margin-bottom:6px">Fitur 1</h3><p style="color:#64748b;font-size:14px">{{ __('common.description') }} singkat fitur</p></div><div style="padding:28px 20px;border:1px solid #e2e8f0;border-radius:12px;text-align:center"><div style="font-size:2.2rem;margin-bottom:10px">⚡</div><h3 style="font-weight:700;margin-bottom:6px">Fitur 2</h3><p style="color:#64748b;font-size:14px">{{ __('common.description') }} singkat fitur</p></div><div style="padding:28px 20px;border:1px solid #e2e8f0;border-radius:12px;text-align:center"><div style="font-size:2.2rem;margin-bottom:10px">💎</div><h3 style="font-weight:700;margin-bottom:6px">Fitur 3</h3><p style="color:#64748b;font-size:14px">{{ __('common.description') }} singkat fitur</p></div></div>`,
     faq: `<div style="max-width:700px;margin:40px auto;padding:20px"><h2 style="text-align:center;font-size:1.8rem;font-weight:800;margin-bottom:24px">FAQ</h2><details style="border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:8px"><summary style="font-weight:600;cursor:pointer;font-size:15px">Pertanyaan 1?</summary><p style="margin-top:8px;color:#64748b">Jawaban untuk pertanyaan 1.</p></details><details style="border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:8px"><summary style="font-weight:600;cursor:pointer;font-size:15px">Pertanyaan 2?</summary><p style="margin-top:8px;color:#64748b">Jawaban untuk pertanyaan 2.</p></details></div>`,
     heading: `<h2 style="font-size:2rem;font-weight:800;margin-bottom:8px;padding:4px 0">Heading Baru</h2>`,
     text: `<p style="color:#475569;line-height:1.7;margin-bottom:12px">Teks paragraf Anda di sini. Klik untuk mengedit. Anda bisa menambahkan <strong>bold</strong>, <em>italic</em>, dan <a href="#" style="color:#3b82f6">link</a>.</p>`,
@@ -254,8 +254,8 @@ function updateProp(prop, value) {
 }
 
 function deleteSelected() {
-    if (!selectedEl) return alert('Pilih elemen dulu');
-    if (confirm('Hapus elemen ini?')) {
+    if (!selectedEl) return alert('{{ __('common.select') }} elemen dulu');
+    if (confirm('{{ __('common.delete') }} elemen ini?')) {
         selectedEl.remove();
         document.getElementById('props-panel').classList.remove('active');
         selectedEl = null;
@@ -263,7 +263,7 @@ function deleteSelected() {
 }
 
 function duplicateSelected() {
-    if (!selectedEl) return alert('Pilih elemen dulu');
+    if (!selectedEl) return alert('{{ __('common.select') }} elemen dulu');
     const clone = selectedEl.cloneNode(true);
     clone.dataset.blockId = 'el-' + (++elementCounter);
     clone.classList.remove('selected');
@@ -319,18 +319,18 @@ async function savePage() {
             if (data.redirect) setTimeout(() => window.location.href = data.redirect, 500);
             @endif
             setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-save mr-1"></i> Simpan';
+                btn.innerHTML = '<i class="fas fa-save mr-1"></i> {{ __('common.save') }}';
                 btn.style.background = '';
                 btn.disabled = false;
             }, 1500);
         } else {
-            alert(data.message || 'Gagal');
-            btn.innerHTML = '<i class="fas fa-save mr-1"></i> Simpan';
+            alert(data.message || '{{ __('common.failed') }}');
+            btn.innerHTML = '<i class="fas fa-save mr-1"></i> {{ __('common.save') }}';
             btn.disabled = false;
         }
     } catch(e) {
         alert('Error: ' + e.message);
-        btn.innerHTML = '<i class="fas fa-save mr-1"></i> Simpan';
+        btn.innerHTML = '<i class="fas fa-save mr-1"></i> {{ __('common.save') }}';
         btn.disabled = false;
     }
 }

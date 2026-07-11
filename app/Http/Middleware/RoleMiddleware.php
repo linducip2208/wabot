@@ -26,6 +26,6 @@ class RoleMiddleware
             }
         }
 
-        abort(403, 'Akses ditolak.');
+        abort(403, __('messages.error.access_denied'));
     }
 }

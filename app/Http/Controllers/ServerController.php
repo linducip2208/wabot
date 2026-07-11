@@ -72,8 +72,8 @@ class ServerController extends Controller
         return back()->with(
             $isOnline ? 'success' : 'warning',
             $isOnline
-                ? 'Server tersimpan dan online.'
-                : 'Server tersimpan tapi tidak bisa dihubungi. Periksa host dan port.'
+                ? __('messages.success.server_saved_online')
+                : __('messages.warning.server_saved_offline')
         );
     }
 
@@ -90,7 +90,7 @@ class ServerController extends Controller
 
         $server->update($validated);
 
-        return back()->with('success', 'Server diperbarui.');
+        return back()->with('success', __('messages.success.server_updated'));
     }
 
     public function destroy(WaServer $server)
@@ -98,11 +98,11 @@ class ServerController extends Controller
         abort_if($server->user_id !== Auth::id(), 403);
 
         if ($server->sessions()->exists()) {
-            return back()->with('error', 'Hapus semua sesi WhatsApp terlebih dahulu.');
+            return back()->with('error', __('messages.error.delete_sessions_first'));
         }
 
         $server->delete();
 
-        return back()->with('success', 'Server dihapus.');
+        return back()->with('success', __('messages.success.server_deleted'));
     }
 }

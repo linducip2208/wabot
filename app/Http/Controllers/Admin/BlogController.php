@@ -45,7 +45,7 @@ class BlogController extends Controller
             'meta_description' => $data['meta_description'] ?? null,
         ]);
 
-        return back()->with('success', 'Artikel berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.article_added'));
     }
 
     public function update(Request $request, BlogPost $post)
@@ -80,13 +80,13 @@ class BlogController extends Controller
 
         $post->update($updateData);
 
-        return back()->with('success', 'Artikel berhasil diperbarui.');
+        return back()->with('success', __('messages.success.article_updated'));
     }
 
     public function destroy(BlogPost $post)
     {
         $post->delete();
-        return back()->with('success', 'Artikel dihapus.');
+        return back()->with('success', __('messages.success.article_deleted'));
     }
 
     // Categories
@@ -102,7 +102,7 @@ class BlogController extends Controller
             'slug' => $data['slug'] ?: Str::slug($data['name']),
         ]);
 
-        return back()->with('success', 'Kategori berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.category_added'));
     }
 
     public function updateCategory(Request $request, BlogCategory $category)
@@ -117,12 +117,12 @@ class BlogController extends Controller
             'slug' => $data['slug'] ?: Str::slug($data['name']),
         ]);
 
-        return back()->with('success', 'Kategori berhasil diperbarui.');
+        return back()->with('success', __('messages.success.category_updated'));
     }
 
     public function destroyCategory(BlogCategory $category)
     {
         $category->delete();
-        return back()->with('success', 'Kategori dihapus.');
+        return back()->with('success', __('messages.success.category_deleted'));
     }
 }

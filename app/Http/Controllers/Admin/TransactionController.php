@@ -36,6 +36,6 @@ class TransactionController extends Controller
 
         $transaction->update(['status' => $data['status']]);
 
-        return back()->with('success', 'Status transaksi diperbarui.');
+        return back()->with('success', __('messages.success.transaction_updated'));
     }
 }

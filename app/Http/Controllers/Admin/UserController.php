@@ -55,7 +55,7 @@ class UserController extends Controller
             ]);
         }
 
-        return back()->with('success', 'User berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.user_added'));
     }
 
     public function update(Request $request, User $user)
@@ -100,18 +100,18 @@ class UserController extends Controller
             $user->subscriptions()->where('status', 'active')->update(['status' => 'expired']);
         }
 
-        return back()->with('success', 'User diperbarui.');
+        return back()->with('success', __('messages.success.user_updated'));
     }
 
     public function destroy(User $user)
     {
         $user->delete();
-        return back()->with('success', 'User dihapus.');
+        return back()->with('success', __('messages.success.user_deleted'));
     }
 
     public function impersonate(User $user)
     {
         auth()->login($user);
-        return redirect('/')->with('success', 'Login sebagai ' . $user->name);
+        return redirect('/')->with('success', __('messages.success.logged_in_as', ['name' => $user->name]));
     }
 }

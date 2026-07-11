@@ -1,10 +1,10 @@
 @extends('layouts.app')
-@section('title', 'Paket — WABot')
+@section('title', __('common.plan') . ' — WABot')
 @section('content')
 
 <div class="mb-5">
-    <h1 class="text-xl font-extrabold text-gray-900">Paket Langganan</h1>
-    <p class="text-sm text-gray-500 mt-0.5">Pilih paket sesuai kebutuhan bisnis Anda</p>
+    <h1 class="text-xl font-extrabold text-gray-900">{{ __('plans.page_title') }}</h1>
+    <p class="text-sm text-gray-500 mt-0.5">{{ __('plans.subtitle') }}</p>
 </div>
 
 @if($currentPlan)
@@ -12,17 +12,17 @@
     <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center"><i class="fas fa-crown text-brand-600"></i></div>
         <div>
-            <span class="text-sm text-brand-800">Paket aktif: <strong class="text-base">{{ $currentPlan->name }}</strong></span>
+            <span class="text-sm text-brand-800">{{ __('common.plan') }} {{ __('common.active') }}: <strong class="text-base">{{ $currentPlan->name }}</strong></span>
             <div class="text-xs text-brand-600 mt-0.5">
-                <span><i class="fas fa-mobile-alt mr-1"></i> {{ $currentPlan->max_sessions }} sesi</span>
+                <span><i class="fas fa-mobile-alt mr-1"></i> {{ $currentPlan->max_sessions }} {{ __('common.session') }}</span>
                 <span class="mx-2">·</span>
-                <span><i class="fas fa-address-book mr-1"></i> {{ number_format($currentPlan->max_contacts) }} kontak</span>
+                <span><i class="fas fa-address-book mr-1"></i> {{ number_format($currentPlan->max_contacts) }} {{ __('common.contact') }}</span>
                 <span class="mx-2">·</span>
                 <span><i class="fas fa-robot mr-1"></i> {{ $currentPlan->max_autoreplies }} auto-reply</span>
             </div>
         </div>
     </div>
-    <span class="text-xs bg-brand-100 text-brand-700 px-3 py-1.5 rounded-full font-medium">Aktif</span>
+    <span class="text-xs bg-brand-100 text-brand-700 px-3 py-1.5 rounded-full font-medium">{{ __('common.active') }}</span>
 </div>
 @endif
 
@@ -38,7 +38,7 @@
     @endphp
     <div class="bg-white rounded-2xl border {{ $isActive ? 'border-brand-400 ring-2 ring-brand-100 shadow-lg' : 'border-gray-200' }} overflow-hidden card-lift flex flex-col relative">
         @if($isActive)
-        <div class="absolute top-3 right-3 bg-brand-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">Aktif</div>
+        <div class="absolute top-3 right-3 bg-brand-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">{{ __('common.active') }}</div>
         @endif
 
         <div class="p-6 {{ $colors[0] }}">
@@ -48,7 +48,7 @@
             <h2 class="text-xl font-bold text-gray-900">{{ $plan->name }}</h2>
             <div class="mt-2">
                 <span class="text-3xl font-extrabold text-gray-900">
-                    @if($plan->price > 0) Rp {{ number_format($plan->price, 0, ',', '.') }} @else Gratis @endif
+                    @if($plan->price > 0) Rp {{ number_format($plan->price, 0, ',', '.') }} @else {{ __('common.free') }} @endif
                 </span>
                 @if($plan->price > 0)
                 <span class="text-sm text-gray-500">/ bln</span>
@@ -58,10 +58,10 @@
 
         <div class="p-6 space-y-2.5 flex-1">
             @foreach([
-                ['fas fa-mobile-alt', $plan->max_sessions . ' Sesi WhatsApp'],
-                ['fas fa-address-book', number_format($plan->max_contacts) . ' Kontak'],
+                ['fas fa-mobile-alt', $plan->max_sessions . ' {{ __('common.session') }} WhatsApp'],
+                ['fas fa-address-book', number_format($plan->max_contacts) . ' {{ __('common.contact') }}'],
                 ['fas fa-robot', $plan->max_autoreplies . ' Auto-Reply Rules'],
-                ['fas fa-bullhorn', number_format($plan->max_campaign_recipients) . ' Penerima/Kampanye'],
+                ['fas fa-bullhorn', number_format($plan->max_campaign_recipients) . ' {{ __('common.receiver') }}/Kampanye'],
             ] as [$icon, $label])
             <div class="flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
@@ -87,13 +87,13 @@
         <div class="p-6 pt-0">
             @if($isActive)
             <button disabled class="w-full bg-gray-100 text-gray-500 rounded-xl py-3 font-semibold text-sm cursor-not-allowed flex items-center justify-center gap-2">
-                <i class="fas fa-check-circle"></i> Paket Aktif
+                <i class="fas fa-check-circle"></i> {{ __('common.plan') }} {{ __('common.active') }}
             </button>
             @else
             <form method="POST" action="{{ route('plans.subscribe', $plan) }}">
                 @csrf
                 <button type="submit" class="w-full bg-brand-600 text-white rounded-xl py-3 font-semibold text-sm hover:bg-brand-700 transition shadow-sm flex items-center justify-center gap-2">
-                    {{ $plan->price > 0 ? 'Pilih Paket' : 'Aktifkan Gratis' }} <i class="fas fa-arrow-right text-xs"></i>
+                    {{ $plan->price > 0 ? __('common.select') . ' ' . __('common.plan') : __('plans.activate_free') }} <i class="fas fa-arrow-right text-xs"></i>
                 </button>
             </form>
             @endif

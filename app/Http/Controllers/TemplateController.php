@@ -32,7 +32,7 @@ class TemplateController extends Controller
             'format' => $validated['format'],
         ]);
 
-        return back()->with('success', 'Template berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.template_added'));
     }
 
     public function update(Request $request, WaMessageTemplate $template)
@@ -47,7 +47,7 @@ class TemplateController extends Controller
 
         $template->update($validated);
 
-        return back()->with('success', 'Template diperbarui.');
+        return back()->with('success', __('messages.success.template_updated'));
     }
 
     public function destroy(WaMessageTemplate $template)
@@ -55,6 +55,6 @@ class TemplateController extends Controller
         abort_if($template->user_id !== Auth::id(), 403);
         $template->delete();
 
-        return back()->with('success', 'Template dihapus.');
+        return back()->with('success', __('messages.success.template_deleted'));
     }
 }

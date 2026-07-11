@@ -44,7 +44,7 @@ class TeamInboxController extends Controller
             ->first();
 
         if ($existing) {
-            return back()->with('error', 'Kontak ini sudah memiliki penugasan aktif.');
+            return back()->with('error', __('messages.error.contact_already_assigned'));
         }
 
         WaConversationAssignment::create([
@@ -55,7 +55,7 @@ class TeamInboxController extends Controller
             'status' => 'active',
         ]);
 
-        return back()->with('success', 'Penugasan berhasil dibuat.');
+        return back()->with('success', __('messages.success.assignment_created'));
     }
 
     public function reassign(Request $request, WaConversationAssignment $assignment)
@@ -70,7 +70,7 @@ class TeamInboxController extends Controller
         $service = app(TeamInboxService::class);
         $service->reassign($assignment->contact_id, $validated['team_member_id']);
 
-        return back()->with('success', 'Penugasan berhasil dialihkan.');
+        return back()->with('success', __('messages.success.assignment_reassigned'));
     }
 
     public function close(WaConversationAssignment $assignment)
@@ -83,7 +83,7 @@ class TeamInboxController extends Controller
             'closed_at' => now(),
         ]);
 
-        return back()->with('success', 'Penugasan ditutup.');
+        return back()->with('success', __('messages.success.assignment_closed'));
     }
 
     public function stats()

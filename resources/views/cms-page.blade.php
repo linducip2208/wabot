@@ -6,7 +6,7 @@
     <div class="mb-8">
         <h1 class="text-3xl font-extrabold text-gray-900 leading-tight">{{ $page->title }}</h1>
         @if($page->updated_at)
-        <p class="text-sm text-gray-400 mt-2">Terakhir diperbarui {{ $page->updated_at->format('d M Y') }}</p>
+        <p class="text-sm text-gray-400 mt-2">Terakhir {{ __('common.updated') }} {{ $page->updated_at->format('d M Y') }}</p>
         @endif
     </div>
 
@@ -16,7 +16,7 @@
 
     <div class="mt-12 pt-6 border-t border-gray-200 text-center">
         <a href="{{ route('login') }}" class="text-brand-600 hover:underline text-sm font-medium">
-            <i class="fas fa-arrow-left mr-1"></i> Kembali ke halaman utama
+            <i class="fas fa-arrow-left mr-1"></i> {{ __('common.back') }} ke halaman utama
         </a>
     </div>
 </article>

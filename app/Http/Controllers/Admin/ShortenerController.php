@@ -29,7 +29,7 @@ class ShortenerController extends Controller
             'api_key_encrypted'  => Crypt::encryptString($data['api_key']),
         ]);
 
-        return back()->with('success', 'URL Shortener berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.shortener_added'));
     }
 
     public function update(Request $request, UrlShortener $shortener)
@@ -51,12 +51,12 @@ class ShortenerController extends Controller
 
         $shortener->update($updateData);
 
-        return back()->with('success', 'URL Shortener berhasil diperbarui.');
+        return back()->with('success', __('messages.success.shortener_updated'));
     }
 
     public function destroy(UrlShortener $shortener)
     {
         $shortener->delete();
-        return back()->with('success', 'URL Shortener dihapus.');
+        return back()->with('success', __('messages.success.shortener_deleted'));
     }
 }

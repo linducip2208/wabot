@@ -43,7 +43,7 @@ class InteractiveButtonController extends Controller
 
         $decoded = json_decode($request->input('buttons'), true);
         if (!is_array($decoded)) {
-            return back()->with('error', 'Format buttons tidak valid.')->withInput();
+            return back()->with('error', __('messages.error.invalid_button_format'))->withInput();
         }
 
         WaInteractiveButton::create([
@@ -58,7 +58,7 @@ class InteractiveButtonController extends Controller
             'session_id' => $validated['session_id'],
         ]);
 
-        return redirect()->route('buttons.index')->with('success', 'Interactive button berhasil dibuat.');
+        return redirect()->route('buttons.index')->with('success', __('messages.success.button_created'));
     }
 
     public function edit(WaInteractiveButton $button)
@@ -89,7 +89,7 @@ class InteractiveButtonController extends Controller
 
         $decoded = json_decode($request->input('buttons'), true);
         if (!is_array($decoded)) {
-            return back()->with('error', 'Format buttons tidak valid.')->withInput();
+            return back()->with('error', __('messages.error.invalid_button_format'))->withInput();
         }
 
         $button->update([
@@ -103,7 +103,7 @@ class InteractiveButtonController extends Controller
             'session_id' => $validated['session_id'],
         ]);
 
-        return redirect()->route('buttons.index')->with('success', 'Interactive button diperbarui.');
+        return redirect()->route('buttons.index')->with('success', __('messages.success.button_updated'));
     }
 
     public function destroy(WaInteractiveButton $button)
@@ -111,6 +111,6 @@ class InteractiveButtonController extends Controller
         abort_if($button->user_id !== Auth::id(), 403);
         $button->delete();
 
-        return back()->with('success', 'Interactive button dihapus.');
+        return back()->with('success', __('messages.success.button_deleted'));
     }
 }

@@ -45,7 +45,7 @@ class DripCampaignController extends Controller
             'send_to_new_only' => true,
         ]);
 
-        return redirect()->route('drips.index')->with('success', 'Drip campaign berhasil dibuat.');
+        return redirect()->route('drips.index')->with('success', __('messages.success.drip_created'));
     }
 
     public function edit(WaDripCampaign $dripCampaign)
@@ -77,7 +77,7 @@ class DripCampaignController extends Controller
             'send_to_new_only' => $request->boolean('send_to_new_only', true),
         ]);
 
-        return back()->with('success', 'Drip campaign diperbarui.');
+        return back()->with('success', __('messages.success.drip_updated'));
     }
 
     public function destroy(WaDripCampaign $dripCampaign)
@@ -85,7 +85,7 @@ class DripCampaignController extends Controller
         abort_if($dripCampaign->user_id !== Auth::id(), 403);
         $dripCampaign->delete();
 
-        return back()->with('success', 'Drip campaign dihapus.');
+        return back()->with('success', __('messages.success.drip_deleted'));
     }
 
     public function steps(WaDripCampaign $dripCampaign)
@@ -121,7 +121,7 @@ class DripCampaignController extends Controller
             'ai_key_id' => $validated['ai_key_id'] ?? null,
         ]);
 
-        return back()->with('success', 'Step berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.step_added'));
     }
 
     public function stepsDestroy(WaDripCampaign $dripCampaign, WaDripStep $step)
@@ -131,6 +131,6 @@ class DripCampaignController extends Controller
 
         $step->delete();
 
-        return back()->with('success', 'Step dihapus.');
+        return back()->with('success', __('messages.success.step_deleted'));
     }
 }

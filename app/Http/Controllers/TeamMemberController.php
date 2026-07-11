@@ -39,7 +39,7 @@ class TeamMemberController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Anggota tim berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.team_member_added'));
     }
 
     public function update(Request $request, WaTeamMember $member)
@@ -67,7 +67,7 @@ class TeamMemberController extends Controller
 
         $member->update($data);
 
-        return back()->with('success', 'Anggota tim berhasil diperbarui.');
+        return back()->with('success', __('messages.success.team_member_updated'));
     }
 
     public function destroy(WaTeamMember $member)
@@ -81,6 +81,6 @@ class TeamMemberController extends Controller
 
         $member->delete();
 
-        return back()->with('success', 'Anggota tim dihapus dan semua penugasan aktif ditutup.');
+        return back()->with('success', __('messages.success.team_member_deleted'));
     }
 }

@@ -5,11 +5,11 @@
 <div class="flex items-center justify-between mb-5">
     <div>
         <h1 class="text-xl font-extrabold text-gray-900">Pipeline</h1>
-        <p class="text-sm text-gray-500 mt-0.5">Kanban board · seret deal antar tahap</p>
+        <p class="text-sm text-gray-500 mt-0.5">{{ __('deals.board_subtitle') }}</p>
     </div>
     <div class="flex gap-2">
         <a href="{{ route('deals.index') }}" class="bg-white border border-gray-300 text-gray-700 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2"><i class="fas fa-list text-xs"></i> List</a>
-        <a href="{{ route('deals.create') }}" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2"><i class="fas fa-plus text-xs"></i> Deal Baru</a>
+        <a href="{{ route('deals.create') }}" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2"><i class="fas fa-plus text-xs"></i> {{ __('deals.new_deal') }}</a>
     </div>
 </div>
 
@@ -37,9 +37,9 @@
     @empty
     <div class="w-full bg-white rounded-xl border border-gray-200 p-16 text-center">
         <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3"><i class="fas fa-columns text-gray-400 text-lg"></i></div>
-        <p class="text-gray-500 font-medium">Belum ada stage</p>
-        <p class="text-sm text-gray-400 mt-1 mb-4">Buat tahapan pipeline terlebih dahulu</p>
-        <a href="{{ route('deal-stages.index') }}" class="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700"><i class="fas fa-plus text-xs"></i> Kelola Stages</a>
+        <p class="text-gray-500 font-medium">{{ __('deals.no_stages_hint') }}</p>
+        <p class="text-sm text-gray-400 mt-1 mb-4">{{ __('deals.no_stages_board_hint') }}</p>
+        <a href="{{ route('deal-stages.index') }}" class="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700"><i class="fas fa-plus text-xs"></i> {{ __('deals.manage_stages') }}</a>
     </div>
     @endforelse
 </div>

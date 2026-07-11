@@ -48,7 +48,7 @@ class AiAgentController extends Controller
             'is_default' => false,
         ]);
 
-        return back()->with('success', 'AI Agent berhasil dibuat.');
+        return back()->with('success', __('messages.success.ai_agent_created'));
     }
 
     public function update(Request $request, WaAiAgent $agent)
@@ -74,7 +74,7 @@ class AiAgentController extends Controller
             'trigger_keywords' => $validated['trigger_keywords'] ?? '',
         ]);
 
-        return back()->with('success', 'AI Agent berhasil diperbarui.');
+        return back()->with('success', __('messages.success.ai_agent_updated'));
     }
 
     public function destroy(WaAiAgent $agent)
@@ -82,7 +82,7 @@ class AiAgentController extends Controller
         abort_if($agent->user_id !== Auth::id(), 403);
         $agent->delete();
 
-        return back()->with('success', 'AI Agent dihapus.');
+        return back()->with('success', __('messages.success.ai_agent_deleted'));
     }
 
     public function test(Request $request, WaAiAgent $agent)
@@ -94,7 +94,7 @@ class AiAgentController extends Controller
         ]);
 
         if (!$agent->aiKey || !$agent->aiKey->is_active) {
-            return back()->with('error', 'AI Key untuk agent ini tidak aktif atau tidak tersedia.');
+            return back()->with('error', __('messages.error.ai_key_inactive'));
         }
 
         $aiService = app(AiService::class);
@@ -103,10 +103,10 @@ class AiAgentController extends Controller
         $response = $aiService->send($agent->aiKey, $validated['message'], $knowledgeContext);
 
         if ($response === null) {
-            return back()->with('error', 'Gagal mendapatkan respons dari AI. Periksa konfigurasi AI Key.');
+            return back()->with('error', __('messages.error.ai_response_failed'));
         }
 
-        return back()->with('success', 'AI Agent merespons:')
+        return back()->with('success', __('messages.success.ai_agent_responded'))
             ->with('test_response', $response)
             ->with('test_message', $validated['message']);
     }

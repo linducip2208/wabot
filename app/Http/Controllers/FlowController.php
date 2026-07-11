@@ -48,7 +48,7 @@ class FlowController extends Controller
             'is_active' => true,
         ]);
 
-        return redirect()->route('flows.index')->with('success', 'Flow berhasil dibuat.');
+        return redirect()->route('flows.index')->with('success', __('messages.success.flow_created'));
     }
 
     public function edit(WaFlow $flow)
@@ -82,7 +82,7 @@ class FlowController extends Controller
             'is_active' => $request->boolean('is_active', true),
         ]);
 
-        return back()->with('success', 'Flow diperbarui.');
+        return back()->with('success', __('messages.success.flow_updated'));
     }
 
     public function destroy(WaFlow $flow)
@@ -90,7 +90,7 @@ class FlowController extends Controller
         abort_if($flow->user_id !== Auth::id(), 403);
         $flow->delete();
 
-        return back()->with('success', 'Flow dihapus.');
+        return back()->with('success', __('messages.success.flow_deleted'));
     }
 
     public function nodes(WaFlow $flow)
@@ -184,6 +184,98 @@ class FlowController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Node flow berhasil disimpan.');
+        return back()->with('success', __('messages.success.flow_node_saved'));
+    }
+
+    public function aiGenerate(Request $request)
+    {
+        $request->validate([
+            'prompt' => 'required|string|max:1000',
+            'ai_key_id' => 'required|exists:wa_ai_keys,id',
+        ]);
+
+        $aiKey = WaAiKey::where('user_id', Auth::id())->findOrFail($request->ai_key_id);
+
+        $systemPrompt = "You are a WhatsApp chatbot flow builder. Generate a complete flow as JSON based on the user's description.
+
+Return ONLY valid JSON in this exact format:
+{
+  \"name\": \"Flow name based on description\",
+  \"nodes\": [
+    {
+      \"type\": \"trigger\",
+      \"label\": \"Start\",
+      \"sort_order\": 1
+    },
+    {
+      \"type\": \"message\",
+      \"label\": \"Node label\",
+      \"reply_message\": \"Reply text\",
+      \"sort_order\": 2,
+      \"next_node_id_true\": null
+    },
+    {
+      \"type\": \"condition\",
+      \"label\": \"Check something\",
+      \"condition_field\": \"text\",
+      \"condition_operator\": \"contains\",
+      \"condition_value\": \"keyword\",
+      \"sort_order\": 3,
+      \"next_node_id_true\": null,
+      \"next_node_id_false\": null
+    },
+    {
+      \"type\": \"ai\",
+      \"label\": \"AI Response\",
+      \"sort_order\": 4
+    }
+  ]
+}
+
+Available node types: trigger, message, image, button, ai, condition, wait
+Condition operators: equals, contains, not_contains
+Make 3-8 nodes maximum. " . __('ai.flow_generation_language_hint');
+
+        $aiService = app(\App\Services\AiService::class);
+        $response = $aiService->send($aiKey, $systemPrompt . "\n\nUser request: " . $request->prompt);
+
+        $flowData = json_decode($response, true);
+
+        if (!$flowData || empty($flowData['nodes'])) {
+            return back()->with('error', __('messages.error.ai_flow_generation_failed'));
+        }
+
+        $flow = WaFlow::create([
+            'user_id' => Auth::id(),
+            'name' => $flowData['name'] ?? 'AI Generated Flow',
+            'is_active' => false,
+        ]);
+
+        $nodeIds = [];
+        foreach ($flowData['nodes'] as $i => $nodeData) {
+            $node = WaFlowNode::create([
+                'flow_id' => $flow->id,
+                'type' => $nodeData['type'] ?? 'message',
+                'label' => $nodeData['label'] ?? "Node " . ($i + 1),
+                'reply_message' => $nodeData['reply_message'] ?? null,
+                'condition_field' => $nodeData['condition_field'] ?? null,
+                'condition_operator' => $nodeData['condition_operator'] ?? null,
+                'condition_value' => $nodeData['condition_value'] ?? null,
+                'sort_order' => $i + 1,
+            ]);
+            $nodeIds[] = $node->id;
+        }
+
+        foreach ($flowData['nodes'] as $i => $nodeData) {
+            if (isset($nodeData['next_node_id_true']) && is_int($nodeData['next_node_id_true']) && isset($nodeIds[$nodeData['next_node_id_true']])) {
+                WaFlowNode::where('id', $nodeIds[$i])->update(['next_node_id_true' => $nodeIds[$nodeData['next_node_id_true']]]);
+            }
+            if (isset($nodeData['next_node_id_false']) && is_int($nodeData['next_node_id_false']) && isset($nodeIds[$nodeData['next_node_id_false']])) {
+                WaFlowNode::where('id', $nodeIds[$i])->update(['next_node_id_false' => $nodeIds[$nodeData['next_node_id_false']]]);
+            }
+        }
+
+        return redirect()->route('flows.nodes', $flow)
+            ->with('success', __('messages.success.flow_ai_created'));
     }
 }

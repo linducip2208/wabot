@@ -44,7 +44,7 @@ class CmsPageController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Halaman CMS berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.cms_page_added'));
     }
 
     public function update(Request $request, CmsPage $page)
@@ -65,13 +65,13 @@ class CmsPageController extends Controller
             return response()->json(['ok' => true, 'message' => 'Halaman disimpan.']);
         }
 
-        return back()->with('success', 'Halaman CMS berhasil diperbarui.');
+        return back()->with('success', __('messages.success.cms_page_updated'));
     }
 
     public function destroy(CmsPage $page)
     {
         $page->delete();
-        return back()->with('success', 'Halaman CMS dihapus.');
+        return back()->with('success', __('messages.success.cms_page_deleted'));
     }
 
     public function show($slug)

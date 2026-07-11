@@ -28,7 +28,7 @@
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
     <div class="bg-white rounded-xl border border-gray-200 p-5 card-lift">
-        <div class="flex items-center justify-between mb-2"><span class="text-xs font-medium text-gray-500">Total Percakapan</span><div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center"><i class="fas fa-comments text-blue-500"></i></div></div>
+        <div class="flex items-center justify-between mb-2"><span class="text-xs font-medium text-gray-500">{{ __('common.total') }} Percakapan</span><div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center"><i class="fas fa-comments text-blue-500"></i></div></div>
         <div class="text-2xl font-extrabold text-gray-900" id="statTotal">{{ $total }}</div>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-5 card-lift">

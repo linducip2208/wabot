@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class WaSession extends Model
 {
     protected $fillable = [
-        'user_id', 'server_id', 'session_id', 'name', 'phone',
-        'status', 'qr_code', 'is_active', 'last_active_at',
+        'user_id', 'server_id', 'meta_account_id', 'session_id', 'name', 'phone',
+        'channel', 'status', 'qr_code', 'is_active', 'last_active_at',
     ];
 
     protected $casts = [
@@ -26,6 +26,11 @@ class WaSession extends Model
     public function server(): BelongsTo
     {
         return $this->belongsTo(WaServer::class, 'server_id');
+    }
+
+    public function metaAccount(): BelongsTo
+    {
+        return $this->belongsTo(WaMetaAccount::class, 'meta_account_id');
     }
 
     public function autoreplies(): HasMany

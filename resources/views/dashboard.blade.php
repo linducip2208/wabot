@@ -5,19 +5,19 @@
 <div class="flex items-center justify-between mb-5">
     <div>
         <h1 class="text-xl font-extrabold text-gray-900">Dashboard</h1>
-        <p class="text-sm text-gray-500 mt-0.5">Selamat datang, {{ Auth::user()->name }}</p>
+        <p class="text-sm text-gray-500 mt-0.5">{{ __('dash.welcome') }}, {{ Auth::user()->name }}</p>
     </div>
 </div>
 
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
     @php
     $statCards = [
-        ['Sesi', $stats['sessions'], 'bg-blue-50 text-blue-500', 'fas fa-mobile-alt'],
-        ['Online', $stats['sessions_connected'], 'bg-emerald-50 text-emerald-500', 'fas fa-wifi'],
-        ['Kontak', $stats['contacts'], 'bg-violet-50 text-violet-500', 'fas fa-address-book'],
-        ['Kampanye', $stats['campaigns'], 'bg-amber-50 text-amber-500', 'fas fa-bullhorn'],
-        ['Msuk', $stats['messages_in'], 'bg-cyan-50 text-cyan-500', 'fas fa-inbox'],
-        ['Klr', $stats['messages_out'], 'bg-rose-50 text-rose-500', 'fas fa-paper-plane'],
+        ['session', $stats['sessions'], 'bg-blue-50 text-blue-500', 'fas fa-mobile-alt'],
+        ['online', $stats['sessions_connected'], 'bg-emerald-50 text-emerald-500', 'fas fa-wifi'],
+        ['contact', $stats['contacts'], 'bg-violet-50 text-violet-500', 'fas fa-address-book'],
+        ['campaign', $stats['campaigns'], 'bg-amber-50 text-amber-500', 'fas fa-bullhorn'],
+        ['in', $stats['messages_in'], 'bg-cyan-50 text-cyan-500', 'fas fa-inbox'],
+        ['out', $stats['messages_out'], 'bg-rose-50 text-rose-500', 'fas fa-paper-plane'],
     ];
     @endphp
     @foreach($statCards as [$label, $val, $colorClass, $icon])
@@ -26,7 +26,7 @@
             <i class="{{ $icon }}"></i>
         </div>
         <div>
-            <div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">{{ $label }}</div>
+            <div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">{{ __('common.' . $label) }}</div>
             <div class="text-xl font-extrabold text-gray-900">{{ number_format($val) }}</div>
         </div>
     </div>
@@ -36,18 +36,18 @@
 {{-- Charts --}}
 <div class="grid lg:grid-cols-2 gap-5 mb-5">
     <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-chart-bar text-brand-500"></i> Aktivitas Pesan 7 Hari</h2>
+        <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-chart-bar text-brand-500"></i> {{ __('dash.weekly_activity') }}</h2>
         <canvas id="weeklyChart" height="220"></canvas>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-chart-line text-emerald-500"></i> Aktivitas Hari Ini</h2>
+        <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-chart-line text-emerald-500"></i> {{ __('dash.today_activity') }}</h2>
         <canvas id="hourlyChart" height="220"></canvas>
     </div>
 </div>
 
 <div class="grid lg:grid-cols-2 gap-5">
     <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-mobile-alt text-brand-500"></i> Sesi WhatsApp</h2>
+        <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-mobile-alt text-brand-500"></i> {{ __('common.session') }} WhatsApp</h2>
         <div class="space-y-2">
             @forelse($sessions as $s)
                 <a href="{{ route('sessions.show', $s) }}" class="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-50 transition">
@@ -63,13 +63,13 @@
                     </span>
                 </a>
             @empty
-                <p class="text-sm text-gray-500 py-4 text-center">Belum ada sesi.</p>
+                <p class="text-sm text-gray-500 py-4 text-center">{{ __('common.no') }} {{ __('common.session') }}.</p>
             @endforelse
         </div>
     </div>
 
     <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-clock text-brand-500"></i> Pesan Terbaru</h2>
+        <h2 class="font-bold text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-clock text-brand-500"></i> {{ __('dash.recent_messages') }}</h2>
         <div class="space-y-2">
             @forelse($recentMessages as $msg)
                 <div class="flex items-start gap-3 py-2.5 px-3 rounded-lg hover:bg-gray-50 transition">
@@ -85,7 +85,7 @@
                     </div>
                 </div>
             @empty
-                <p class="text-sm text-gray-500 py-4 text-center">Belum ada pesan.</p>
+                <p class="text-sm text-gray-500 py-4 text-center">{{ __('common.no') }} {{ __('common.message') }}.</p>
             @endforelse
         </div>
     </div>
@@ -100,8 +100,8 @@ new Chart(weeklyCtx, {
     data: {
         labels: {!! json_encode($chartData['labels']) !!},
         datasets: [
-            { label: 'Masuk', data: {!! json_encode($chartData['in']) !!}, backgroundColor: '#06b6d4', borderRadius: 6, borderSkipped: false },
-            { label: 'Keluar', data: {!! json_encode($chartData['out']) !!}, backgroundColor: '#10b981', borderRadius: 6, borderSkipped: false },
+            { label: '{{ __('common.in') }}', data: {!! json_encode($chartData['in']) !!}, backgroundColor: '#06b6d4', borderRadius: 6, borderSkipped: false },
+            { label: '{{ __('common.out') }}', data: {!! json_encode($chartData['out']) !!}, backgroundColor: '#10b981', borderRadius: 6, borderSkipped: false },
         ]
     },
     options: {
@@ -120,7 +120,7 @@ new Chart(hourlyCtx, {
     data: {
         labels: {!! json_encode($chartData['hourlyLabels']) !!},
         datasets: [
-            { label: 'Pesan', data: {!! json_encode($chartData['hourlyData']) !!}, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.08)', fill: true, tension: 0.4, pointRadius: 2, pointHoverRadius: 5 }
+            { label: '{{ __('common.message') }}', data: {!! json_encode($chartData['hourlyData']) !!}, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.08)', fill: true, tension: 0.4, pointRadius: 2, pointHoverRadius: 5 }
         ]
     },
     options: {

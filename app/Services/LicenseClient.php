@@ -67,24 +67,24 @@ class LicenseClient
                     'domain'         => $domain,
                 ]);
         } catch (\Throwable $e) {
-            return ['ok' => false, 'error' => 'Tidak bisa menghubungi server lisensi: ' . $e->getMessage()];
+            return ['ok' => false, 'error' => __('messages.error.license_connection_failed', ['error' => $e->getMessage()])];
         }
 
         if ($resp->status() === 422 || $resp->status() === 403 || $resp->status() === 404) {
-            return ['ok' => false, 'error' => $resp->json('error') ?? 'Aktivasi gagal.'];
+            return ['ok' => false, 'error' => $resp->json('error') ?? __('messages.error.activation_failed')];
         }
         if (!$resp->successful()) {
-            return ['ok' => false, 'error' => 'Server error (HTTP ' . $resp->status() . ').'];
+            return ['ok' => false, 'error' => __('messages.error.license_server_error', ['status' => $resp->status()])];
         }
 
         $body = $resp->json();
         if (!($body['activated'] ?? false)) {
-            return ['ok' => false, 'error' => $body['error'] ?? 'Aktivasi gagal.'];
+            return ['ok' => false, 'error' => $body['error'] ?? __('messages.error.activation_failed')];
         }
 
         $signed = $body['signed_payload'] ?? null;
         if (!$signed || !$this->verifySignature($signed)) {
-            return ['ok' => false, 'error' => 'Server response signature gagal divalidasi. Hubungi support.'];
+            return ['ok' => false, 'error' => __('messages.error.signature_validation_failed')];
         }
 
         // Encrypt + write to lock file
@@ -217,7 +217,7 @@ class LicenseClient
             16
         );
         if ($cipher === false) {
-            throw new \RuntimeException('Failed to encrypt license payload.');
+            throw new \RuntimeException(__('messages.error.license_encrypt_failed'));
         }
 
         file_put_contents($path, $nonce . $tag . $cipher, LOCK_EX);

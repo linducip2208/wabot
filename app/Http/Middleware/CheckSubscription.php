@@ -24,18 +24,18 @@ class CheckSubscription
 
         if (!$plan) {
             if ($request->expectsJson()) {
-                return response()->json(['error' => 'No active plan.'], 402);
+                return response()->json(['error' => __('api.error.no_active_plan')], 402);
             }
             return redirect()->route('plans.index')
-                ->with('warning', 'Silakan pilih paket untuk melanjutkan.');
+                ->with('warning', __('messages.warning.select_plan'));
         }
 
         if (!$subscription && $plan->price > 0) {
             if ($request->expectsJson()) {
-                return response()->json(['error' => 'Subscription required.'], 402);
+                return response()->json(['error' => __('api.error.subscription_required')], 402);
             }
             return redirect()->route('plans.index')
-                ->with('warning', 'Anda perlu subscription aktif untuk paket ini.');
+                ->with('warning', __('messages.warning.subscription_required'));
         }
 
         if ($feature) {
@@ -50,10 +50,10 @@ class CheckSubscription
             if ($current >= $limit && $limit > 0) {
                 if ($request->expectsJson()) {
                     return response()->json([
-                        'error' => "Limit {$feature} reached ({$current}/{$limit}). Upgrade plan.",
+                        'error' => __('api.error.limit_reached', ['feature' => $feature, 'current' => $current, 'limit' => $limit]),
                     ], 402);
                 }
-                return back()->with('error', "Limit {$feature} tercapai ({$current}/{$limit}). Upgrade paket.");
+                return back()->with('error', __('messages.error.limit_reached', ['feature' => $feature, 'current' => $current, 'limit' => $limit]));
             }
         }
 

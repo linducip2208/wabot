@@ -41,7 +41,7 @@ class AiKeyController extends Controller
             'temperature'       => $data['temperature'] ?? 0.7,
         ]);
 
-        return back()->with('success', 'AI Key berhasil ditambahkan.');
+        return back()->with('success', __('messages.success.ai_key_added'));
     }
 
     public function update(Request $request, WaAiKey $aiKey)
@@ -75,14 +75,14 @@ class AiKeyController extends Controller
 
         $aiKey->update($updateData);
 
-        return back()->with('success', 'AI Key berhasil diperbarui.');
+        return back()->with('success', __('messages.success.ai_key_updated'));
     }
 
     public function destroy(WaAiKey $aiKey)
     {
         abort_if($aiKey->user_id !== Auth::id(), 403);
         $aiKey->delete();
-        return back()->with('success', 'AI Key dihapus.');
+        return back()->with('success', __('messages.success.ai_key_deleted'));
     }
 
     public function test(WaAiKey $aiKey)
@@ -92,7 +92,7 @@ class AiKeyController extends Controller
         try {
             $apiKey = Crypt::decryptString($aiKey->api_key_encrypted);
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal mendekripsi API key.');
+            return back()->with('error', __('messages.error.api_key_decrypt_failed'));
         }
 
         $testPrompt = 'Say hello in one word.';
@@ -157,7 +157,7 @@ class AiKeyController extends Controller
                     break;
 
                 default:
-                    return back()->with('error', 'Provider tidak dikenal.');
+                    return back()->with('error', __('messages.error.unknown_provider'));
             }
 
             if ($res->successful()) {
@@ -172,13 +172,13 @@ class AiKeyController extends Controller
                     $text = $body['choices'][0]['message']['content'] ?? '(respons kosong)';
                 }
 
-                return back()->with('success', "Test berhasil! Respons: {$text}");
+                return back()->with('success', __('messages.success.ai_key_test_ok', ['text' => $text]));
             }
 
             return back()->with('error', 'HTTP ' . $res->status() . ': ' . ($res->json()['error']['message'] ?? $res->body()));
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal terhubung: ' . $e->getMessage());
+            return back()->with('error', __('messages.error.connection_failed', ['error' => $e->getMessage()]));
         }
     }
 }

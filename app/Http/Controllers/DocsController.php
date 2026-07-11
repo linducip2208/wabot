@@ -14,8 +14,8 @@ class DocsController extends Controller
         $features = $this->features();
 
         $seoMeta = [
-            'title' => 'Dokumentasi — WABot WhatsApp Marketing SaaS',
-            'description' => 'Dokumentasi lengkap WABot. Tutorial langkah demi langkah, daftar fitur, akun demo, dan struktur menu admin.',
+            'title' => __('docs.seo_title'),
+            'description' => __('docs.seo_description'),
             'canonical' => url('/docs'),
         ];
 
@@ -27,8 +27,8 @@ class DocsController extends Controller
     protected function demoAccounts(): array
     {
         return [
-            ['role' => 'Admin', 'email' => 'admin@wabot.test', 'password' => 'password', 'scope' => 'Akses penuh: server, user, voucher, transaksi, payout, CMS, blog'],
-            ['role' => 'User', 'email' => 'user@wabot.test', 'password' => 'password', 'scope' => 'Akses standar: chat, kontak, kampanye, auto-reply, sesi, webhook'],
+            ['role' => 'Admin', 'email' => 'admin@wabot.test', 'password' => 'password', 'scope' => __('docs.demo.admin_scope')],
+            ['role' => 'User', 'email' => 'user@wabot.test', 'password' => 'password', 'scope' => __('docs.demo.user_scope')],
         ];
     }
 
@@ -36,45 +36,45 @@ class DocsController extends Controller
     {
         return [
             [
-                'title' => 'Utama',
+                'title' => __('docs.menu.group_main'),
                 'icon' => 'fa-star',
                 'items' => [
-                    ['icon' => 'fa-comments', 'label' => 'Chat Omni-Channel', 'desc' => 'Inbox percakapan real-time'],
-                    ['icon' => 'fa-chart-pie', 'label' => 'Dashboard', 'desc' => 'Statistik & grafik aktivitas'],
+                    ['icon' => 'fa-comments', 'label' => __('docs.menu.chat_omnichannel'), 'desc' => __('docs.menu.chat_omnichannel_desc')],
+                    ['icon' => 'fa-chart-pie', 'label' => __('docs.menu.dashboard'), 'desc' => __('docs.menu.dashboard_desc')],
                 ]
             ],
             [
-                'title' => 'WhatsApp',
+                'title' => __('docs.menu.group_whatsapp'),
                 'icon' => 'fa-whatsapp',
                 'items' => [
-                    ['icon' => 'fa-mobile-alt', 'label' => 'Sesi / Agen', 'desc' => 'Kelola koneksi WhatsApp'],
-                    ['icon' => 'fa-address-book', 'label' => 'Kontak', 'desc' => 'Database kontak & import CSV'],
-                    ['icon' => 'fa-layer-group', 'label' => 'Grup Kontak', 'desc' => 'Segmentasi kontak'],
-                    ['icon' => 'fa-bullhorn', 'label' => 'Kampanye', 'desc' => 'Kirim pesan massal'],
-                    ['icon' => 'fa-clock', 'label' => 'Jadwal Berulang', 'desc' => 'Auto-send berkala'],
-                    ['icon' => 'fa-robot', 'label' => 'Auto-Reply', 'desc' => 'Balas otomatis keyword'],
-                    ['icon' => 'fa-file-lines', 'label' => 'Template Pesan', 'desc' => 'Simpan template'],
-                    ['icon' => 'fa-bolt', 'label' => 'Webhook', 'desc' => 'Forward pesan ke URL'],
-                    ['icon' => 'fa-brain', 'label' => 'AI Keys', 'desc' => 'Integrasi AI/LLM'],
+                    ['icon' => 'fa-mobile-alt', 'label' => __('docs.menu.sessions'), 'desc' => __('docs.menu.sessions_desc')],
+                    ['icon' => 'fa-address-book', 'label' => __('docs.menu.contacts'), 'desc' => __('docs.menu.contacts_desc')],
+                    ['icon' => 'fa-layer-group', 'label' => __('docs.menu.contact_groups'), 'desc' => __('docs.menu.contact_groups_desc')],
+                    ['icon' => 'fa-bullhorn', 'label' => __('docs.menu.campaigns'), 'desc' => __('docs.menu.campaigns_desc')],
+                    ['icon' => 'fa-clock', 'label' => __('docs.menu.recurring'), 'desc' => __('docs.menu.recurring_desc')],
+                    ['icon' => 'fa-robot', 'label' => __('docs.menu.autoreply'), 'desc' => __('docs.menu.autoreply_desc')],
+                    ['icon' => 'fa-file-lines', 'label' => __('docs.menu.templates'), 'desc' => __('docs.menu.templates_desc')],
+                    ['icon' => 'fa-bolt', 'label' => __('docs.menu.webhooks'), 'desc' => __('docs.menu.webhooks_desc')],
+                    ['icon' => 'fa-brain', 'label' => __('docs.menu.ai_keys'), 'desc' => __('docs.menu.ai_keys_desc')],
                 ]
             ],
             [
-                'title' => 'Sistem',
+                'title' => __('docs.menu.group_system'),
                 'icon' => 'fa-cog',
                 'items' => [
-                    ['icon' => 'fa-server', 'label' => 'Server', 'desc' => 'Konfigurasi server (admin)'],
-                    ['icon' => 'fa-users-cog', 'label' => 'User', 'desc' => 'Manajemen user (admin)'],
-                    ['icon' => 'fa-ticket-alt', 'label' => 'Voucher', 'desc' => 'Kode voucher (admin)'],
-                    ['icon' => 'fa-exchange-alt', 'label' => 'Transaksi', 'desc' => 'Riwayat pembayaran (admin)'],
-                    ['icon' => 'fa-link', 'label' => 'Shortener', 'desc' => 'URL pendek (admin)'],
-                    ['icon' => 'fa-file-alt', 'label' => 'CMS Pages', 'desc' => 'Halaman konten (admin)'],
-                    ['icon' => 'fa-blog', 'label' => 'Blog', 'desc' => 'Kelola artikel (admin)'],
-                    ['icon' => 'fa-hand-holding-usd', 'label' => 'Payout Admin', 'desc' => 'Pencairan (admin)'],
-                    ['icon' => 'fa-box', 'label' => 'Paket', 'desc' => 'Paket langganan'],
-                    ['icon' => 'fa-id-card', 'label' => 'Langganan', 'desc' => 'Status langganan'],
-                    ['icon' => 'fa-key', 'label' => 'API Token', 'desc' => 'Token integrasi'],
-                    ['icon' => 'fa-wallet', 'label' => 'Payout', 'desc' => 'Pencairan saldo'],
-                    ['icon' => 'fa-history', 'label' => 'Log', 'desc' => 'Aktivitas log'],
+                    ['icon' => 'fa-server', 'label' => __('docs.menu.servers'), 'desc' => __('docs.menu.servers_desc')],
+                    ['icon' => 'fa-users-cog', 'label' => __('docs.menu.users'), 'desc' => __('docs.menu.users_desc')],
+                    ['icon' => 'fa-ticket-alt', 'label' => __('docs.menu.vouchers'), 'desc' => __('docs.menu.vouchers_desc')],
+                    ['icon' => 'fa-exchange-alt', 'label' => __('docs.menu.transactions'), 'desc' => __('docs.menu.transactions_desc')],
+                    ['icon' => 'fa-link', 'label' => __('docs.menu.shortener'), 'desc' => __('docs.menu.shortener_desc')],
+                    ['icon' => 'fa-file-alt', 'label' => __('docs.menu.cms_pages'), 'desc' => __('docs.menu.cms_pages_desc')],
+                    ['icon' => 'fa-blog', 'label' => __('docs.menu.blog'), 'desc' => __('docs.menu.blog_desc')],
+                    ['icon' => 'fa-hand-holding-usd', 'label' => __('docs.menu.payout_admin'), 'desc' => __('docs.menu.payout_admin_desc')],
+                    ['icon' => 'fa-box', 'label' => __('docs.menu.plans'), 'desc' => __('docs.menu.plans_desc')],
+                    ['icon' => 'fa-id-card', 'label' => __('docs.menu.subscriptions'), 'desc' => __('docs.menu.subscriptions_desc')],
+                    ['icon' => 'fa-key', 'label' => __('docs.menu.api_tokens'), 'desc' => __('docs.menu.api_tokens_desc')],
+                    ['icon' => 'fa-wallet', 'label' => __('docs.menu.payout'), 'desc' => __('docs.menu.payout_desc')],
+                    ['icon' => 'fa-history', 'label' => __('docs.menu.logs'), 'desc' => __('docs.menu.logs_desc')],
                 ]
             ],
         ];
@@ -84,75 +84,75 @@ class DocsController extends Controller
     {
         return [
             [
-                'phase' => 'Fase 1 — Setup Awal',
+                'phase' => __('docs.tutorial.phase_1_title'),
                 'icon' => 'fa-rocket',
                 'steps' => [
-                    'Daftar akun di halaman register',
-                    'Login dengan akun yang sudah dibuat',
-                    'Masuk ke halaman Paket untuk memilih paket',
-                    'Setup server WhatsApp di menu Server (admin)',
+                    __('docs.tutorial.step_1_1'),
+                    __('docs.tutorial.step_1_2'),
+                    __('docs.tutorial.step_1_3'),
+                    __('docs.tutorial.step_1_4'),
                 ]
             ],
             [
-                'phase' => 'Fase 2 — Koneksi WhatsApp',
+                'phase' => __('docs.tutorial.phase_2_title'),
                 'icon' => 'fa-plug',
                 'steps' => [
-                    'Buka menu Sesi / Agen → Tambah Sesi',
-                    'Pilih server dan masukkan nama sesi',
-                    'Scan QR code dengan WhatsApp di HP Anda',
-                    'Tunggu status berubah menjadi Connected',
+                    __('docs.tutorial.step_2_1'),
+                    __('docs.tutorial.step_2_2'),
+                    __('docs.tutorial.step_2_3'),
+                    __('docs.tutorial.step_2_4'),
                 ]
             ],
             [
-                'phase' => 'Fase 3 — Data Kontak',
+                'phase' => __('docs.tutorial.phase_3_title'),
                 'icon' => 'fa-address-book',
                 'steps' => [
-                    'Buka menu Kontak → Tambah Kontak manual',
-                    'Atau gunakan Import CSV untuk upload massal',
-                    'Buat Grup Kontak untuk segmentasi',
-                    'Assign kontak ke grup yang sesuai',
+                    __('docs.tutorial.step_3_1'),
+                    __('docs.tutorial.step_3_2'),
+                    __('docs.tutorial.step_3_3'),
+                    __('docs.tutorial.step_3_4'),
                 ]
             ],
             [
-                'phase' => 'Fase 4 — Auto-Reply',
+                'phase' => __('docs.tutorial.phase_4_title'),
                 'icon' => 'fa-robot',
                 'steps' => [
-                    'Buka menu Auto-Reply → Tambah',
-                    'Masukkan keyword pemicu (contoh: "harga")',
-                    'Pilih tipe pencocokan: exact / contains',
-                    'Tulis pesan balasan dengan spintax {Halo|Hai}',
-                    'Aktifkan auto-reply',
+                    __('docs.tutorial.step_4_1'),
+                    __('docs.tutorial.step_4_2'),
+                    __('docs.tutorial.step_4_3'),
+                    __('docs.tutorial.step_4_4'),
+                    __('docs.tutorial.step_4_5'),
                 ]
             ],
             [
-                'phase' => 'Fase 5 — Kampanye',
+                'phase' => __('docs.tutorial.phase_5_title'),
                 'icon' => 'fa-bullhorn',
                 'steps' => [
-                    'Buka menu Kampanye → Tambah Kampanye',
-                    'Isi nama, pesan, dan pilih sesi',
-                    'Pilih kontak atau grup target',
-                    'Atur delay antar pesan (anti-ban)',
-                    'Jadwalkan atau kirim langsung',
+                    __('docs.tutorial.step_5_1'),
+                    __('docs.tutorial.step_5_2'),
+                    __('docs.tutorial.step_5_3'),
+                    __('docs.tutorial.step_5_4'),
+                    __('docs.tutorial.step_5_5'),
                 ]
             ],
             [
-                'phase' => 'Fase 6 — Chat Harian',
+                'phase' => __('docs.tutorial.phase_6_title'),
                 'icon' => 'fa-comments',
                 'steps' => [
-                    'Buka menu Chat untuk lihat inbox',
-                    'Klik kontak untuk lihat percakapan',
-                    'Balas pesan langsung dari dashboard',
-                    'Pantau status: sent, delivered, read',
+                    __('docs.tutorial.step_6_1'),
+                    __('docs.tutorial.step_6_2'),
+                    __('docs.tutorial.step_6_3'),
+                    __('docs.tutorial.step_6_4'),
                 ]
             ],
             [
-                'phase' => 'Fase 7 — Integrasi',
+                'phase' => __('docs.tutorial.phase_7_title'),
                 'icon' => 'fa-bolt',
                 'steps' => [
-                    'Setup Webhook untuk forward pesan',
-                    'Generate API Token untuk integrasi eksternal',
-                    'Konfigurasi AI Keys untuk auto-reply cerdas',
-                    'Test integrasi dengan tools eksternal',
+                    __('docs.tutorial.step_7_1'),
+                    __('docs.tutorial.step_7_2'),
+                    __('docs.tutorial.step_7_3'),
+                    __('docs.tutorial.step_7_4'),
                 ]
             ],
         ];
@@ -162,48 +162,48 @@ class DocsController extends Controller
     {
         return [
             [
-                'group' => 'Chat & Pesan',
+                'group' => __('docs.features.group_chat'),
                 'icon' => 'fa-comments',
                 'items' => [
-                    ['title' => 'Chat Omni-Channel', 'desc' => 'Inbox real-time semua percakapan WhatsApp dalam satu layar. Lihat, balas, dan pantau status pesan (sent, delivered, read).'],
-                    ['title' => 'Multi-Agen', 'desc' => 'Hubungkan banyak nomor WhatsApp sekaligus. Setiap sesi bisa punya nama dan agen berbeda.'],
-                    ['title' => 'Template Pesan', 'desc' => 'Simpan template pesan untuk balasan cepat. Gunakan variabel dinamis untuk personalisasi.'],
+                    ['title' => __('docs.features.chat_omnichannel_title'), 'desc' => __('docs.features.chat_omnichannel_desc')],
+                    ['title' => __('docs.features.multi_agent_title'), 'desc' => __('docs.features.multi_agent_desc')],
+                    ['title' => __('docs.features.template_title'), 'desc' => __('docs.features.template_desc')],
                 ]
             ],
             [
-                'group' => 'Otomatisasi',
+                'group' => __('docs.features.group_automation'),
                 'icon' => 'fa-robot',
                 'items' => [
-                    ['title' => 'Auto-Reply Keyword', 'desc' => 'Balas otomatis berdasarkan keyword dengan spintax {Halo|Hai}. Dukungan exact match dan contains.'],
-                    ['title' => 'Jadwal Berulang', 'desc' => 'Kirim pesan welcome, daily, weekly, atau monthly otomatis. Set and forget.'],
-                    ['title' => 'Campaign Bulk', 'desc' => 'Kirim pesan massal ke ribuan kontak dengan delay anti-ban. Bisa dijadwalkan atau kirim langsung.'],
+                    ['title' => __('docs.features.autoreply_title'), 'desc' => __('docs.features.autoreply_desc')],
+                    ['title' => __('docs.features.recurring_title'), 'desc' => __('docs.features.recurring_desc')],
+                    ['title' => __('docs.features.campaign_title'), 'desc' => __('docs.features.campaign_desc')],
                 ]
             ],
             [
-                'group' => 'Kontak',
+                'group' => __('docs.features.group_contacts'),
                 'icon' => 'fa-address-book',
                 'items' => [
-                    ['title' => 'Database Kontak', 'desc' => 'Kelola semua kontak WhatsApp. Tambah manual atau import CSV massal.'],
-                    ['title' => 'Grup Kontak', 'desc' => 'Segmentasi kontak ke grup untuk targeting campaign yang lebih presisi.'],
-                    ['title' => 'Import CSV', 'desc' => 'Upload file CSV sekali klik. Auto-detect kolom nama dan nomor.'],
+                    ['title' => __('docs.features.contact_db_title'), 'desc' => __('docs.features.contact_db_desc')],
+                    ['title' => __('docs.features.contact_group_title'), 'desc' => __('docs.features.contact_group_desc')],
+                    ['title' => __('docs.features.import_csv_title'), 'desc' => __('docs.features.import_csv_desc')],
                 ]
             ],
             [
-                'group' => 'Integrasi',
+                'group' => __('docs.features.group_integration'),
                 'icon' => 'fa-plug',
                 'items' => [
-                    ['title' => 'Webhook', 'desc' => 'Forward pesan masuk ke URL eksternal. Konfigurasi header dan method HTTP.'],
-                    ['title' => 'API Token', 'desc' => 'Generate token untuk integrasi dengan aplikasi lain via REST API.'],
-                    ['title' => 'AI / LLM Keys', 'desc' => 'Tambahkan API key LLM untuk auto-reply cerdas berbasis AI. Dukung OpenAI, DeepSeek, Groq, dll.'],
+                    ['title' => __('docs.features.webhook_title'), 'desc' => __('docs.features.webhook_desc')],
+                    ['title' => __('docs.features.api_token_title'), 'desc' => __('docs.features.api_token_desc')],
+                    ['title' => __('docs.features.ai_keys_title'), 'desc' => __('docs.features.ai_keys_desc')],
                 ]
             ],
             [
-                'group' => 'Manajemen',
+                'group' => __('docs.features.group_management'),
                 'icon' => 'fa-cog',
                 'items' => [
-                    ['title' => 'Dashboard Analitik', 'desc' => 'Pantau aktivitas pesan dengan chart interaktif. Lihat tren harian, mingguan, bulanan.'],
-                    ['title' => 'Paket Langganan', 'desc' => 'Pilih paket sesuai kebutuhan: Free, Growth, atau Whitelabel. Upgrade kapan saja.'],
-                    ['title' => 'Payout & Saldo', 'desc' => 'Pantau saldo dan ajukan pencairan. Admin bisa approve/reject payout.'],
+                    ['title' => __('docs.features.dashboard_title'), 'desc' => __('docs.features.dashboard_desc')],
+                    ['title' => __('docs.features.plans_title'), 'desc' => __('docs.features.plans_desc')],
+                    ['title' => __('docs.features.payout_title'), 'desc' => __('docs.features.payout_desc')],
                 ]
             ],
         ];

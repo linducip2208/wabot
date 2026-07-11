@@ -32,7 +32,7 @@ class ContactTagController extends Controller
             'color' => $validated['color'],
         ]);
 
-        return back()->with('success', 'Tag berhasil dibuat.');
+        return back()->with('success', __('messages.success.tag_created'));
     }
 
     public function update(Request $request, WaContactTag $tag)
@@ -46,7 +46,7 @@ class ContactTagController extends Controller
 
         $tag->update($validated);
 
-        return back()->with('success', 'Tag diperbarui.');
+        return back()->with('success', __('messages.success.tag_updated'));
     }
 
     public function destroy(WaContactTag $tag)
@@ -56,7 +56,7 @@ class ContactTagController extends Controller
         $tag->contacts()->detach();
         $tag->delete();
 
-        return back()->with('success', 'Tag dihapus.');
+        return back()->with('success', __('messages.success.tag_deleted'));
     }
 
     public function attach(Request $request, WaContactTag $tag)
@@ -72,7 +72,7 @@ class ContactTagController extends Controller
 
         $tag->contacts()->syncWithoutDetaching([$contact->id]);
 
-        return back()->with('success', 'Tag ditempelkan ke kontak.');
+        return back()->with('success', __('messages.success.tag_attached'));
     }
 
     public function detach(Request $request, WaContactTag $tag)
@@ -88,6 +88,6 @@ class ContactTagController extends Controller
 
         $tag->contacts()->detach($contact->id);
 
-        return back()->with('success', 'Tag dilepaskan dari kontak.');
+        return back()->with('success', __('messages.success.tag_detached'));
     }
 }

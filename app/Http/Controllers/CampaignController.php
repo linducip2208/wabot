@@ -57,7 +57,7 @@ class CampaignController extends Controller
         ]);
 
         if (empty($validated['recipient_ids']) && empty(trim($validated['manual_numbers'] ?? ''))) {
-            return back()->with('error', 'Pilih minimal 1 kontak atau masukkan nomor manual.')->withInput();
+            return back()->with('error', __('messages.error.select_contact_or_number'))->withInput();
         }
 
         $recipients = collect();
@@ -112,7 +112,7 @@ class CampaignController extends Controller
         }
 
         return redirect()->route('campaigns.index')
-            ->with('success', 'Kampanye berhasil dibuat.');
+            ->with('success', __('messages.success.campaign_created'));
     }
 
     public function show(WaCampaign $campaign)
@@ -126,7 +126,7 @@ class CampaignController extends Controller
     {
         abort_if($campaign->user_id !== Auth::id(), 403);
         $campaign->delete();
-        return back()->with('success', 'Kampanye dihapus.');
+        return back()->with('success', __('messages.success.campaign_deleted'));
     }
 
     protected function sendCampaign(WaCampaign $campaign, $recipients): void
@@ -191,7 +191,7 @@ class CampaignController extends Controller
         if ($campaign->status === 'sending') {
             $campaign->update(['status' => 'paused']);
         }
-        return back()->with('success', 'Kampanye dijeda.');
+        return back()->with('success', __('messages.success.campaign_paused'));
     }
 
     public function resume(WaCampaign $campaign)
@@ -204,7 +204,7 @@ class CampaignController extends Controller
                 ->get();
             $this->sendCampaign($campaign, $recipients);
         }
-        return back()->with('success', 'Kampanye dilanjutkan.');
+        return back()->with('success', __('messages.success.campaign_resumed'));
     }
 
     public function resend(WaCampaign $campaign)
@@ -215,6 +215,6 @@ class CampaignController extends Controller
             ->whereIn('id', $campaign->recipient_ids ?? [])
             ->get();
         $this->sendCampaign($campaign, $recipients);
-        return back()->with('success', 'Kampanye dikirim ulang.');
+        return back()->with('success', __('messages.success.campaign_resent'));
     }
 }

@@ -81,7 +81,7 @@
   </div>
 
   <p class="text-center text-xs text-slate-500 mt-6">
-    Setelah aktivasi, file <code class="text-slate-300">.license.lock</code> akan dibuat otomatis. Domain ter-bind permanen sampai di-revoke dari marketplace.
+    Setelah aktivasi, file <code class="text-slate-300">.license.lock</code> akan {{ __('common.created') }} otomatis. Domain ter-bind permanen sampai di-revoke dari marketplace.
   </p>
 </div>
 

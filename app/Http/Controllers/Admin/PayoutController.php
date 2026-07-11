@@ -29,7 +29,7 @@ class PayoutController extends Controller
             'admin_note' => request('admin_note'),
         ]);
 
-        return back()->with('success', 'Payout #' . $payout->id . ' disetujui.');
+        return back()->with('success', __('messages.success.payout_approved', ['id' => $payout->id]));
     }
 
     public function reject(Payout $payout)
@@ -39,6 +39,6 @@ class PayoutController extends Controller
             'admin_note' => request('admin_note'),
         ]);
 
-        return back()->with('success', 'Payout #' . $payout->id . ' ditolak.');
+        return back()->with('success', __('messages.success.payout_rejected', ['id' => $payout->id]));
     }
 }

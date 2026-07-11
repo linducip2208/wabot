@@ -1,12 +1,12 @@
 @extends('layouts.app')
-@section('title', 'Item Katalog — ' . $catalog->name)
+@section('title', __('catalogs.items_title', ['name' => $catalog->name]))
 @section('content')
 
 <div class="flex items-center gap-3 mb-5">
     <a href="{{ route('catalogs.index') }}" class="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-brand-600"><i class="fas fa-arrow-left"></i></a>
     <div>
-        <h1 class="text-xl font-extrabold text-gray-900">Item: {{ $catalog->name }}</h1>
-        <p class="text-sm text-gray-500 mt-0.5">{{ $catalog->items->count() }} produk dalam katalog ini</p>
+        <h1 class="text-xl font-extrabold text-gray-900">{{ __('catalogs.items_title', ['name' => $catalog->name]) }}</h1>
+        <p class="text-sm text-gray-500 mt-0.5">{{ __('catalogs.items_subtitle', ['count' => $catalog->items->count()]) }}</p>
     </div>
 </div>
 
@@ -15,10 +15,10 @@
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-gray-50 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                    <th class="px-4 py-3">Produk</th>
-                    <th class="px-4 py-3">Harga</th>
-                    <th class="px-4 py-3">Stok</th>
-                    <th class="px-4 py-3 w-16 text-right">Aksi</th>
+                    <th class="px-4 py-3">{{ __('common.product') }}</th>
+                    <th class="px-4 py-3">{{ __('common.price') }}</th>
+                    <th class="px-4 py-3">{{ __('catalogs.stock') }}</th>
+                    <th class="px-4 py-3 w-16 text-right">{{ __('common.action') }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -36,43 +36,43 @@
                     <td class="px-4 py-3 font-semibold text-gray-800">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ $item->stock }}</td>
                     <td class="px-4 py-3 text-right">
-                        <form method="POST" action="{{ route('catalogs.items.destroy', [$catalog, $item]) }}" onsubmit="return confirm('Hapus item?')">@csrf @method('DELETE')<button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button></form>
+                        <form method="POST" action="{{ route('catalogs.items.destroy', [$catalog, $item]) }}" onsubmit="return confirm('{{ __('common.delete') }} {{ __('common.items') }}?')">@csrf @method('DELETE')<button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button></form>
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="4" class="px-4 py-12 text-center text-gray-400"><i class="fas fa-box-open text-3xl mb-2"></i><p>Belum ada item</p></td></tr>
+                <tr><td colspan="4" class="px-4 py-12 text-center text-gray-400"><i class="fas fa-box-open text-3xl mb-2"></i><p>{{ __('catalogs.items_empty') }}</p></td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
     <div class="bg-white rounded-xl border border-gray-200 p-5 h-fit">
-        <h2 class="font-bold text-gray-900 mb-3">Tambah Item</h2>
+        <h2 class="font-bold text-gray-900 mb-3">{{ __('catalogs.create_item') }}</h2>
         <form method="POST" action="{{ route('catalogs.items.store', $catalog) }}" class="space-y-3">
             @csrf
             <div>
-                <label class="text-xs font-medium text-gray-500">Nama Produk</label>
+                <label class="text-xs font-medium text-gray-500">{{ __('common.name') }} {{ __('common.product') }}</label>
                 <input type="text" name="name" required class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
             </div>
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Harga</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('common.price') }}</label>
                     <input type="number" name="price" min="0" step="0.01" required class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
                 </div>
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Stok</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('catalogs.stock') }}</label>
                     <input type="number" name="stock" min="0" value="0" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
                 </div>
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Kode Produk (opsional)</label>
+                <label class="text-xs font-medium text-gray-500">{{ __('catalogs.code_optional') }}</label>
                 <input type="text" name="product_code" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
             </div>
             <div>
-                <label class="text-xs font-medium text-gray-500">Image URL (opsional)</label>
+                <label class="text-xs font-medium text-gray-500">{{ __('catalogs.image_url_optional') }}</label>
                 <input type="url" name="image_url" placeholder="https://..." class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
             </div>
-            <button type="submit" class="w-full bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700"><i class="fas fa-plus mr-1"></i> Tambah Item</button>
+            <button type="submit" class="w-full bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700"><i class="fas fa-plus mr-1"></i> {{ __('catalogs.create_item') }}</button>
         </form>
     </div>
 </div>

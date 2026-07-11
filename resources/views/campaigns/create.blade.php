@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Kampanye Baru — WABot')
+@section('title', __('campaigns.create_title'))
 @section('content')
 
 <div x-data="campaignWizard()" class="max-w-4xl mx-auto">
     <div class="mb-6">
         <a href="{{ route('campaigns.index') }}" class="text-sm text-gray-500 hover:text-brand-600">
-            <i class="fas fa-arrow-left mr-1"></i> Kembali
+            <i class="fas fa-arrow-left mr-1"></i> {{ __('common.back') }}
         </a>
     </div>
 
@@ -41,30 +41,30 @@
 
         {{-- Step 1: Audience --}}
         <div x-show="current === 0" class="p-6">
-            <h2 class="text-lg font-bold text-gray-900 mb-1">Pilih Audiens</h2>
-            <p class="text-sm text-gray-500 mb-5">Tentukan sesi WhatsApp dan target kontak</p>
+            <h2 class="text-lg font-bold text-gray-900 mb-1">{{ __('common.select') }} {{ __('campaigns.step_audience') }}</h2>
+            <p class="text-sm text-gray-500 mb-5">{{ __('campaigns.determine_session') }}</p>
 
             <div class="grid grid-cols-2 gap-4 mb-5">
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Sesi WhatsApp</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('common.session') }} WhatsApp</label>
                     <select name="session_id" x-model="sessionId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                        <option value="">Pilih sesi</option>
+                        <option value="">{{ __('common.select') }} {{ __('common.session') }}</option>
                         @foreach($sessions as $s)
                             <option value="{{ $s->id }}">{{ $s->name }} ({{ $s->phone ?? 'offline' }})</option>
                         @endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Nama Kampanye</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('campaigns.campaign_name') }}</label>
                     <input type="text" name="name" x-model="campaignName" placeholder="Promo Lebaran 2026" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
             </div>
 
             <div class="flex items-center gap-2 mb-3">
-                <span class="text-xs font-medium text-gray-500">Pilih kontak</span>
-                <span class="text-[11px] text-gray-400" x-text="selectedCount + ' dari ' + totalContacts + ' dipilih'"></span>
-                <button type="button" @click="selectAll()" class="text-[11px] text-brand-600 hover:underline ml-auto">Pilih Semua</button>
-                <button type="button" @click="deselectAll()" class="text-[11px] text-gray-500 hover:underline">Hapus</button>
+                <span class="text-xs font-medium text-gray-500">{{ __('common.select') }} {{ __('common.contact') }}</span>
+                <span class="text-[11px] text-gray-400" x-text="selectedCount + ' {{ __('campaigns.of_selected') }}'.replace(':selected', selectedCount).replace(':total', '{{ $contacts->count() }}')"></span>
+                <button type="button" @click="selectAll()" class="text-[11px] text-brand-600 hover:underline ml-auto">{{ __('common.select') }} {{ __('common.all') }}</button>
+                <button type="button" @click="deselectAll()" class="text-[11px] text-gray-500 hover:underline">{{ __('common.delete') }}</button>
             </div>
 
             <div class="border border-gray-200 rounded-xl max-h-48 overflow-y-auto divide-y divide-gray-100 mb-4">
@@ -77,64 +77,64 @@
                     </div>
                 </label>
                 @empty
-                <p class="px-4 py-8 text-center text-sm text-gray-500">Belum ada kontak. <a href="{{ route('contacts.index') }}" class="text-brand-600 hover:underline">Tambah kontak</a></p>
+                <p class="px-4 py-8 text-center text-sm text-gray-500">{{ __('campaigns.empty_title') }}. <a href="{{ route('contacts.index') }}" class="text-brand-600 hover:underline">{{ __('common.create') }} {{ __('common.contact') }}</a></p>
                 @endforelse
             </div>
 
             <div class="border-t border-gray-100 pt-4">
                 <button type="button" @click="manualTab = !manualTab" class="text-xs font-medium text-brand-600 hover:underline flex items-center gap-1">
-                    <i class="fas fa-plus-circle text-[10px]"></i> <span x-text="manualTab ? 'Sembunyikan input manual' : 'Tambah nomor manual'"></span>
+                    <i class="fas fa-plus-circle text-[10px]"></i> <span x-text="manualTab ? '{{ __('campaigns.hide_manual') }}' : '{{ __('campaigns.create_manual') }}'"></span>
                 </button>
                 <div x-show="manualTab" class="mt-3">
-                    <label class="text-xs font-medium text-gray-500">Nomor manual (1 per baris, format: 628123456789 atau Nama,628123456789)</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('campaigns.manual_numbers_label') }}</label>
                     <textarea name="manual_numbers" x-model="manualNumbers" rows="5" placeholder="6281234567890&#10;Budi,6289876543210&#10;6281111111111" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
-                    <p class="text-[10px] text-gray-400 mt-0.5" x-text="'Total: ' + selectedCount + ' penerima'"></p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">{{ __('common.total') }}: <span x-text="selectedCount"></span> {{ __('common.receiver') }}</p>
                 </div>
             </div>
         </div>
 
         {{-- Step 2: Message --}}
         <div x-show="current === 1" class="p-6">
-            <h2 class="text-lg font-bold text-gray-900 mb-1">Tulis Pesan</h2>
-            <p class="text-sm text-gray-500 mb-5">Gunakan spintax & variable untuk variasi</p>
+            <h2 class="text-lg font-bold text-gray-900 mb-1">{{ __('campaigns.write_message') }}</h2>
+            <p class="text-sm text-gray-500 mb-5">{{ __('campaigns.spintax_hint') }}</p>
 
             <div class="mb-4">
-                <label class="text-xs font-medium text-gray-500">Pesan <span class="text-gray-400">({'{Halo|Hai|Pagi}'} = spintax, {'{name}'}, {'{phone}'})</span></label>
+                <label class="text-xs font-medium text-gray-500">{{ __('common.message') }} <span class="text-gray-400">({'{Halo|Hai|Pagi}'} = spintax, {'{name}'}, {'{phone}'})</span></label>
                 <textarea name="message" x-model="messageText" rows="5" required placeholder="Halo {'{name}'}! {'{Kami ada promo spesial|Jangan lewatkan diskon 50%|Ada penawaran menarik untuk Anda}'}" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Delay antar pesan (detik)</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('campaigns.delay_between') }}</label>
                     <input type="number" name="delay_seconds" x-model="delaySeconds" min="1" max="60" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                    <p class="text-[10px] text-gray-400 mt-0.5">Rekomendasi 3-10 detik untuk hindari banned</p>
+                    <p class="text-[10px] text-gray-400 mt-0.5">{{ __('campaigns.delay_recommendation') }}</p>
                 </div>
                 <div>
-                    <label class="text-xs font-medium text-gray-500">Media URL (opsional)</label>
+                    <label class="text-xs font-medium text-gray-500">{{ __('campaigns.media_url_optional') }}</label>
                     <input type="url" name="media_url" placeholder="https://example.com/image.jpg" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
             </div>
 
-            {{-- Live preview --}}
+            {{-- Live Preview --}}
             <div class="bg-[#efeae2] rounded-xl p-4">
-                <div class="text-[10px] text-gray-500 mb-2 font-medium uppercase tracking-wide">Preview Pesan</div>
-                <div class="bg-[#d9fdd3] rounded-lg rounded-br-none px-3.5 py-2 text-sm shadow-sm inline-block max-w-[80%]" x-text="previewMessage() || 'Pesan akan muncul di sini...'"></div>
-                <div class="text-[10px] text-gray-400 mt-1"><span x-text="selectedCount"></span> penerima</div>
+                <div class="text-[10px] text-gray-500 mb-2 font-medium uppercase tracking-wide">{{ __('common.preview') }} {{ __('common.message') }}</div>
+                <div class="bg-[#d9fdd3] rounded-lg rounded-br-none px-3.5 py-2 text-sm shadow-sm inline-block max-w-[80%]" x-text="previewMessage() || '{{ __('campaigns.message_placeholder') }}'"></div>
+                <div class="text-[10px] text-gray-400 mt-1"><span x-text="selectedCount"></span> {{ __('common.receiver') }}</div>
             </div>
         </div>
 
         {{-- Step 3: Review & Launch --}}
         <div x-show="current === 2" class="p-6">
-            <h2 class="text-lg font-bold text-gray-900 mb-1">Review & Kirim</h2>
-            <p class="text-sm text-gray-500 mb-5">Periksa sebelum mengirim</p>
+            <h2 class="text-lg font-bold text-gray-900 mb-1">{{ __('campaigns.review_and_send') }}</h2>
+            <p class="text-sm text-gray-500 mb-5">{{ __('campaigns.review_subtitle') }}</p>
 
             <div class="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
-                <div class="flex justify-between"><span class="text-gray-500">Kampanye</span><span class="font-medium" x-text="campaignName || '-'"></span></div>
-                <div class="flex justify-between"><span class="text-gray-500">Penerima</span><span class="font-medium" x-text="selectedCount + ' kontak'"></span></div>
-                <div class="flex justify-between"><span class="text-gray-500">Delay</span><span class="font-medium" x-text="delaySeconds + ' detik'"></span></div>
-                <div class="flex justify-between"><span class="text-gray-500">Estimasi selesai</span><span class="font-medium" x-text="estimateFinish()"></span></div>
+                <div class="flex justify-between"><span class="text-gray-500">{{ __('campaigns.campaign') }}</span><span class="font-medium" x-text="campaignName || '-'"></span></div>
+                <div class="flex justify-between"><span class="text-gray-500">{{ __('common.receiver') }}</span><span class="font-medium" x-text="selectedCount + ' {{ __('common.contact') }}'"></span></div>
+                <div class="flex justify-between"><span class="text-gray-500">{{ __('campaigns.delay') }}</span><span class="font-medium" x-text="delaySeconds + ' {{ __('common.second') }}'"></span></div>
+                <div class="flex justify-between"><span class="text-gray-500">{{ __('campaigns.estimated') }} {{ __('common.completed') }}</span><span class="font-medium" x-text="estimateFinish()"></span></div>
                 <div class="border-t border-gray-200 pt-3 mt-3">
-                    <div class="text-xs text-gray-500 mb-1">Pesan:</div>
+                    <div class="text-xs text-gray-500 mb-1">{{ __('common.message') }}:</div>
                     <div class="bg-white rounded-lg p-3 text-sm whitespace-pre-wrap" x-text="messageText || '-'"></div>
                 </div>
             </div>
@@ -144,17 +144,17 @@
         <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50/50 rounded-b-2xl">
             <button type="button" @click="prev()" x-show="current > 0"
                 class="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-200 transition">
-                <i class="fas fa-arrow-left mr-1"></i> Sebelumnya
+                <i class="fas fa-arrow-left mr-1"></i> {{ __('campaigns.previous') }}
             </button>
             <div x-show="current === 0"></div>
             <button type="button" @click="next()" x-show="current < 2"
                 class="bg-brand-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition ml-auto">
-                Lanjut <i class="fas fa-arrow-right ml-1"></i>
+                {{ __('campaigns.next') }} <i class="fas fa-arrow-right ml-1"></i>
             </button>
             <button type="submit" x-show="current === 2" :disabled="submitting || selectedCount === 0"
                 class="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:bg-gray-300 transition ml-auto">
-                <span x-show="!submitting"><i class="fas fa-paper-plane mr-1"></i> Kirim Kampanye</span>
-                <span x-show="submitting"><i class="fas fa-spinner fa-spin mr-1"></i> Mengirim...</span>
+                <span x-show="!submitting"><i class="fas fa-paper-plane mr-1"></i> {{ __('campaigns.send_campaign') }}</span>
+                <span x-show="submitting"><i class="fas fa-spinner fa-spin mr-1"></i> {{ __('campaigns.sending') }}</span>
             </button>
         </div>
     </form>
@@ -164,7 +164,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('campaignWizard', () => ({
         current: 0,
-        steps: ['Audiens', 'Pesan', 'Kirim'],
+        steps: ['{{ __('campaigns.step_audience') }}', '{{ __('common.message') }}', '{{ __('common.send') }}'],
         selectedIds: [],
         manualNumbers: '',
         manualTab: false,
@@ -188,15 +188,15 @@ document.addEventListener('alpine:init', () => {
         next() {
             if (this.current === 0) {
                 if (!this.sessionId) {
-                    alert('Pilih sesi WhatsApp terlebih dahulu.');
+                    alert('{{ __('campaigns.alert_select_session') }}');
                     return;
                 }
                 if (!this.campaignName.trim()) {
-                    alert('Isi nama kampanye terlebih dahulu.');
+                    alert('{{ __('campaigns.alert_enter_name') }}');
                     return;
                 }
                 if (this.selectedCount === 0) {
-                    alert('Pilih minimal 1 kontak atau masukkan nomor manual.');
+                    alert('{{ __('campaigns.alert_select_contact') }}');
                     return;
                 }
             }
@@ -218,9 +218,9 @@ document.addEventListener('alpine:init', () => {
             const delay = parseInt(this.delaySeconds) || 3;
             const totalSeconds = msgs * (delay + 0.5);
             const mins = Math.ceil(totalSeconds / 60);
-            if (mins < 1) return '< 1 menit';
-            if (mins < 60) return `~${mins} menit`;
-            return `~${Math.ceil(mins / 60)} jam ${mins % 60} menit`;
+            if (mins < 1) return '{{ __('campaigns.less_than_minute') }}';
+            if (mins < 60) return '{{ __('campaigns.est_minutes', ['mins' => '__MINS__']) }}'.replace('__MINS__', mins);
+            return '{{ __('campaigns.est_hours', ['hours' => '__HOURS__', 'mins' => '__MINS__']) }}'.replace('__HOURS__', Math.ceil(mins / 60)).replace('__MINS__', mins % 60);
         }
     }));
 });

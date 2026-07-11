@@ -49,7 +49,7 @@ class MediaTemplateController extends Controller
             'longitude' => $request->input('longitude'),
         ]);
 
-        return back()->with('success', 'Media Template berhasil disimpan.');
+        return back()->with('success', __('messages.success.media_template_saved'));
     }
 
     public function update(Request $request, WaMediaTemplate $template)
@@ -83,7 +83,7 @@ class MediaTemplateController extends Controller
             'longitude' => $request->input('longitude'),
         ]);
 
-        return back()->with('success', 'Media Template berhasil diperbarui.');
+        return back()->with('success', __('messages.success.media_template_updated'));
     }
 
     public function destroy(WaMediaTemplate $template)
@@ -91,6 +91,6 @@ class MediaTemplateController extends Controller
         abort_if($template->user_id !== Auth::id(), 403);
         $template->delete();
 
-        return back()->with('success', 'Media Template dihapus.');
+        return back()->with('success', __('messages.success.media_template_deleted'));
     }
 }

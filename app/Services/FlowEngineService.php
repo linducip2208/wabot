@@ -106,7 +106,7 @@ class FlowEngineService
     {
         $config = $node->config ?? [];
         $buttons = $config['buttons'] ?? [];
-        $bodyText = $node->reply_message ?: ($config['body_text'] ?? 'Pilih salah satu:');
+        $bodyText = $node->reply_message ?: ($config['body_text'] ?? __('messages.flows.choose_one'));
 
         if (empty($buttons)) return $this->goNext($node, true);
 

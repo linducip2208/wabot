@@ -4,8 +4,8 @@
 
 <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
     <div>
-        <h1 class="text-xl font-extrabold text-gray-900">Transaksi Pembayaran</h1>
-        <p class="text-sm text-gray-500 mt-0.5">{{ $transactions->count() }} transaksi tercatat</p>
+        <h1 class="text-xl font-extrabold text-gray-900">{{ __('admin.transaction_mgmt') }}</h1>
+        <p class="text-sm text-gray-500 mt-0.5">{{ __('admin.recorded_transactions', ['count' => $transactions->count()]) }}</p>
     </div>
 </div>
 
@@ -17,19 +17,19 @@
     @endphp
     <div class="bg-white rounded-xl border border-gray-200 p-4 card-lift flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center"><i class="fas fa-exchange-alt text-sky-500"></i></div>
-        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Total</div><div class="text-xl font-extrabold text-gray-900">{{ $transactions->count() }}</div></div>
+        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">{{ __('common.total') }}</div><div class="text-xl font-extrabold text-gray-900">{{ $transactions->count() }}</div></div>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-4 card-lift flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center"><i class="fas fa-check-circle text-emerald-500"></i></div>
-        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Berhasil</div><div class="text-xl font-extrabold text-gray-900">Rp {{ number_format($totalAmount, 0, ',', '.') }}</div></div>
+        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">{{ __('common.completed') }}</div><div class="text-xl font-extrabold text-gray-900">Rp {{ number_format($totalAmount, 0, ',', '.') }}</div></div>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-4 card-lift flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center"><i class="fas fa-clock text-amber-500"></i></div>
-        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Pending</div><div class="text-xl font-extrabold text-gray-900">{{ $pending }}</div></div>
+        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">{{ __('common.pending') }}</div><div class="text-xl font-extrabold text-gray-900">{{ $pending }}</div></div>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-4 card-lift flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center"><i class="fas fa-times-circle text-red-400"></i></div>
-        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Gagal</div><div class="text-xl font-extrabold text-gray-900">{{ $transactions->where('status', 'failed')->count() }}</div></div>
+        <div><div class="text-[11px] font-medium text-gray-500 uppercase tracking-wide">{{ __('common.failed') }}</div><div class="text-xl font-extrabold text-gray-900">{{ $transactions->where('status', 'failed')->count() }}</div></div>
     </div>
 </div>
 
@@ -37,13 +37,13 @@
 <div class="flex items-center gap-3 mb-4 flex-wrap">
     <form method="GET" class="flex items-center gap-3 flex-wrap w-full">
         <select name="type" class="rounded-xl border border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 focus:ring-2 focus:ring-brand-500" onchange="this.form.submit()">
-            <option value="">Semua Tipe</option>
+            <option value="">{{ __('common.all') }} {{ __('common.type') }}</option>
             @foreach($types as $t)
                 <option value="{{ $t }}" {{ request('type') === $t ? 'selected' : '' }}>{{ ucfirst($t) }}</option>
             @endforeach
         </select>
         <select name="status" class="rounded-xl border border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 focus:ring-2 focus:ring-brand-500" onchange="this.form.submit()">
-            <option value="">Semua Status</option>
+            <option value="">{{ __('common.all') }} {{ __('common.status') }}</option>
             @foreach($statuses as $s)
                 <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
             @endforeach
@@ -60,12 +60,12 @@
             <tr class="bg-gray-50 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
                 <th class="px-5 py-3">ID</th>
                 <th class="px-5 py-3">User</th>
-                <th class="px-5 py-3 hidden md:table-cell">Paket</th>
-                <th class="px-5 py-3">Tipe</th>
-                <th class="px-5 py-3">Jumlah</th>
-                <th class="px-5 py-3">Status</th>
-                <th class="px-5 py-3 hidden lg:table-cell">Tanggal</th>
-                <th class="px-5 py-3 w-28 text-right">Aksi</th>
+                <th class="px-5 py-3 hidden md:table-cell">{{ __('common.plan') }}</th>
+                <th class="px-5 py-3">{{ __('common.type') }}</th>
+                <th class="px-5 py-3">{{ __('common.amount') }}</th>
+                <th class="px-5 py-3">{{ __('common.status') }}</th>
+                <th class="px-5 py-3 hidden lg:table-cell">{{ __('common.date') }}</th>
+                <th class="px-5 py-3 w-28 text-right">{{ __('common.action') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -109,14 +109,14 @@
                         <form method="POST" action="{{ route('admin.transactions.update', $trx) }}" class="inline">
                             @csrf @method('PUT')
                             <input type="hidden" name="status" value="completed">
-                            <button class="p-1.5 rounded-lg hover:bg-emerald-50 text-gray-400 hover:text-emerald-600" title="Tandai Selesai">
+                            <button class="p-1.5 rounded-lg hover:bg-emerald-50 text-gray-400 hover:text-emerald-600" title="{{ __('admin.mark_completed') }}">
                                 <i class="fas fa-check text-xs"></i>
                             </button>
                         </form>
                         <form method="POST" action="{{ route('admin.transactions.update', $trx) }}" class="inline">
                             @csrf @method('PUT')
                             <input type="hidden" name="status" value="failed">
-                            <button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600" title="Tandai Gagal">
+                            <button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600" title="{{ __('common.mark') }} {{ __('common.failed') }}">
                                 <i class="fas fa-times text-xs"></i>
                             </button>
                         </form>
@@ -132,8 +132,8 @@
                     <div class="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
                         <i class="fas fa-exchange-alt text-xl text-gray-400"></i>
                     </div>
-                    <p class="text-gray-500 font-medium">Belum ada transaksi</p>
-                    <p class="text-sm text-gray-400">Transaksi akan muncul setelah pengguna melakukan pembayaran</p>
+                    <p class="text-gray-500 font-medium">{{ __('admin.no_transactions') }}</p>
+                    <p class="text-sm text-gray-400">{{ __('admin.transactions_empty_hint') }}</p>
                 </td>
             </tr>
             @endforelse

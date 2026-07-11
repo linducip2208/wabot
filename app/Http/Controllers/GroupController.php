@@ -28,7 +28,7 @@ class GroupController extends Controller
             'color' => $data['color'] ?? '#3b82f6',
         ]);
 
-        return back()->with('success', 'Grup dibuat.');
+        return back()->with('success', __('messages.success.group_created'));
     }
 
     public function update(Request $request, ContactGroup $group)
@@ -41,14 +41,14 @@ class GroupController extends Controller
         ]);
 
         $group->update($data);
-        return back()->with('success', 'Grup diperbarui.');
+        return back()->with('success', __('messages.success.group_updated'));
     }
 
     public function destroy(ContactGroup $group)
     {
         abort_if($group->user_id !== Auth::id(), 403);
         $group->delete();
-        return back()->with('success', 'Grup dihapus.');
+        return back()->with('success', __('messages.success.group_deleted'));
     }
 
     public function assign(Request $request)
@@ -62,6 +62,6 @@ class GroupController extends Controller
         $group = ContactGroup::where('user_id', Auth::id())->findOrFail($data['group_id']);
         $group->contacts()->syncWithoutDetaching($data['contact_ids']);
 
-        return back()->with('success', count($data['contact_ids']) . ' kontak ditambahkan ke grup.');
+        return back()->with('success', __('messages.success.contacts_added_to_group', ['count' => count($data['contact_ids'])]));
     }
 }

@@ -35,13 +35,13 @@ class VoucherController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Voucher berhasil dibuat.');
+        return back()->with('success', __('messages.success.voucher_created'));
     }
 
     public function destroy(WaVoucher $voucher)
     {
         $voucher->delete();
-        return back()->with('success', 'Voucher dihapus.');
+        return back()->with('success', __('messages.success.voucher_deleted'));
     }
 
     public function redeem(Request $request)
@@ -53,15 +53,15 @@ class VoucherController extends Controller
         $voucher = WaVoucher::where('code', strtoupper($request->code))->first();
 
         if (!$voucher) {
-            return back()->with('error', 'Kode voucher tidak ditemukan.');
+            return back()->with('error', __('messages.error.voucher_not_found'));
         }
 
         if (!$voucher->is_active) {
-            return back()->with('error', 'Voucher sudah tidak aktif.');
+            return back()->with('error', __('messages.error.voucher_inactive'));
         }
 
         if ($voucher->used_count >= $voucher->max_uses) {
-            return back()->with('error', 'Voucher sudah mencapai batas pemakaian.');
+            return back()->with('error', __('messages.error.voucher_limit_reached'));
         }
 
         $user = Auth::user();
@@ -87,6 +87,6 @@ class VoucherController extends Controller
         $voucher->increment('used_count');
 
         return redirect()->route('subscriptions.index')
-            ->with('success', "Voucher berhasil ditukarkan! Paket {$plan->name} aktif selama {$voucher->duration_days} hari.");
+            ->with('success', __('messages.success.voucher_redeemed', ['name' => $plan->name, 'days' => $voucher->duration_days]));
     }
 }

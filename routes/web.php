@@ -41,6 +41,13 @@ use App\Http\Controllers\IntentConfigController;
 use App\Http\Controllers\MediaTemplateController;
 use App\Http\Controllers\SentimentController;
 use App\Http\Controllers\ConversationRatingController;
+use App\Http\Controllers\MetaController;
+use App\Http\Controllers\MetaWebhookController;
+use App\Http\Controllers\WaFormController;
+use App\Http\Controllers\CallController;
+use App\Http\Controllers\InstagramController;
+use App\Http\Controllers\KanbanController;
+use App\Http\Controllers\TelegramController;
 
 // Public CMS pages
 Route::get('/pages/{slug}', [CmsPageController::class, 'show'])->name('pages.show')->where('slug', '^(?!builder$).*$');
@@ -67,9 +74,24 @@ Route::get('/register', fn() => view('auth.register'))->name('register');
 Route::post('/register', [App\Http\Controllers\AuthController::class, 'register']);
 Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
+// Language switch
+Route::get('/lang/{locale}', function ($locale) {
+    $lang = \App\Models\Language::where('iso', $locale)->where('is_active', true)->first();
+    if ($lang) {
+        session(['locale' => $locale]);
+        if (auth()->check()) {
+            auth()->user()->update(['language_id' => $lang->id]);
+        }
+    }
+    return redirect()->back();
+})->name('lang.switch');
+
 // Webhook (no auth)
 Route::post('/webhook/whatsapp', [WebhookController::class, 'whatsapp'])->name('webhook.whatsapp');
 Route::post('/webhook/whatsapp-status', [WebhookController::class, 'statusUpdate'])->name('webhook.status');
+Route::match(['get', 'post'], '/webhook/meta', [MetaWebhookController::class, 'receive'])->name('webhook.meta');
+Route::match(['get', 'post'], '/webhook/instagram', [InstagramController::class, 'webhook'])->name('webhook.instagram');
+Route::post('/webhook/telegram/{account}', [TelegramController::class, 'webhook'])->name('webhook.telegram');
 
 // License pairing routes
 require base_path('routes/pair-routes.php');
@@ -179,6 +201,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('flows', FlowController::class)->except(['show']);
     Route::get('flows/{flow}/nodes', [FlowController::class, 'nodes'])->name('flows.nodes');
     Route::post('flows/{flow}/nodes', [FlowController::class, 'nodesStore'])->name('flows.nodes.store');
+    Route::post('flows/ai-generate', [FlowController::class, 'aiGenerate'])->name('flows.ai-generate');
 
     // ── Drip Campaigns ──────────────────────────────────────────
     Route::resource('drips', DripCampaignController::class)->except(['show']);
@@ -256,6 +279,41 @@ Route::middleware('auth')->group(function () {
     Route::resource('ratings', ConversationRatingController::class)->only(['index', 'show']);
     Route::get('ratings-stats', [ConversationRatingController::class, 'stats'])->name('ratings.stats');
 
+    // ── Meta Cloud API ──────────────────────────────────────────
+    Route::resource('meta', MetaController::class)->except(['create', 'show', 'edit'])->parameters(['meta' => 'account']);
+    Route::post('meta/{account}/connect', [MetaController::class, 'connect'])->name('meta.connect');
+    Route::post('meta/{account}/disconnect', [MetaController::class, 'disconnect'])->name('meta.disconnect');
+    Route::post('meta/{account}/session', [MetaController::class, 'sessionStore'])->name('meta.session.store');
+    Route::post('meta/{account}/test', [MetaController::class, 'testSend'])->name('meta.test');
+
+    // ── WhatsApp Forms ──────────────────────────────────────────
+    Route::resource('forms', WaFormController::class)->except(['create', 'show', 'edit']);
+    Route::post('forms/{form}/send', [WaFormController::class, 'sendForm'])->name('forms.send');
+    Route::post('forms/{form}/send-bulk', [WaFormController::class, 'sendBulk'])->name('forms.send-bulk');
+    Route::get('forms/{form}/submissions', [WaFormController::class, 'submissions'])->name('forms.submissions');
+    Route::get('forms/{form}/export', [WaFormController::class, 'exportSubmissions'])->name('forms.export');
+
+    // ── WhatsApp Calling ────────────────────────────────────────
+    Route::resource('calls', CallController::class)->only(['index', 'store', 'destroy']);
+    Route::get('calls/{broadcast}/logs', [CallController::class, 'logs'])->name('calls.logs');
+    Route::post('calls/reply', [CallController::class, 'handleReply'])->name('calls.reply');
+
+    // ── Instagram ───────────────────────────────────────────────
+    Route::resource('instagram', InstagramController::class)->except(['create', 'show', 'edit']);
+    Route::get('instagram/callback', [InstagramController::class, 'callback'])->name('instagram.callback');
+    Route::post('instagram/{account}/connect', [InstagramController::class, 'connect'])->name('instagram.connect');
+    Route::post('instagram/{account}/disconnect', [InstagramController::class, 'disconnect'])->name('instagram.disconnect');
+
+    // ── Telegram ────────────────────────────────────────────────
+    Route::resource('telegram', TelegramController::class)->except(['create', 'show', 'edit']);
+    Route::post('telegram/{account}/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
+    Route::post('telegram/{account}/disconnect', [TelegramController::class, 'disconnect'])->name('telegram.disconnect');
+    Route::post('telegram/{account}/test', [TelegramController::class, 'testSend'])->name('telegram.test');
+
+    // ── Kanban ──────────────────────────────────────────────────
+    Route::get('kanban', [KanbanController::class, 'index'])->name('kanban.index');
+    Route::post('kanban/move', [KanbanController::class, 'move'])->name('kanban.move');
+
     // Admin
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
@@ -275,5 +333,6 @@ Route::middleware('auth')->group(function () {
         Route::put('blog/categories/{category}', [\App\Http\Controllers\Admin\BlogController::class, 'updateCategory'])->name('blog.categories.update');
         Route::delete('blog/categories/{category}', [\App\Http\Controllers\Admin\BlogController::class, 'destroyCategory'])->name('blog.categories.destroy');
         Route::resource('gateways', \App\Http\Controllers\Admin\PaymentGatewayController::class)->except(['create', 'show', 'edit']);
+        Route::resource('plans', \App\Http\Controllers\Admin\PlanController::class)->except(['create', 'show', 'edit']);
     });
 });

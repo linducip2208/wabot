@@ -48,7 +48,7 @@ class IntentConfigController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Intent Config berhasil disimpan.');
+        return back()->with('success', __('messages.success.intent_config_saved'));
     }
 
     public function update(Request $request, WaIntentConfig $intent)
@@ -76,7 +76,7 @@ class IntentConfigController extends Controller
             'ai_key_id' => $validated['ai_key_id'] ?? null,
         ]);
 
-        return back()->with('success', 'Intent Config berhasil diperbarui.');
+        return back()->with('success', __('messages.success.intent_config_updated'));
     }
 
     public function destroy(WaIntentConfig $intent)
@@ -84,6 +84,6 @@ class IntentConfigController extends Controller
         abort_if($intent->user_id !== Auth::id(), 403);
         $intent->delete();
 
-        return back()->with('success', 'Intent Config dihapus.');
+        return back()->with('success', __('messages.success.intent_config_deleted'));
     }
 }

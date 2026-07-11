@@ -52,10 +52,10 @@
     <div class="max-w-6xl mx-auto flex items-center justify-between px-5 h-16">
         <a href="/" class="flex items-center gap-2 text-xl font-extrabold tracking-tight"><i class="fas fa-paper-plane text-brand-500"></i> WABot</a>
         <div class="flex items-center gap-4">
-            <a href="/docs" class="text-sm text-brand-600 font-semibold">Dokumentasi</a>
-            <a href="/blog" class="text-sm text-gray-600 hover:text-brand-600 font-medium">Blog</a>
-            <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-brand-600 font-medium">Masuk</a>
-            <a href="{{ route('register') }}" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">Daftar Gratis</a>
+            <a href="/docs" class="text-sm text-brand-600 font-semibold">{{ __('nav.docs') }}</a>
+            <a href="/blog" class="text-sm text-gray-600 hover:text-brand-600 font-medium">{{ __('nav.blog') }}</a>
+            <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-brand-600 font-medium">{{ __('nav.login') }}</a>
+            <a href="{{ route('register') }}" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">{{ __('nav.register') }}</a>
         </div>
     </div>
 </nav>
@@ -63,33 +63,33 @@
 {{-- Jump Nav --}}
 <div class="sticky top-16 z-40 bg-white border-b border-gray-100 overflow-x-auto" x-data>
     <div class="max-w-6xl mx-auto flex items-center gap-1 px-5 py-2 text-sm">
-        <a href="#demo" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 whitespace-nowrap font-medium">Akun Demo</a>
-        <a href="#menu" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 whitespace-nowrap font-medium">Struktur Menu</a>
-        <a href="#tutorial" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 whitespace-nowrap font-medium">Tutorial</a>
-        <a href="#fitur" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 whitespace-nowrap font-medium">Fitur</a>
-        <a href="#cta" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 whitespace-nowrap font-medium">Mulai</a>
+        <a href="#demo" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 whitespace-nowrap font-medium">{{ __('docs.jump_demo') }}</a>
+        <a href="#menu" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 whitespace-nowrap font-medium">{{ __('docs.jump_menu') }}</a>
+        <a href="#tutorial" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 whitespace-nowrap font-medium">{{ __('docs.jump_tutorial') }}</a>
+        <a href="#fitur" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 whitespace-nowrap font-medium">{{ __('docs.jump_features') }}</a>
+        <a href="#cta" class="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 whitespace-nowrap font-medium">{{ __('docs.jump_start') }}</a>
     </div>
 </div>
 
 {{-- Hero --}}
 <section class="bg-gradient-to-r from-brand-600 to-brand-800 py-16 lg:py-20">
     <div class="max-w-6xl mx-auto px-5 text-white text-center">
-        <h1 class="text-3xl lg:text-4xl font-extrabold mb-3">Dokumentasi WABot</h1>
-        <p class="text-brand-200 text-lg max-w-xl mx-auto">Panduan lengkap penggunaan WABot WhatsApp Marketing SaaS — dari setup awal hingga operasional harian.</p>
+        <h1 class="text-3xl lg:text-4xl font-extrabold mb-3">{{ __('docs.hero_title') }}</h1>
+        <p class="text-brand-200 text-lg max-w-xl mx-auto">{{ __('docs.hero_description') }}</p>
     </div>
 </section>
 
 {{-- Demo Accounts --}}
 <section id="demo" class="max-w-6xl mx-auto px-5 py-16">
-    <h2 class="text-2xl font-extrabold mb-6 text-center">Akun Demo</h2>
+    <h2 class="text-2xl font-extrabold mb-6 text-center">{{ __('docs.demo_section_title') }}</h2>
     <div class="overflow-x-auto">
         <table class="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
             <thead>
                 <tr class="bg-gray-50 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                    <th class="px-5 py-3">Role</th>
+                    <th class="px-5 py-3">{{ __('common.role') }}</th>
                     <th class="px-5 py-3">Email</th>
-                    <th class="px-5 py-3">Password</th>
-                    <th class="px-5 py-3">Cakupan</th>
+                    <th class="px-5 py-3">{{ __('common.password') }}</th>
+                    <th class="px-5 py-3">{{ __('docs.scope') }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -106,7 +106,7 @@
     </div>
     <div class="mt-4 text-center">
         <a href="{{ route('login') }}" class="inline-flex items-center gap-2 text-brand-600 hover:underline text-sm font-semibold">
-            <i class="fas fa-sign-in-alt"></i> Masuk dengan akun demo
+            <i class="fas fa-sign-in-alt"></i> {{ __('docs.login_demo') }}
         </a>
     </div>
 </section>
@@ -114,7 +114,7 @@
 {{-- Menu Structure --}}
 <section id="menu" class="bg-gray-50 py-16">
     <div class="max-w-6xl mx-auto px-5">
-        <h2 class="text-2xl font-extrabold mb-8 text-center">Struktur Menu Admin</h2>
+        <h2 class="text-2xl font-extrabold mb-8 text-center">{{ __('docs.menu_structure_admin') }}</h2>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($menuGroups as $group)
             <div class="bg-white rounded-xl border border-gray-200 p-5 card-lift reveal">
@@ -143,7 +143,7 @@
 
 {{-- Tutorial --}}
 <section id="tutorial" class="max-w-5xl mx-auto px-5 py-16">
-    <h2 class="text-2xl font-extrabold mb-8 text-center">Tutorial Langkah demi Langkah</h2>
+    <h2 class="text-2xl font-extrabold mb-8 text-center">{{ __('docs.tutorial_section_title') }}</h2>
     <div class="space-y-8">
         @foreach($tutorialPhases as $phase)
         <div class="reveal bg-white border border-gray-200 rounded-2xl p-6 card-lift">
@@ -169,7 +169,7 @@
 {{-- Fitur --}}
 <section id="fitur" class="bg-gray-50 py-16">
     <div class="max-w-6xl mx-auto px-5">
-        <h2 class="text-2xl font-extrabold mb-8 text-center">Fitur Lengkap</h2>
+        <h2 class="text-2xl font-extrabold mb-8 text-center">{{ __('docs.features_section_title') }}</h2>
         <div class="grid md:grid-cols-2 gap-6">
             @foreach($features as $featureGroup)
             <div class="reveal">
@@ -196,11 +196,11 @@
 {{-- CTA --}}
 <section id="cta" class="bg-gradient-to-r from-brand-600 to-brand-800 py-16">
     <div class="max-w-xl mx-auto text-center px-5 text-white">
-        <h2 class="text-2xl font-extrabold mb-3">Siap Mulai?</h2>
-        <p class="text-brand-200 mb-6">Daftar gratis dan langsung pakai semua fitur.</p>
+        <h2 class="text-2xl font-extrabold mb-3">{{ __('docs.cta_heading') }}</h2>
+        <p class="text-brand-200 mb-6">{{ __('docs.cta_subtitle') }}</p>
         <div class="flex items-center justify-center gap-3">
-            <a href="{{ route('register') }}" class="bg-white text-brand-700 px-6 py-3 rounded-xl font-bold hover:shadow-xl transition">Daftar Gratis</a>
-            <a href="{{ route('login') }}" class="bg-brand-500/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-brand-500/30 transition">Masuk</a>
+            <a href="{{ route('register') }}" class="bg-white text-brand-700 px-6 py-3 rounded-xl font-bold hover:shadow-xl transition">{{ __('nav.register') }}</a>
+            <a href="{{ route('login') }}" class="bg-brand-500/20 text-white px-6 py-3 rounded-xl font-semibold hover:bg-brand-500/30 transition">{{ __('nav.login') }}</a>
         </div>
     </div>
 </section>
@@ -208,11 +208,11 @@
 {{-- Footer --}}
 <footer class="bg-gray-900 text-gray-400 py-10 text-sm">
     <div class="max-w-6xl mx-auto px-5 flex flex-col md:flex-row justify-between gap-6">
-        <div><span class="text-white font-bold text-lg">WABot</span><p class="mt-1">WhatsApp Marketing SaaS</p></div>
+        <div><span class="text-white font-bold text-lg">WABot</span><p class="mt-1">{{ __('app.tagline') }}</p></div>
         <div class="flex gap-6">
-            <a href="/docs" class="hover:text-white">Dokumentasi</a>
-            <a href="/blog" class="hover:text-white">Blog</a>
-            <a href="{{ route('login') }}" class="hover:text-white">Login</a>
+            <a href="/docs" class="hover:text-white">{{ __('nav.docs') }}</a>
+            <a href="/blog" class="hover:text-white">{{ __('nav.blog') }}</a>
+            <a href="{{ route('login') }}" class="hover:text-white">{{ __('footer.login') }}</a>
         </div>
     </div>
 </footer>

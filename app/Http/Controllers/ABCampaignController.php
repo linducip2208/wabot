@@ -55,7 +55,7 @@ class ABCampaignController extends Controller
             'is_active' => false,
         ]);
 
-        return redirect()->route('ab-tests.index')->with('success', 'A/B test berhasil dibuat.');
+        return redirect()->route('ab-tests.index')->with('success', __('messages.success.ab_test_created'));
     }
 
     public function edit(WaCampaignAB $test)
@@ -91,7 +91,7 @@ class ABCampaignController extends Controller
             'media_url_b' => $validated['media_url_b'] ?? null,
         ]);
 
-        return back()->with('success', 'A/B test diperbarui.');
+        return back()->with('success', __('messages.success.ab_test_updated'));
     }
 
     public function destroy(WaCampaignAB $test)
@@ -99,7 +99,7 @@ class ABCampaignController extends Controller
         abort_if($test->user_id !== Auth::id(), 403);
         $test->delete();
 
-        return back()->with('success', 'A/B test dihapus.');
+        return back()->with('success', __('messages.success.ab_test_deleted'));
     }
 
     public function start(WaCampaignAB $test)
@@ -117,7 +117,7 @@ class ABCampaignController extends Controller
             'ended_at' => null,
         ]);
 
-        return back()->with('success', 'A/B test dimulai.');
+        return back()->with('success', __('messages.success.ab_test_started'));
     }
 
     public function end(WaCampaignAB $test)
@@ -142,6 +142,6 @@ class ABCampaignController extends Controller
             'winner' => $winner,
         ]);
 
-        return back()->with('success', 'A/B test diakhiri. Pemenang: ' . ($winner ? "Varian {$winner}" : 'Tidak ada pemenang'));
+        return back()->with('success', __('messages.success.ab_test_ended', ['winner' => $winner]));
     }
 }

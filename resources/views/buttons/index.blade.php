@@ -1,14 +1,14 @@
 @extends('layouts.app')
-@section('title', 'Interactive Buttons — WABot')
+@section('title', __('buttons.title') . ' — WABot')
 @section('content')
 
 <div class="flex items-center justify-between mb-5">
     <div>
-        <h1 class="text-xl font-extrabold text-gray-900">Interactive Buttons</h1>
-        <p class="text-sm text-gray-500 mt-0.5">{{ $buttons->count() }} template · pesan dengan tombol interaktif</p>
+        <h1 class="text-xl font-extrabold text-gray-900">{{ __('buttons.title') }}</h1>
+        <p class="text-sm text-gray-500 mt-0.5">{{ __('buttons.subtitle', ['count' => $buttons->count()]) }}</p>
     </div>
     <a href="{{ route('buttons.create') }}" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2">
-        <i class="fas fa-plus text-xs"></i> Button Baru
+        <i class="fas fa-plus text-xs"></i> {{ __('buttons.create_button') }}
     </a>
 </div>
 
@@ -22,7 +22,7 @@
             </div>
             <div class="flex items-center gap-1">
                 <a href="{{ route('buttons.edit', $b) }}" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-brand-600"><i class="fas fa-edit text-xs"></i></a>
-                <form method="POST" action="{{ route('buttons.destroy', $b) }}" onsubmit="return confirm('Hapus?')">@csrf @method('DELETE')<button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button></form>
+                <form method="POST" action="{{ route('buttons.destroy', $b) }}" onsubmit="return confirm('{{ __('common.delete') }}?')">@csrf @method('DELETE')<button class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button></form>
             </div>
         </div>
         <div class="rounded-lg bg-gray-50 border border-gray-100 p-3 text-sm">
@@ -31,18 +31,18 @@
             @if($b->footer_text)<div class="text-[10px] text-gray-400 mb-2">{{ $b->footer_text }}</div>@endif
             <div class="space-y-1">
                 @foreach(($b->buttons ?? []) as $btn)
-                    <div class="w-full text-center text-xs text-brand-600 border border-brand-200 rounded-md py-1 bg-white">{{ is_array($btn) ? ($btn['text'] ?? $btn['title'] ?? 'Tombol') : $btn }}</div>
+                    <div class="w-full text-center text-xs text-brand-600 border border-brand-200 rounded-md py-1 bg-white">{{ is_array($btn) ? ($btn['text'] ?? $btn['title'] ?? __('buttons.fallback_button')) : $btn }}</div>
                 @endforeach
             </div>
         </div>
-        <div class="text-[10px] text-gray-400 mt-2">{{ $b->session?->name ?? 'Semua sesi' }}</div>
+        <div class="text-[10px] text-gray-400 mt-2">{{ $b->session?->name ?? __('common.all') . ' ' . __('common.session') }}</div>
     </div>
     @empty
     <div class="col-span-full bg-white rounded-xl border border-gray-200 p-16 text-center">
         <div class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4"><i class="fas fa-hand-pointer text-2xl text-gray-400"></i></div>
-        <p class="text-gray-500 font-medium mb-1">Belum ada interactive button</p>
-        <p class="text-sm text-gray-400 mb-4">Buat pesan dengan tombol untuk mempermudah respons pelanggan</p>
-        <a href="{{ route('buttons.create') }}" class="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition"><i class="fas fa-plus text-xs"></i> Button Baru</a>
+        <p class="text-gray-500 font-medium mb-1">{{ __('buttons.empty_title') }}</p>
+        <p class="text-sm text-gray-400 mb-4">{{ __('buttons.empty_desc') }}</p>
+        <a href="{{ route('buttons.create') }}" class="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition"><i class="fas fa-plus text-xs"></i> {{ __('buttons.create_button') }}</a>
     </div>
     @endforelse
 </div>

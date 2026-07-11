@@ -69,7 +69,7 @@ class SentimentService
     {
         try {
             $aiService = app(AiService::class);
-            $prompt = "Analisis sentimen pesan berikut. Jawab HANYA dengan JSON: {\"sentiment\":\"positive|neutral|negative\",\"confidence\":0.0-1.0}\n\nPesan: \"{$message}\"";
+            $prompt = __('ai.sentiment_analysis_prompt', ['message' => $message]);
             $response = $aiService->rawPrompt($aiKey, $prompt);
 
             if (!$response) return null;
