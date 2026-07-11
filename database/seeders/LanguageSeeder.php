@@ -32,7 +32,7 @@ class LanguageSeeder extends Seeder
         ];
 
         foreach ($languages as $data) {
-            Language::create($data);
+            Language::updateOrCreate(['iso' => $data['iso']], $data);
         }
     }
 }
