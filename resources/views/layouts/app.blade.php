@@ -83,6 +83,17 @@
             </a>
         </div>
 
+        {{-- WHATSAPP --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
+            <span>WhatsApp</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 500px;">
+            <a href="{{ route('sessions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('sessions*') ? 'active' : '' }}">
+                <i class="fab fa-whatsapp w-4 text-center"></i> Sessions / Agents
+            </a>
+        </div>
+
         {{-- INBOX --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
             <span>{{ __('sidebar.inbox') }}</span>
