@@ -118,7 +118,7 @@
                                 <div class="text-sm font-medium text-gray-800 truncate">{{ $appt->contact->name ?? preg_replace('/@.*/', '', $appt->contact->phone) }}</div>
                                 <div class="text-[11px] text-gray-500">{{ $appt->service->name ?? 'N/A' }}</div>
                                 <div class="text-[11px] text-gray-400">{{ $appt->start_at->format('d M Y, H:i') }}</div>
-                                <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium mt-1 inline-block {{ WaAppointment::statusBadge($appt->status) }}">{{ $appt->status }}</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium mt-1 inline-block {{ App\Models\WaAppointment::statusBadge($appt->status) }}">{{ $appt->status }}</span>
                             </div>
                             <div class="flex flex-col gap-1">
                                 <form action="{{ route('appointments.confirm', $appt) }}" method="POST">
@@ -184,7 +184,7 @@
                 <div class="space-y-1.5 max-h-60 overflow-y-auto">
                     @foreach($availabilities->groupBy('day_of_week') as $dow => $items)
                         <div class="flex items-center gap-3 text-sm">
-                            <span class="font-medium text-gray-600 w-20">{{ WaAvailability::dayName($dow) }}</span>
+                            <span class="font-medium text-gray-600 w-20">{{ App\Models\WaAvailability::dayName($dow) }}</span>
                             <div class="space-x-1">
                                 @foreach($items as $item)
                                     <span class="inline-flex items-center gap-1 text-xs bg-gray-100 rounded-lg px-2 py-1
@@ -218,7 +218,7 @@
                     <span class="text-gray-400 text-xs">{{ $pa->start_at->format('d/m/Y, H:i') }}</span>
                     <span class="font-medium text-gray-700">{{ $pa->contact->name }}</span>
                     <span class="text-gray-500">{{ $pa->service->name }}</span>
-                    <span class="text-[10px] px-1.5 py-0.5 rounded-full ml-auto {{ WaAppointment::statusBadge($pa->status) }}">{{ $pa->status }}</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded-full ml-auto {{ App\Models\WaAppointment::statusBadge($pa->status) }}">{{ $pa->status }}</span>
                 </div>
             @endforeach
         </div>
@@ -348,7 +348,7 @@
                     <select name="day_of_week" required
                         class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
                         @for($i = 0; $i < 7; $i++)
-                            <option value="{{ $i }}">{{ WaAvailability::dayName($i) }}</option>
+                            <option value="{{ $i }}">{{ App\Models\WaAvailability::dayName($i) }}</option>
                         @endfor
                     </select>
                 </div>
