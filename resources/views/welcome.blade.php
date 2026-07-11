@@ -25,6 +25,7 @@
             @include('components.language-switcher', [
                 'languages' => \App\Models\Language::active()->ordered()->get(),
                 'currentLocale' => app()->getLocale(),
+                'position' => 'top',
             ])
             <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-brand-600 font-medium">{{ __('nav.login') }}</a>
             <a href="{{ route('register') }}" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-brand-700 transition">{{ __('nav.register') }}</a>

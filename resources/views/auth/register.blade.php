@@ -20,6 +20,7 @@
             @include('components.language-switcher', [
                 'languages' => \App\Models\Language::active()->ordered()->get(),
                 'currentLocale' => app()->getLocale(),
+                'position' => 'top',
             ])
         </div>
     </div>
