@@ -533,21 +533,30 @@
 
 @stack('scripts')
 <script>
-// Preserve sidebar scroll position
+// Sidebar — scroll to active link, expand parent group
 (function() {
     var nav = document.querySelector('nav.overflow-y-auto');
     if (!nav) return;
 
-    // Scroll to active link
     var active = nav.querySelector('.nav-link.active');
     if (active) {
-        requestAnimationFrame(function() {
+        // Expand parent group if collapsed
+        var body = active.closest('.nav-group-body');
+        if (body) {
+            var header = body.previousElementSibling;
+            if (header && header.classList.contains('nav-group-header') && !header.classList.contains('open')) {
+                header.classList.add('open');
+                body.style.maxHeight = '1000px';
+            }
+        }
+        // Scroll to active link
+        setTimeout(function() {
             active.scrollIntoView({block: 'center', behavior: 'instant'});
-        });
+        }, 200);
         return;
     }
 
-    // Or restore last position
+    // Restore last scroll position
     var saved = sessionStorage.getItem('sidebar-scroll');
     if (saved) {
         requestAnimationFrame(function() {
