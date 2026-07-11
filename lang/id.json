@@ -765,6 +765,7 @@
     "store.empty_title": "Belum ada integrasi toko",
     "store.empty_desc": "Hubungkan toko online Anda untuk menerima notifikasi order langsung di WhatsApp.",
     "store.create_integration": "Tambah Integrasi",
+    "store.download_plugin": "Download Plugin",
     "store.platform": "Platform",
     "store.name_placeholder": "Toko Online Saya",
     "store.base_url": "URL Toko",

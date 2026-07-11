@@ -431,7 +431,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('store/{integration}', [App\Http\Controllers\StoreController::class, 'destroy'])->name('store.destroy');
         Route::post('store/{integration}/connect', [App\Http\Controllers\StoreController::class, 'connect'])->name('store.connect');
         Route::post('store/{integration}/sync', [App\Http\Controllers\StoreController::class, 'sync'])->name('store.sync');
-        Route::patch('store/{integration}/settings', [App\Http\Controllers\StoreController::class, 'updateSettings'])->name('store.settings');
+        Route::get('store/download-plugin', fn() => response()->download(public_path('wabot-woocommerce.zip')))->name('store.download-plugin');
 
         // ── Google Sheets Sync ──────────────────────────────────────
         Route::get('sheets', [App\Http\Controllers\SheetsController::class, 'index'])->name('sheets.index');

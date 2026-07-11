@@ -772,6 +772,7 @@
     "store.empty_title": "No store integrations yet",
     "store.empty_desc": "Connect your online store to receive order notifications directly on WhatsApp.",
     "store.create_integration": "Add Integration",
+    "store.download_plugin": "Download Plugin",
     "store.platform": "Platform",
     "store.name_placeholder": "My Online Store",
     "store.base_url": "Store URL",

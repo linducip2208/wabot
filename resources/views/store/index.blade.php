@@ -8,10 +8,15 @@
             <h1 class="text-2xl font-extrabold text-gray-900">{{ __('store.title') }}</h1>
             <p class="text-sm text-gray-500 mt-0.5">{{ __('store.subtitle') }}</p>
         </div>
-        <button onclick="document.getElementById('addModal').classList.remove('hidden')"
-            class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2">
-            <i class="fas fa-plus text-xs"></i> {{ __('store.create_integration') }}
-        </button>
+        <div class="flex gap-2">
+            <a href="{{ route('store.download-plugin') }}" class="bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2">
+                <i class="fas fa-download text-xs"></i> {{ __('store.download_plugin') }}
+            </a>
+            <button onclick="document.getElementById('addModal').classList.remove('hidden')"
+                class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2">
+                <i class="fas fa-plus text-xs"></i> {{ __('store.create_integration') }}
+            </button>
+        </div>
     </div>
 
     @if($integrations->isEmpty())
