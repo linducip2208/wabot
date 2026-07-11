@@ -1,4 +1,5 @@
 <div x-data="languageSwitcher()" class="relative">
+    @php $position = $position ?? 'bottom'; @endphp
     <button @click="open = !open"
         class="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition">
         <span class="fi fi-{{ $languages->firstWhere('iso', $currentLocale)?->flag ?? 'id' }} rounded-sm" style="width:18px;height:12px;"></span>
