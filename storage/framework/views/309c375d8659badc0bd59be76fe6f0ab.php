@@ -1,0 +1,29 @@
+<div x-data="languageSwitcher()" class="relative">
+    <button @click="open = !open"
+        class="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition">
+        <span class="fi fi-<?php echo e($languages->firstWhere('iso', $currentLocale)?->flag ?? 'id'); ?> rounded-sm" style="width:18px;height:12px;"></span>
+        <span class="hidden lg:inline"><?php echo e(strtoupper($currentLocale)); ?></span>
+        <i class="fas fa-chevron-down text-[9px] transition-transform" :class="open && 'rotate-180'"></i>
+    </button>
+
+    <div x-show="open" @click.outside="open = false" x-cloak
+        class="absolute <?php echo e(($position ?? 'bottom') === 'top' ? 'top-full mt-2' : 'bottom-full mb-2'); ?> right-0 w-44 bg-sidebar-bg border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+        <?php $__currentLoopData = $languages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lang): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <a href="<?php echo e(route('lang.switch', $lang->iso)); ?>"
+            class="flex items-center gap-3 px-4 py-2.5 text-sm transition hover:bg-white/5 <?php echo e($currentLocale === $lang->iso ? 'text-brand-400 bg-white/5' : 'text-gray-300'); ?>">
+            <span class="fi fi-<?php echo e($lang->flag); ?> rounded-sm" style="width:18px;height:12px;"></span>
+            <span class="flex-1"><?php echo e($lang->native_name); ?></span>
+            <?php if($currentLocale === $lang->iso): ?>
+            <i class="fas fa-check text-brand-400 text-xs"></i>
+            <?php endif; ?>
+        </a>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+    </div>
+</div>
+
+<script>
+function languageSwitcher() {
+    return { open: false };
+}
+</script>
+<?php /**PATH D:\project laravel\wabot\resources\views/components/language-switcher.blade.php ENDPATH**/ ?>
