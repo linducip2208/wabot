@@ -23,11 +23,13 @@
             .sidebar-overlay { display: none; }
             .sidebar-overlay.show { display: block; }
         }
-        .nav-group-header { cursor: pointer; user-select: none; }
+        .nav-group-header { cursor: pointer; user-select: none; scroll-margin-top: 8px; }
         .nav-group-header .chevron { transition: transform .2s ease; }
         .nav-group-header.open .chevron { transform: rotate(90deg); }
         .nav-group-body { overflow: hidden; transition: max-height .3s ease; }
+        .nav-group-body.open { overflow: visible; }
         .nav-link { transition: all .15s ease; }
+        .nav-link.active { background: rgba(99,102,241,.15); color: #a5b4fc; font-weight: 600; }
         .nav-link:hover { background: rgba(255,255,255,.06); padding-left: 1.25rem; }
         .nav-link.active { background: rgba(59,130,246,.15); color: #60a5fa; border-left: 3px solid #3b82f6; }
         .topbar { backdrop-filter: blur(12px) saturate(180%); background: rgba(255,255,255,.8); }
@@ -70,7 +72,7 @@
         @php $langs = \App\Models\Language::active()->ordered()->get(); $cur = app()->getLocale(); @endphp
 
         {{-- OVERVIEW --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.overview') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -84,7 +86,7 @@
         </div>
 
         {{-- WHATSAPP --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>WhatsApp</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -95,7 +97,7 @@
         </div>
 
         {{-- APPOINTMENTS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.appointments') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -106,7 +108,7 @@
         </div>
 
         {{-- INBOX --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.inbox') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -132,7 +134,7 @@
         </div>
 
         {{-- MARKETING --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.marketing') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -161,7 +163,7 @@
         </div>
 
         {{-- AI STUDIO --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.ai_studio') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -181,7 +183,7 @@
         </div>
 
         {{-- AI AUTOMATION --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.ai_automation') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -204,7 +206,7 @@
         </div>
 
         {{-- COMMERCE --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.commerce') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -229,7 +231,7 @@
         </div>
 
         {{-- CRM --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.crm') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -249,7 +251,7 @@
         </div>
 
         {{-- SOCIAL MEDIA --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.social_media') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -275,7 +277,7 @@
         </div>
 
     {{-- CHANNELS --}}
-    <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+    <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
         <span>{{ __('sidebar.channels') }}</span>
         <i class="fas fa-chevron-right text-[9px] chevron"></i>
     </div>
@@ -327,7 +329,7 @@
         </div>
 
         {{-- TEAM --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.team') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -347,7 +349,7 @@
         </div>
 
         {{-- ANALYTICS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.analytics') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -367,7 +369,7 @@
         </div>
 
         {{-- INTEGRATIONS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.integrations') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -381,7 +383,7 @@
         </div>
 
         {{-- SETTINGS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.earn') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -395,7 +397,7 @@
         </div>
 
         {{-- SETTINGS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
             <span>{{ __('sidebar.settings') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -530,5 +532,17 @@
 @endguest
 
 @stack('scripts')
+<script>
+// Preserve sidebar scroll position
+document.addEventListener('DOMContentLoaded', function() {
+    var nav = document.querySelector('nav.overflow-y-auto');
+    if (!nav) return;
+    var saved = sessionStorage.getItem('sidebar-scroll');
+    if (saved) nav.scrollTop = parseInt(saved);
+    nav.addEventListener('scroll', function() {
+        sessionStorage.setItem('sidebar-scroll', nav.scrollTop);
+    });
+});
+</script>
 </body>
 </html>
