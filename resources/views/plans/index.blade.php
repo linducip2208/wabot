@@ -58,10 +58,10 @@
 
         <div class="p-6 space-y-2.5 flex-1">
             @foreach([
-                ['fas fa-mobile-alt', $plan->max_sessions . ' {{ __('common.session') }} WhatsApp'],
-                ['fas fa-address-book', number_format($plan->max_contacts) . ' {{ __('common.contact') }}'],
+                ['fas fa-mobile-alt', $plan->max_sessions . ' ' . __('common.session') . ' WhatsApp'],
+                ['fas fa-address-book', number_format($plan->max_contacts) . ' ' . __('common.contact')],
                 ['fas fa-robot', $plan->max_autoreplies . ' Auto-Reply Rules'],
-                ['fas fa-bullhorn', number_format($plan->max_campaign_recipients) . ' {{ __('common.receiver') }}/Kampanye'],
+                ['fas fa-bullhorn', number_format($plan->max_campaign_recipients) . ' ' . __('common.receiver') . '/Kampanye'],
             ] as [$icon, $label])
             <div class="flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">

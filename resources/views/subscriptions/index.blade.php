@@ -42,8 +42,8 @@
 {{-- Usage Limits --}}
 <div class="grid md:grid-cols-3 gap-3 mb-6">
     @foreach([
-        ['fas fa-mobile-alt', '{{ __('common.session') }} WhatsApp', $usage['sessions']['current'], $usage['sessions']['limit'], 'bg-sky-50 text-sky-500'],
-        ['fas fa-address-book', '{{ __('common.contact') }}', $usage['contacts']['current'], $usage['contacts']['limit'], 'bg-violet-50 text-violet-500'],
+        ['fas fa-mobile-alt', __('common.session') . ' WhatsApp', $usage['sessions']['current'], $usage['sessions']['limit'], 'bg-sky-50 text-sky-500'],
+        ['fas fa-address-book', __('common.contact'), $usage['contacts']['current'], $usage['contacts']['limit'], 'bg-violet-50 text-violet-500'],
         ['fas fa-robot', 'Auto-Reply', $usage['autoreplies']['current'], $usage['autoreplies']['limit'], 'bg-emerald-50 text-emerald-500'],
     ] as [$icon, $label, $current, $limit, $colorClass])
     <div class="bg-white rounded-xl border border-gray-200 p-4 card-lift">
