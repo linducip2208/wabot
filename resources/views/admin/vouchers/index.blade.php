@@ -16,8 +16,8 @@
 {{-- Stat Bar --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
     @php
-        $active = $vouchers->where('is_active', true)->where('used_count', '<', 'max_uses');
-        $expired = $vouchers->where('is_active', false)->orWhere('used_count', '>=', 'max_uses');
+        $active = $vouchers->filter(fn($v) => $v->is_active && $v->used_count < $v->max_uses);
+        $expired = $vouchers->filter(fn($v) => !$v->is_active || $v->used_count >= $v->max_uses);
     @endphp
     <div class="bg-white rounded-xl border border-gray-200 p-4 card-lift flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center"><i class="fas fa-ticket-alt text-sky-500"></i></div>
