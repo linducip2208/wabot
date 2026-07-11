@@ -337,7 +337,8 @@
     </script>
 
     @foreach($widgets as $widget)
-    <script type="application/json" id="widget-data-{{ $widget->id }}">@json($widget->only(['name', 'greeting_message', 'offline_message', 'theme_color', 'position', 'button_icon', 'channels', 'is_active']))</script>
+    @php $wdata = $widget->only(['name', 'greeting_message', 'offline_message', 'theme_color', 'position', 'button_icon', 'channels', 'is_active']); @endphp
+    <script type="application/json" id="widget-data-{{ $widget->id }}">@json($wdata)</script>
     @endforeach
 </div>
 @endsection
