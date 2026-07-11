@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Crypt;
 
 class WaSendGridAccount extends Model
 {
+    protected $table = 'wa_sendgrid_accounts';
     protected $fillable = [
         'user_id', 'name', 'api_key_encrypted',
         'from_email', 'from_name', 'is_active', 'connected_at',

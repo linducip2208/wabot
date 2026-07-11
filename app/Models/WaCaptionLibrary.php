@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WaCaptionLibrary extends Model
 {
+    protected $table = 'wa_caption_library';
+
     protected $fillable = [
         'user_id', 'name', 'content', 'tags',
     ];
