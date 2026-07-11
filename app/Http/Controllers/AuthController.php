@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Services\AffiliateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -50,6 +51,14 @@ class AuthController extends Controller
             'trial_ends_at' => now()->addDays($trialDays),
             'email_verified_at' => now(),
         ]);
+
+        $user->refresh();
+
+        $affiliateService = app(AffiliateService::class);
+        $affiliateRef = $request->cookie('affiliate_ref') ?? $request->input('ref');
+        if ($affiliateRef) {
+            $affiliateService->captureReferral($affiliateRef, $user);
+        }
 
         if ($freePlan) {
             Subscription::create([

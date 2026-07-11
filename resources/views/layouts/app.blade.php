@@ -160,6 +160,26 @@
             </a>
         </div>
 
+        {{-- AI STUDIO --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>{{ __('sidebar.ai_studio') }}</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('ai-content.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-content*') ? 'active' : '' }}">
+                <i class="fas fa-pen-fancy w-4 text-center"></i> {{ __('sidebar.ai_content') }}
+            </a>
+            <a href="{{ route('ai-image.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-image*') ? 'active' : '' }}">
+                <i class="fas fa-image w-4 text-center"></i> {{ __('sidebar.ai_image') }}
+            </a>
+            <a href="{{ route('ai-planner.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-planner*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-check w-4 text-center"></i> {{ __('sidebar.ai_planner') }}
+            </a>
+            <a href="{{ route('ai-best-time.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('ai-best-time*') ? 'active' : '' }}">
+                <i class="fas fa-clock w-4 text-center"></i> {{ __('sidebar.ai_best_time') }}
+            </a>
+        </div>
+
         {{-- AI AUTOMATION --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
             <span>{{ __('sidebar.ai_automation') }}</span>
@@ -225,6 +245,32 @@
             </a>
             <a href="{{ route('contact-tags.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('contact-tags*') ? 'active' : '' }}">
                 <i class="fas fa-tags w-4 text-center"></i> {{ __('sidebar.tags') }}
+            </a>
+        </div>
+
+        {{-- SOCIAL MEDIA --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>{{ __('sidebar.social_media') }}</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('publishing.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->routeIs('publishing.index') ? 'active' : '' }}">
+                <i class="fas fa-pen-to-square w-4 text-center"></i> {{ __('sidebar.publishing_composer') }}
+            </a>
+            <a href="{{ route('publishing.calendar') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->routeIs('publishing.calendar') ? 'active' : '' }}">
+                <i class="fas fa-calendar-days w-4 text-center"></i> {{ __('sidebar.publishing_calendar') }}
+            </a>
+            <a href="{{ route('publishing.queue') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->routeIs('publishing.queue') ? 'active' : '' }}">
+                <i class="fas fa-clock w-4 text-center"></i> {{ __('sidebar.publishing_queue') }}
+            </a>
+            <a href="{{ route('publishing.drafts') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->routeIs('publishing.drafts') ? 'active' : '' }}">
+                <i class="fas fa-file-lines w-4 text-center"></i> {{ __('sidebar.publishing_drafts') }}
+            </a>
+            <a href="{{ route('publishing.rss.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->routeIs('publishing.rss.*') ? 'active' : '' }}">
+                <i class="fas fa-rss w-4 text-center"></i> {{ __('sidebar.publishing_rss') }}
+            </a>
+            <a href="{{ route('publishing.captions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->routeIs('publishing.captions.*') ? 'active' : '' }}">
+                <i class="fas fa-book-open w-4 text-center"></i> {{ __('sidebar.publishing_captions') }}
             </a>
         </div>
 
@@ -336,6 +382,20 @@
 
         {{-- SETTINGS --}}
         <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
+            <span>{{ __('sidebar.earn') }}</span>
+            <i class="fas fa-chevron-right text-[9px] chevron"></i>
+        </div>
+        <div class="nav-group-body space-y-0.5" style="max-height: 0;" x-bind:style="open ? 'max-height: 300px;' : 'max-height: 0;'">
+            <a href="{{ route('credits.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('credits*') ? 'active' : '' }}">
+                <i class="fas fa-coins w-4 text-center"></i> {{ __('sidebar.credits') }}
+            </a>
+            <a href="{{ route('affiliate.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('affiliate*') ? 'active' : '' }}">
+                <i class="fas fa-hand-holding-heart w-4 text-center"></i> {{ __('sidebar.affiliate') }}
+            </a>
+        </div>
+
+        {{-- SETTINGS --}}
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open')">
             <span>{{ __('sidebar.settings') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -382,6 +442,21 @@
             </a>
             <a href="{{ route('admin.payouts.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/payouts*') ? 'active' : '' }}">
                 <i class="fas fa-hand-holding-usd w-4 text-center"></i> {{ __('sidebar.payout_approval') }}
+            </a>
+            <div class="mt-2 pt-2 border-t border-white/10">
+                <div class="px-3 py-1 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">{{ __('sidebar.monetization') }}</div>
+            </div>
+            <a href="{{ route('admin.credit-packs.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/credit-packs*') ? 'active' : '' }}">
+                <i class="fas fa-box-open w-4 text-center"></i> {{ __('sidebar.credit_packs') }}
+            </a>
+            <a href="{{ route('admin.coupons.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/coupons*') ? 'active' : '' }}">
+                <i class="fas fa-percent w-4 text-center"></i> {{ __('sidebar.coupons') }}
+            </a>
+            <a href="{{ route('admin.credit-transactions.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/credit-transactions*') ? 'active' : '' }}">
+                <i class="fas fa-list-alt w-4 text-center"></i> {{ __('sidebar.credit_transactions') }}
+            </a>
+            <a href="{{ route('admin.affiliate-withdrawals.index') }}" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 {{ request()->is('admin/affiliate-withdrawals*') ? 'active' : '' }}">
+                <i class="fas fa-money-bill-wave w-4 text-center"></i> {{ __('sidebar.affiliate_withdrawals') }}
             </a>
             @endif
         </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\WaAiAgent;
 use App\Models\WaAiKey;
 use App\Services\AiService;
+use App\Services\CreditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -103,14 +104,29 @@ class AiAgentController extends Controller
             return back()->with('error', __('messages.error.ai_key_inactive'));
         }
 
+        $creditService = app(CreditService::class);
+        $user = Auth::user();
+        $cost = 1;
+
+        if (!$creditService->hasCredits($user, $cost)) {
+            return back()->with('error', __('credits.insufficient_credits', [
+                'required' => $cost,
+                'balance' => $creditService->getBalance($user),
+            ]));
+        }
+
         $aiService = app(AiService::class);
         $knowledgeContext = $aiService->getKnowledgeContext(Auth::id());
 
         $response = $aiService->send($agent->aiKey, $validated['message'], $knowledgeContext);
 
         if ($response === null) {
-            return back()->with('error', __('messages.error.ai_response_failed'));
+            $creditService->deductCredits($user, $cost, 'AI agent test — ' . $agent->name, WaAiAgent::class, $agent->id);
+            return back()->with('error', __('messages.error.ai_response_failed'))
+                ->with('warning', __('credits.charged_for_attempt'));
         }
+
+        $creditService->deductCredits($user, $cost, 'AI agent test — ' . $agent->name, WaAiAgent::class, $agent->id);
 
         return back()->with('success', __('messages.success.ai_agent_responded'))
             ->with('test_response', $response)

@@ -6,6 +6,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\PaymentGateway;
 use App\Models\PaymentTransaction;
+use App\Models\WaCoupon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -69,8 +70,23 @@ class PlanController extends Controller
 
         $gateways = PaymentGateway::where('is_active', true)->orderBy('sort_order')->get();
         $plan = $subscription->plan;
+        $appliedCoupon = session('applied_coupon');
+        $discountAmount = 0;
+        $finalPrice = $plan->price;
 
-        return view('payment.page', compact('subscription', 'gateways', 'plan'));
+        if ($appliedCoupon) {
+            $coupon = WaCoupon::find($appliedCoupon['id']);
+            if ($coupon && $coupon->isValid()) {
+                if (empty($coupon->plan_id) || $coupon->plan_id === $plan->id) {
+                    if ($plan->price >= $coupon->min_order) {
+                        $discountAmount = $coupon->calculateDiscount($plan->price);
+                        $finalPrice = max(0, $plan->price - $discountAmount);
+                    }
+                }
+            }
+        }
+
+        return view('payment.page', compact('subscription', 'gateways', 'plan', 'appliedCoupon', 'discountAmount', 'finalPrice'));
     }
 
     public function uploadPayment(Request $request, Subscription $subscription)
@@ -91,12 +107,21 @@ class PlanController extends Controller
             'amount' => $data['amount'],
             'status' => 'pending',
             'gateway' => $gateway->code,
-            'gateway_meta' => ['gateway_name' => $gateway->name],
+            'gateway_meta' => [
+                'gateway_name' => $gateway->name,
+                'coupon_code' => session('applied_coupon.code') ?? null,
+            ],
         ]);
 
         $subscription->update(['status' => 'active']);
 
         Auth::user()->update(['plan_id' => $subscription->plan_id]);
+
+        $appliedCoupon = session('applied_coupon');
+        if ($appliedCoupon) {
+            WaCoupon::where('id', $appliedCoupon['id'])->increment('used_count');
+            session()->forget('applied_coupon');
+        }
 
         return redirect()->route('subscriptions.index')
             ->with('success', __('messages.success.payment_confirmed'));

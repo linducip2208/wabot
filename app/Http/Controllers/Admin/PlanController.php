@@ -33,12 +33,13 @@ class PlanController extends Controller
         $bools = ['can_manage_server','can_use_meta','can_use_forms','can_use_calling',
             'can_use_instagram','can_use_flow','can_use_ai_agent','can_use_intent',
             'can_use_drip','can_use_ab_test','can_use_catalog','can_use_commerce',
-            'can_use_deals','can_use_kanban'];
+            'can_use_deals','can_use_kanban','can_ai_studio','can_affiliate'];
 
         foreach ($bools as $b) {
             $validated[$b] = $request->boolean($b);
         }
 
+        $validated['affiliate_commission_rate'] = $request->input('affiliate_commission_rate', 20.00);
         $validated['features'] = json_encode($request->input('features', []));
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['sort_order'] = $validated['sort_order'] ?? 0;
@@ -67,12 +68,13 @@ class PlanController extends Controller
         $bools = ['can_manage_server','can_use_meta','can_use_forms','can_use_calling',
             'can_use_instagram','can_use_flow','can_use_ai_agent','can_use_intent',
             'can_use_drip','can_use_ab_test','can_use_catalog','can_use_commerce',
-            'can_use_deals','can_use_kanban'];
+            'can_use_deals','can_use_kanban','can_ai_studio','can_affiliate'];
 
         foreach ($bools as $b) {
             $validated[$b] = $request->boolean($b);
         }
 
+        $validated['affiliate_commission_rate'] = $request->input('affiliate_commission_rate', 20.00);
         $validated['features'] = json_encode($request->input('features', []));
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['sort_order'] = $validated['sort_order'] ?? $plan->sort_order;

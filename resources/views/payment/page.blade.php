@@ -7,6 +7,36 @@
     <h1 class="text-2xl font-extrabold text-gray-900 mt-1 mb-2">{{ __('common.payment') }}</h1>
     <p class="text-gray-500 mb-6">{{ __('common.plan') }} {{ $plan->name }} — Rp {{ number_format($plan->price, 0, ',', '.') }}</p>
 
+    {{-- Coupon Section --}}
+    <div class="bg-white rounded-xl border border-gray-200 p-4 mb-5">
+        <div class="flex items-center gap-2 mb-3">
+            <i class="fas fa-ticket-alt text-violet-500"></i>
+            <span class="text-sm font-semibold text-gray-700">{{ __('coupons.apply_coupon') }}</span>
+        </div>
+        @if(isset($appliedCoupon) && $appliedCoupon)
+        <div class="bg-violet-50 border border-violet-200 rounded-xl p-3 flex items-center justify-between mb-3">
+            <div>
+                <span class="text-sm font-semibold text-violet-700">{{ $appliedCoupon['code'] }}</span>
+                <span class="text-xs text-violet-500 ml-2">-Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
+            </div>
+            <form method="POST" action="{{ route('coupons.apply') }}" class="inline">
+                @csrf
+                <input type="hidden" name="code" value="">
+                <button class="text-xs text-red-500 hover:text-red-700 font-medium">{{ __('common.remove') }}</button>
+            </form>
+        </div>
+        @else
+        <form method="POST" action="{{ route('coupons.apply') }}" class="flex gap-2">
+            @csrf
+            <input type="text" name="code" placeholder="Masukkan kode kupon" required
+                class="flex-1 rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 uppercase">
+            <button type="submit" class="bg-violet-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-violet-700 transition flex-shrink-0">
+                {{ __('coupons.apply') }}
+            </button>
+        </form>
+        @endif
+    </div>
+
     <div x-data="paymentForm()" class="space-y-5">
         {{-- Gateway Selection --}}
         <div class="bg-white rounded-xl border border-gray-200 p-5">
@@ -41,15 +71,25 @@
         <form method="POST" action="{{ route('payment.upload', $subscription) }}" class="bg-white rounded-xl border border-gray-200 p-5" x-show="gatewayId" x-transition>
             @csrf
             <input type="hidden" name="gateway_id" x-model="gatewayId">
-            <input type="hidden" name="amount" value="{{ $plan->price }}">
+            <input type="hidden" name="amount" value="{{ $finalPrice ?? $plan->price }}">
 
             <h2 class="font-bold text-gray-900 mb-3">Konfirmasi {{ __('common.payment') }}</h2>
             <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 mb-4">
                 <i class="fas fa-info-circle mr-1"></i> Setelah transfer, klik "Konfirmasi {{ __('common.payment') }}". Admin akan verifikasi.
             </div>
+            @if(isset($discountAmount) && $discountAmount > 0)
+            <div class="flex justify-between items-center p-2 mb-1">
+                <span class="text-sm text-gray-500">{{ __('common.subtotal') }}</span>
+                <span class="text-sm text-gray-400 line-through">Rp {{ number_format($plan->price, 0, ',', '.') }}</span>
+            </div>
+            <div class="flex justify-between items-center p-2 mb-1">
+                <span class="text-sm text-violet-600">{{ __('coupons.discount') }} ({{ $appliedCoupon['code'] }})</span>
+                <span class="text-sm font-semibold text-violet-600">-Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
+            </div>
+            @endif
             <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl mb-4">
                 <span class="text-sm text-gray-500">{{ __('common.total') }} {{ __('common.payment') }}</span>
-                <span class="text-xl font-extrabold text-gray-900">Rp {{ number_format($plan->price, 0, ',', '.') }}</span>
+                <span class="text-xl font-extrabold text-gray-900">Rp {{ number_format($finalPrice ?? $plan->price, 0, ',', '.') }}</span>
             </div>
             <button type="submit" class="w-full bg-brand-600 text-white rounded-xl py-3 font-semibold text-sm hover:bg-brand-700 transition">
                 <i class="fas fa-check-circle mr-1"></i> Konfirmasi {{ __('common.payment') }}

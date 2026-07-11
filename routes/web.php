@@ -56,6 +56,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\TikTokController;
 use App\Http\Controllers\LineController;
 use App\Http\Controllers\TwitterController;
+use App\Http\Controllers\PublishingController;
 
 // Public widget embed script & lead capture
 Route::get('/widget/{embedKey}.js', [WidgetController::class, 'embedScript'])->name('widget.embed');
@@ -82,7 +83,7 @@ Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'ind
 // Auth
 Route::get('/login', fn() => view('auth.login'))->name('login');
 Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
-Route::get('/register', fn() => view('auth.register'))->name('register');
+Route::get('/register', fn() => view('auth.register'))->name('register')->middleware(\App\Http\Middleware\CaptureAffiliateReferral::class);
 Route::post('/register', [App\Http\Controllers\AuthController::class, 'register']);
 Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
@@ -286,6 +287,25 @@ Route::middleware('auth')->group(function () {
     Route::get('sla-logs', [SlaConfigController::class, 'logs'])->name('sla-logs.index');
     Route::get('sla-dashboard', [SlaConfigController::class, 'dashboard'])->name('sla.dashboard');
 
+    // ── AI Content Studio ───────────────────────────────────────
+    Route::get('ai-content', [\App\Http\Controllers\AiContentController::class, 'index'])->name('ai-content.index');
+    Route::post('ai-content/generate', [\App\Http\Controllers\AiContentController::class, 'generate'])->name('ai-content.generate');
+    Route::get('ai-content/templates', [\App\Http\Controllers\AiContentController::class, 'templates'])->name('ai-content.templates');
+    Route::post('ai-content/templates', [\App\Http\Controllers\AiContentController::class, 'templateStore'])->name('ai-content.templates.store');
+    Route::put('ai-content/templates/{template}', [\App\Http\Controllers\AiContentController::class, 'templateUpdate'])->name('ai-content.templates.update');
+    Route::delete('ai-content/templates/{template}', [\App\Http\Controllers\AiContentController::class, 'templateDestroy'])->name('ai-content.templates.destroy');
+
+    Route::get('ai-image', [\App\Http\Controllers\AiImageController::class, 'index'])->name('ai-image.index');
+    Route::post('ai-image/generate', [\App\Http\Controllers\AiImageController::class, 'generate'])->name('ai-image.generate');
+    Route::get('ai-image/list', [\App\Http\Controllers\AiImageController::class, 'list'])->name('ai-image.list');
+
+    Route::get('ai-planner', [\App\Http\Controllers\AiPlannerController::class, 'index'])->name('ai-planner.index');
+    Route::post('ai-planner/generate', [\App\Http\Controllers\AiPlannerController::class, 'generate'])->name('ai-planner.generate');
+    Route::delete('ai-planner/{plan}', [\App\Http\Controllers\AiPlannerController::class, 'destroy'])->name('ai-planner.destroy');
+
+    Route::get('ai-best-time', [\App\Http\Controllers\AiBestTimeController::class, 'index'])->name('ai-best-time.index');
+    Route::post('ai-best-time/suggest', [\App\Http\Controllers\AiBestTimeController::class, 'suggest'])->name('ai-best-time.suggest');
+
     // ── AI Agents ───────────────────────────────────────────────
     Route::resource('ai-agents', AiAgentController::class)->except(['show']);
     Route::post('ai-agents/{agent}/test', [AiAgentController::class, 'test'])->name('ai-agents.test');
@@ -428,6 +448,44 @@ Route::middleware('auth')->group(function () {
     Route::get('kanban', [KanbanController::class, 'index'])->name('kanban.index');
     Route::post('kanban/move', [KanbanController::class, 'move'])->name('kanban.move');
 
+    // ── Social Media Publishing ─────────────────────────────────
+    Route::resource('publishing', PublishingController::class)->only(['index', 'store', 'destroy']);
+    Route::post('publishing/{post}/publish', [PublishingController::class, 'publish'])->name('publishing.publish');
+    Route::get('publishing-calendar', [PublishingController::class, 'calendar'])->name('publishing.calendar');
+    Route::get('publishing-queue', [PublishingController::class, 'queue'])->name('publishing.queue');
+    Route::get('publishing-drafts', [PublishingController::class, 'drafts'])->name('publishing.drafts');
+    Route::get('publishing-campaigns', [PublishingController::class, 'campaigns'])->name('publishing.campaigns.index');
+    Route::post('publishing-campaigns', [PublishingController::class, 'campaigns'])->name('publishing.campaigns.store');
+    Route::put('publishing-campaigns/{campaign}', [PublishingController::class, 'updateCampaign'])->name('publishing.campaigns.update');
+    Route::delete('publishing-campaigns/{campaign}', [PublishingController::class, 'destroyCampaign'])->name('publishing.campaigns.destroy');
+    Route::get('publishing-labels', [PublishingController::class, 'labels'])->name('publishing.labels.index');
+    Route::post('publishing-labels', [PublishingController::class, 'labels'])->name('publishing.labels.store');
+    Route::put('publishing-labels/{label}', [PublishingController::class, 'updateLabel'])->name('publishing.labels.update');
+    Route::delete('publishing-labels/{label}', [PublishingController::class, 'destroyLabel'])->name('publishing.labels.destroy');
+    Route::get('publishing-captions', [PublishingController::class, 'captions'])->name('publishing.captions.index');
+    Route::post('publishing-captions', [PublishingController::class, 'captions'])->name('publishing.captions.store');
+    Route::put('publishing-captions/{caption}', [PublishingController::class, 'updateCaption'])->name('publishing.captions.update');
+    Route::delete('publishing-captions/{caption}', [PublishingController::class, 'destroyCaption'])->name('publishing.captions.destroy');
+    Route::get('publishing-rss', [PublishingController::class, 'rssSchedules'])->name('publishing.rss.index');
+    Route::post('publishing-rss', [PublishingController::class, 'rssSchedules'])->name('publishing.rss.store');
+    Route::put('publishing-rss/{schedule}', [PublishingController::class, 'updateRssSchedule'])->name('publishing.rss.update');
+    Route::delete('publishing-rss/{schedule}', [PublishingController::class, 'destroyRssSchedule'])->name('publishing.rss.destroy');
+    Route::post('publishing-rss/{schedule}/toggle', [PublishingController::class, 'toggleRssSchedule'])->name('publishing.rss.toggle');
+
+    // ── Credits ──────────────────────────────────────────────────
+    Route::get('credits', [\App\Http\Controllers\CreditController::class, 'index'])->name('credits.index');
+    Route::post('credits/purchase', [\App\Http\Controllers\CreditController::class, 'purchase'])->name('credits.purchase');
+    Route::get('credits/payment/{payment}', [\App\Http\Controllers\CreditController::class, 'payment'])->name('credits.payment');
+    Route::post('credits/payment/{payment}/callback', [\App\Http\Controllers\CreditController::class, 'callback'])->name('credits.callback');
+
+    // ── Affiliate ────────────────────────────────────────────────
+    Route::get('affiliate', [\App\Http\Controllers\AffiliateController::class, 'index'])->name('affiliate.index');
+    Route::post('affiliate/withdrawal', [\App\Http\Controllers\AffiliateController::class, 'requestWithdrawal'])->name('affiliate.withdrawal.request');
+
+    // ── Coupon ───────────────────────────────────────────────────
+    Route::post('coupons/validate', [\App\Http\Controllers\CouponController::class, 'validate'])->name('coupons.validate');
+    Route::post('coupons/apply', [\App\Http\Controllers\CouponController::class, 'apply'])->name('coupons.apply');
+
     // Admin
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
@@ -448,5 +506,20 @@ Route::middleware('auth')->group(function () {
         Route::delete('blog/categories/{category}', [\App\Http\Controllers\Admin\BlogController::class, 'destroyCategory'])->name('blog.categories.destroy');
         Route::resource('gateways', \App\Http\Controllers\Admin\PaymentGatewayController::class)->except(['create', 'show', 'edit']);
         Route::resource('plans', \App\Http\Controllers\Admin\PlanController::class)->except(['create', 'show', 'edit']);
+
+        // ── Monetization Admin ──────────────────────────────────
+        Route::get('credit-packs', [\App\Http\Controllers\Admin\CreditPackController::class, 'index'])->name('credit-packs.index');
+        Route::post('credit-packs', [\App\Http\Controllers\Admin\CreditPackController::class, 'store'])->name('credit-packs.store');
+        Route::post('credit-packs/{pack}/toggle', [\App\Http\Controllers\Admin\CreditPackController::class, 'toggle'])->name('credit-packs.toggle');
+        Route::delete('credit-packs/{pack}', [\App\Http\Controllers\Admin\CreditPackController::class, 'destroy'])->name('credit-packs.destroy');
+        Route::get('coupons', [\App\Http\Controllers\Admin\CouponController::class, 'index'])->name('coupons.index');
+        Route::post('coupons', [\App\Http\Controllers\Admin\CouponController::class, 'store'])->name('coupons.store');
+        Route::post('coupons/{coupon}/toggle', [\App\Http\Controllers\Admin\CouponController::class, 'toggle'])->name('coupons.toggle');
+        Route::delete('coupons/{coupon}', [\App\Http\Controllers\Admin\CouponController::class, 'destroy'])->name('coupons.destroy');
+        Route::get('affiliate-withdrawals', [\App\Http\Controllers\Admin\AffiliateWithdrawalController::class, 'index'])->name('affiliate-withdrawals.index');
+        Route::post('affiliate-withdrawals/{withdrawal}/approve', [\App\Http\Controllers\Admin\AffiliateWithdrawalController::class, 'approve'])->name('affiliate-withdrawals.approve');
+        Route::post('affiliate-withdrawals/{withdrawal}/reject', [\App\Http\Controllers\Admin\AffiliateWithdrawalController::class, 'reject'])->name('affiliate-withdrawals.reject');
+        Route::get('credit-transactions', [\App\Http\Controllers\Admin\CreditTransactionController::class, 'index'])->name('credit-transactions.index');
+        Route::post('credit-transactions/grant', [\App\Http\Controllers\Admin\CreditTransactionController::class, 'grant'])->name('credit-transactions.grant');
     });
 });

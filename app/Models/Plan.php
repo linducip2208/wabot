@@ -16,7 +16,8 @@ class Plan extends Model
         'can_use_instagram', 'can_use_flow', 'can_use_ai_agent',
         'can_use_intent', 'can_use_drip', 'can_use_ab_test',
         'can_use_catalog', 'can_use_commerce', 'can_use_deals',
-        'can_use_kanban', 'max_meta_accounts', 'max_forms',
+        'can_use_kanban', 'can_ai_studio', 'max_meta_accounts', 'max_forms',
+        'can_affiliate', 'affiliate_commission_rate',
     ];
 
     protected $casts = [
@@ -36,6 +37,9 @@ class Plan extends Model
         'can_use_commerce' => 'boolean',
         'can_use_deals' => 'boolean',
         'can_use_kanban' => 'boolean',
+        'can_ai_studio' => 'boolean',
+        'can_affiliate' => 'boolean',
+        'affiliate_commission_rate' => 'decimal:2',
         'price' => 'decimal:2',
     ];
 

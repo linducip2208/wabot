@@ -12,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'role_id', 'plan_id', 'trial_ends_at', 'expires_at', 'language_id'])]
+#[Fillable(['name', 'email', 'password', 'role', 'role_id', 'plan_id', 'trial_ends_at', 'expires_at', 'language_id', 'credits_balance', 'referral_code', 'referred_by_user_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -207,5 +207,76 @@ class User extends Authenticatable
     public function waSheetsIntegrations(): HasMany
     {
         return $this->hasMany(WaSheetsIntegration::class);
+    }
+
+    public function waAiTemplates(): HasMany
+    {
+        return $this->hasMany(WaAiTemplate::class);
+    }
+
+    public function waAiImageJobs(): HasMany
+    {
+        return $this->hasMany(WaAiImageJob::class);
+    }
+
+    public function waAiContentPlans(): HasMany
+    {
+        return $this->hasMany(WaAiContentPlan::class);
+    }
+}
+
+    public function waSocialAccounts(): HasMany
+    {
+        return $this->hasMany(WaSocialAccount::class);
+    }
+
+    public function waPosts(): HasMany
+    {
+        return $this->hasMany(WaPost::class);
+    }
+
+    public function waPostCampaigns(): HasMany
+    {
+        return $this->hasMany(WaPostCampaign::class);
+    }
+
+    public function waPostLabels(): HasMany
+    {
+        return $this->hasMany(WaPostLabel::class);
+    }
+
+    public function waCaptionLibraries(): HasMany
+    {
+        return $this->hasMany(WaCaptionLibrary::class);
+    }
+
+    public function waRssSchedules(): HasMany
+    {
+        return $this->hasMany(WaRssSchedule::class);
+    }
+
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by_user_id');
+    }
+
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(User::class, 'referred_by_user_id');
+    }
+
+    public function creditTransactions(): HasMany
+    {
+        return $this->hasMany(WaCreditTransaction::class);
+    }
+
+    public function affiliateCommissions(): HasMany
+    {
+        return $this->hasMany(WaAffiliateCommission::class);
+    }
+
+    public function affiliateWithdrawals(): HasMany
+    {
+        return $this->hasMany(WaAffiliateWithdrawal::class);
     }
 }
