@@ -145,6 +145,7 @@ Route::middleware('auth')->group(function () {
     Route::post('messages/{message}/resend', [\App\Http\Controllers\MessageController::class, 'resend'])->name('messages.resend');
     Route::delete('messages/{message}', [\App\Http\Controllers\MessageController::class, 'destroy'])->name('messages.destroy');
     Route::post('messages/bulk-delete', [\App\Http\Controllers\MessageController::class, 'bulkDelete'])->name('messages.bulk-delete');
+    Route::get('messages/search', [\App\Http\Controllers\MessageController::class, 'search'])->name('messages.search');
     Route::resource('contacts', ContactController::class)->except(['create', 'edit']);
     Route::post('contacts/import', [ContactController::class, 'import'])->name('contacts.import');
 

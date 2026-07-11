@@ -27,7 +27,22 @@
                 </div>
                 <div>
                     <div class="font-semibold text-gray-900">{{ $c->name }}</div>
-                    <div class="text-xs text-gray-500">{{ $c->session?->name ?? '-' }} · {{ $c->delay_seconds ?? 3 }}s delay</div>
+                    <div class="text-xs text-gray-500">
+                        @php
+                            $channelLabel = $c->channel ?? 'whatsapp';
+                            $channelBadge = [
+                                'whatsapp' => 'bg-emerald-50 text-emerald-700',
+                                'meta' => 'bg-blue-50 text-blue-700',
+                                'telegram' => 'bg-sky-50 text-sky-700',
+                            ][$channelLabel] ?? 'bg-gray-50 text-gray-700';
+                            $channelName = [
+                                'whatsapp' => 'WhatsApp',
+                                'meta' => 'Meta Cloud',
+                                'telegram' => 'Telegram',
+                            ][$channelLabel] ?? 'WhatsApp';
+                        @endphp
+                        <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium {{ $channelBadge }}">{{ $channelName }}</span>
+                        · {{ $c->session?->name ?? $c->metaAccount?->name ?? $c->telegramAccount?->name ?? '-' }} · {{ $c->delay_seconds ?? 3 }}s delay</div>
                 </div>
             </div>
             <span class="text-[11px] font-medium px-2 py-0.5 rounded-full

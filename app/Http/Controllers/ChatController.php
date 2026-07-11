@@ -99,9 +99,18 @@ class ChatController extends Controller
             ->where('is_active', true)
             ->get();
 
+        $socketServerUrl = null;
+        $socketApiKey = null;
+        $firstSession = $sessions->first();
+        if ($firstSession && $firstSession->server) {
+            $socketServerUrl = $firstSession->server->baseUrl();
+            $socketApiKey = $firstSession->server->api_key;
+        }
+
         return view('chat.index', compact(
             'contacts', 'sessions', 'activeContact', 'messages',
-            'instagramAccounts', 'telegramAccounts', 'metaAccounts'
+            'instagramAccounts', 'telegramAccounts', 'metaAccounts',
+            'socketServerUrl', 'socketApiKey'
         ));
     }
 
@@ -114,6 +123,35 @@ class ChatController extends Controller
         $messages = WaMessage::where('contact_id', $contact->id)
             ->orderBy('created_at')
             ->get();
+
+        if (in_array($channel, ['instagram', 'telegram'])) {
+            WaMessage::where('contact_id', $contact->id)
+                ->where('direction', 'in')
+                ->whereNull('read_at')
+                ->update(['read_at' => now(), 'status' => 'read']);
+        }
+
+        if ($channel === 'baileys') {
+            $session = WaSession::where('user_id', Auth::id())
+                ->where('status', 'connected')
+                ->first();
+            if ($session && $session->meta_account_id) {
+                $metaAccount = WaMetaAccount::find($session->meta_account_id);
+                if ($metaAccount) {
+                    $unreadMetaMessages = WaMessage::where('contact_id', $contact->id)
+                        ->where('direction', 'in')
+                        ->where('channel', 'meta')
+                        ->whereNull('read_at')
+                        ->get();
+                    foreach ($unreadMetaMessages as $msg) {
+                        if ($msg->external_id) {
+                            $this->metaApi->markAsRead($metaAccount, $msg->external_id);
+                        }
+                        $msg->update(['read_at' => now(), 'status' => 'read']);
+                    }
+                }
+            }
+        }
 
         $sessions = WaSession::where('user_id', Auth::id())
             ->where('status', 'connected')

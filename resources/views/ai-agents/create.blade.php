@@ -42,6 +42,29 @@
             <label class="text-xs font-medium text-gray-500">{{ __('aiagents.trigger_keywords') }} <span class="text-gray-400">({{ __('aiagents.separated_by_comma') }})</span></label>
             <input type="text" name="trigger_keywords" value="{{ old('trigger_keywords') }}" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm">
         </div>
+        <div>
+            <label class="text-xs font-medium text-gray-500">Channels</label>
+            <div class="grid grid-cols-2 gap-2 mt-1">
+                @php $ch = old('channels', []); @endphp
+                <label class="flex items-center gap-2 p-2 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" name="channels[]" value="whatsapp" {{ in_array('whatsapp', $ch) ? 'checked' : '' }} class="rounded text-brand-600 focus:ring-brand-500">
+                    <span class="text-sm text-gray-700"><i class="fab fa-whatsapp text-green-500 mr-1"></i> WhatsApp</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" name="channels[]" value="meta" {{ in_array('meta', $ch) ? 'checked' : '' }} class="rounded text-brand-600 focus:ring-brand-500">
+                    <span class="text-sm text-gray-700"><i class="fab fa-facebook text-blue-500 mr-1"></i> Meta</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" name="channels[]" value="instagram" {{ in_array('instagram', $ch) ? 'checked' : '' }} class="rounded text-brand-600 focus:ring-brand-500">
+                    <span class="text-sm text-gray-700"><i class="fab fa-instagram text-pink-500 mr-1"></i> Instagram</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" name="channels[]" value="telegram" {{ in_array('telegram', $ch) ? 'checked' : '' }} class="rounded text-brand-600 focus:ring-brand-500">
+                    <span class="text-sm text-gray-700"><i class="fab fa-telegram-plane text-blue-400 mr-1"></i> Telegram</span>
+                </label>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-1">Leave empty to activate on all channels</p>
+        </div>
         <div class="flex gap-2 pt-1">
             <a href="{{ route('ai-agents.index') }}" class="flex-1 text-center bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">{{ __('common.cancel') }}</a>
             <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">{{ __('common.save') }}</button>

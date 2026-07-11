@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         [x-cloak] { display: none !important; }
@@ -84,7 +85,7 @@
 {{-- Alpine.js Chat App --}}
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('chatApp', (initialContactId, initialPhone) => ({
+    Alpine.data('chatApp', (initialContactId, initialPhone, socketServerUrl, socketApiKey) => ({
         activeContact: null,
         messages: [],
         contacts: [],
@@ -106,6 +107,9 @@ document.addEventListener('alpine:init', () => {
         telegramAccountsData: [],
         metaAccountsData: [],
         accounts: {},
+        socket: null,
+        socketConnected: false,
+        pendingSocketMsgIds: new Set(),
 
         get isSessionChannel() {
             const ch = this.activeContact?.channel;
@@ -154,7 +158,68 @@ document.addEventListener('alpine:init', () => {
                 const c = this.contacts.find(x => x.id == initialContactId);
                 if (c) this.openChat(c);
             }
+            this.connectSocket();
             this.startPolling();
+        },
+
+        connectSocket() {
+            if (!socketServerUrl) return;
+            try {
+                this.socket = io(socketServerUrl, {
+                    auth: { apiKey: socketApiKey },
+                    transports: ['websocket', 'polling'],
+                    reconnectionDelay: 3000,
+                    reconnectionDelayMax: 10000,
+                });
+                this.socket.on('connect', () => {
+                    this.socketConnected = true;
+                });
+                this.socket.on('disconnect', () => {
+                    this.socketConnected = false;
+                });
+                this.socket.on('message.received', (data) => {
+                    this.handleSocketMessage(data);
+                });
+            } catch (e) {
+                console.warn('Socket.io connection failed, using polling fallback');
+            }
+        },
+
+        handleSocketMessage(data) {
+            const msgKey = `${data.phone}_${data.timestamp}`;
+            if (this.pendingSocketMsgIds.has(msgKey)) return;
+            this.pendingSocketMsgIds.add(msgKey);
+
+            const cleanPhone = (data.phone || '').replace(/@.*$/, '');
+            const foundContact = this.contacts.find(c =>
+                (c.phone && c.phone.replace(/@.*$/, '') === cleanPhone) ||
+                (c.display_phone && c.display_phone.replace(/^0/, '62') === cleanPhone)
+            );
+
+            if (this.activeContact) {
+                const activeCleanPhone = (this.activeContact.phone || '').replace(/@.*$/, '');
+                if (activeCleanPhone === cleanPhone ||
+                    (this.activeContact.display_phone && this.activeContact.display_phone.replace(/^0/, '62') === cleanPhone)) {
+                    this.messages.push({
+                        id: 'socket_' + Date.now(),
+                        direction: 'in',
+                        message: data.message,
+                        status: 'delivered',
+                        time: new Date(data.timestamp * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                        date: new Date(data.timestamp * 1000).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+                        full_time: new Date(data.timestamp * 1000).toISOString(),
+                    });
+                    this.$nextTick(() => this.scrollToBottom());
+                }
+            }
+
+            if (foundContact) {
+                foundContact.last_message = data.message;
+                foundContact.last_time = new Date(data.timestamp * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                foundContact.last_direction = 'in';
+            }
+
+            setTimeout(() => this.pendingSocketMsgIds.delete(msgKey), 10000);
         },
 
         async loadContacts() {

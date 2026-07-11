@@ -194,7 +194,7 @@ class InstagramController extends Controller
 
         // ── Intent detection ─────────────────────────────────────
         try {
-            $detectedIntent = $this->intent->detect($userId, $text);
+            $detectedIntent = $this->intent->detect($userId, $text, 'instagram');
         } catch (\Throwable) {
             $detectedIntent = null;
         }

@@ -44,9 +44,9 @@ class FlowEngineService
         return 'baileys';
     }
 
-    protected function sendViaChannel(WaSession $session, WaContact $contact, string $message): array
+    protected function sendViaChannel(WaSession $session, WaContact $contact, string $message, ?string $forcedChannel = null): array
     {
-        $channel = $this->detectChannel($contact);
+        $channel = $forcedChannel ?: $this->detectChannel($contact);
 
         switch ($channel) {
             case 'instagram':
@@ -125,8 +125,8 @@ class FlowEngineService
             'phone' => $contact->phone,
         ]);
 
-        $channel = $this->detectChannel($contact);
-        $result = $this->sendViaChannel($session, $contact, $message);
+        $channel = $node->channel ?: $this->detectChannel($contact);
+        $result = $this->sendViaChannel($session, $contact, $message, $node->channel);
 
         if ($result['ok'] ?? false) {
             WaMessage::create([
@@ -223,8 +223,8 @@ class FlowEngineService
         $reply = $aiService->send($node->aiKey, $context, $kb ?: null);
 
         if ($reply) {
-            $channel = $this->detectChannel($contact);
-            $result = $this->sendViaChannel($session, $contact, $reply);
+            $channel = $node->channel ?: $this->detectChannel($contact);
+            $result = $this->sendViaChannel($session, $contact, $reply, $node->channel);
             if ($result['ok'] ?? false) {
                 WaMessage::create([
                     'user_id' => $session->user_id,

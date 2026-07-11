@@ -9,7 +9,7 @@ class WaFlowNode extends Model
 {
     protected $fillable = [
         'flow_id', 'type', 'label', 'position_x', 'position_y',
-        'config', 'reply_message', 'media_url', 'ai_key_id',
+        'config', 'reply_message', 'channel', 'media_url', 'ai_key_id',
         'condition_field', 'condition_operator', 'condition_value',
         'next_node_id_true', 'next_node_id_false', 'wait_seconds', 'sort_order',
     ];

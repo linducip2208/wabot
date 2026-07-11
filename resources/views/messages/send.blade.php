@@ -16,14 +16,47 @@
 
     <form method="POST" action="{{ route('messages.send') }}" class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
         @csrf
-        <div>
-            <label class="text-xs font-medium text-gray-500">{{ __('common.session') }} WhatsApp</label>
-            <select name="session_id" required class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                <option value="">{{ __('common.select') }} {{ __('common.session') }} {{ __('common.active') }}</option>
-                @foreach($sessions as $s)
-                    <option value="{{ $s->id }}">{{ $s->name }} ({{ $s->phone ?? 'offline' }})</option>
-                @endforeach
-            </select>
+
+        <div x-data="{ channel: 'whatsapp' }">
+            <div>
+                <label class="text-xs font-medium text-gray-500">Channel</label>
+                <select name="channel" x-model="channel" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="whatsapp">WhatsApp (Baileys)</option>
+                    <option value="meta">WhatsApp Cloud (Meta)</option>
+                    <option value="telegram">Telegram</option>
+                </select>
+            </div>
+
+            <div x-show="channel === 'whatsapp'" class="mt-4">
+                <label class="text-xs font-medium text-gray-500">{{ __('common.session') }} WhatsApp</label>
+                <select name="session_id" :required="channel === 'whatsapp'" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">{{ __('common.select') }} {{ __('common.session') }} {{ __('common.active') }}</option>
+                    @foreach($sessions as $s)
+                        <option value="{{ $s->id }}">{{ $s->name }} ({{ $s->phone ?? 'offline' }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div x-show="channel === 'meta'" class="mt-4">
+                <label class="text-xs font-medium text-gray-500">Meta Account</label>
+                <select name="meta_account_id" :required="channel === 'meta'" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih Meta Account</option>
+                    @foreach($metaAccounts as $m)
+                        <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->phone_number ?? '-' }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div x-show="channel === 'telegram'" class="mt-4">
+                <label class="text-xs font-medium text-gray-500">Telegram Account</label>
+                <select name="telegram_account_id" :required="channel === 'telegram'" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih Telegram Account</option>
+                    @foreach($telegramAccounts as $t)
+                        <option value="{{ $t->id }}">{{ $t->name }} (@{{ $t->bot_username }})</option>
+                    @endforeach
+                </select>
+            </div>
+
         </div>
 
         <div>

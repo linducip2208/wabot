@@ -265,7 +265,7 @@ class WebhookController extends Controller
 
         // ── Intent detection ─────────────────────────────────────
         try {
-            $detectedIntent = $this->intent->detect($session->user_id, $data['message']);
+            $detectedIntent = $this->intent->detect($session->user_id, $data['message'], 'whatsapp');
         } catch (\Throwable) { $detectedIntent = null; }
 
         // ── Flow engine check ────────────────────────────────────

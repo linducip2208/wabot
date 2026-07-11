@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class WaCampaign extends Model
 {
     protected $fillable = [
-        'user_id', 'session_id', 'name', 'message', 'delay_seconds',
-        'media_url', 'message_type', 'recipient_ids', 'status',
-        'total_recipients', 'sent_count', 'failed_count', 'scheduled_at',
+        'user_id', 'session_id', 'channel', 'meta_account_id', 'telegram_account_id',
+        'name', 'message', 'delay_seconds', 'media_url', 'message_type',
+        'recipient_ids', 'status', 'total_recipients', 'sent_count', 'failed_count',
+        'scheduled_at',
     ];
 
     protected $casts = [
@@ -26,5 +27,15 @@ class WaCampaign extends Model
     public function session(): BelongsTo
     {
         return $this->belongsTo(WaSession::class, 'session_id');
+    }
+
+    public function metaAccount(): BelongsTo
+    {
+        return $this->belongsTo(WaMetaAccount::class, 'meta_account_id');
+    }
+
+    public function telegramAccount(): BelongsTo
+    {
+        return $this->belongsTo(WaTelegramAccount::class, 'telegram_account_id');
     }
 }

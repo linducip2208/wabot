@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\WaCampaign;
 use App\Models\WaContact;
+use App\Models\WaMetaAccount;
 use App\Models\WaSession;
+use App\Models\WaTelegramAccount;
 use App\Services\BaileysService;
+use App\Services\MetaApiService;
 use App\Services\SpintaxService;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,12 +19,14 @@ class CampaignController extends Controller
     public function __construct(
         protected BaileysService $baileys,
         protected SpintaxService $spintax,
+        protected MetaApiService $metaApi,
+        protected TelegramService $telegram,
     ) {}
 
     public function index()
     {
         $campaigns = WaCampaign::where('user_id', Auth::id())
-            ->with('session')
+            ->with('session', 'metaAccount', 'telegramAccount')
             ->latest()
             ->get();
 
@@ -36,7 +42,15 @@ class CampaignController extends Controller
 
         $contacts = WaContact::where('user_id', Auth::id())->get();
 
-        return view('campaigns.create', compact('sessions', 'contacts'));
+        $metaAccounts = WaMetaAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->get();
+
+        $telegramAccounts = WaTelegramAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->get();
+
+        return view('campaigns.create', compact('sessions', 'contacts', 'metaAccounts', 'telegramAccounts'));
     }
 
     public function store(Request $request)
@@ -44,8 +58,8 @@ class CampaignController extends Controller
         $plan = Auth::user()->plan;
         $maxRecipients = $plan?->max_campaign_recipients ?? 50;
 
-        $validated = $request->validate([
-            'session_id' => 'required|exists:wa_sessions,id',
+        $rules = [
+            'channel' => 'required|in:whatsapp,meta,telegram',
             'name' => 'required|string|max:255',
             'message' => 'required|string|max:5000',
             'delay_seconds' => 'nullable|integer|min:1|max:60',
@@ -54,7 +68,13 @@ class CampaignController extends Controller
             'recipient_ids.*' => 'exists:wa_contacts,id',
             'manual_numbers' => 'nullable|string',
             'scheduled_at' => 'nullable|date',
-        ]);
+        ];
+
+        $rules['session_id'] = 'required_if:channel,whatsapp|nullable|exists:wa_sessions,id';
+        $rules['meta_account_id'] = 'required_if:channel,meta|nullable|exists:wa_meta_accounts,id';
+        $rules['telegram_account_id'] = 'required_if:channel,telegram|nullable|exists:wa_telegram_accounts,id';
+
+        $validated = $request->validate($rules);
 
         if (empty($validated['recipient_ids']) && empty(trim($validated['manual_numbers'] ?? ''))) {
             return back()->with('error', __('messages.error.select_contact_or_number'))->withInput();
@@ -96,7 +116,10 @@ class CampaignController extends Controller
 
         $campaign = WaCampaign::create([
             'user_id' => Auth::id(),
-            'session_id' => $validated['session_id'],
+            'channel' => $validated['channel'],
+            'session_id' => $validated['session_id'] ?? null,
+            'meta_account_id' => $validated['meta_account_id'] ?? null,
+            'telegram_account_id' => $validated['telegram_account_id'] ?? null,
             'name' => $validated['name'],
             'message' => $validated['message'],
             'delay_seconds' => $validated['delay_seconds'] ?? 3,
@@ -131,10 +154,30 @@ class CampaignController extends Controller
 
     protected function sendCampaign(WaCampaign $campaign, $recipients): void
     {
-        $session = $campaign->session;
-        if (!$session || !$session->server) {
-            $campaign->update(['status' => 'failed']);
-            return;
+        $channel = $campaign->channel ?? 'whatsapp';
+
+        if ($channel === 'whatsapp') {
+            $session = $campaign->session;
+            if (!$session || !$session->server) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
+        if ($channel === 'meta') {
+            $metaAccount = $campaign->metaAccount;
+            if (!$metaAccount || !$metaAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        }
+
+        if ($channel === 'telegram') {
+            $tgAccount = $campaign->telegramAccount;
+            if (!$tgAccount || !$tgAccount->is_active) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
         }
 
         $phones = $recipients->pluck('phone')->toArray();
@@ -146,9 +189,8 @@ class CampaignController extends Controller
 
         $sent = $campaign->sent_count ?? 0;
         $failed = $campaign->failed_count ?? 0;
-        $startIndex = count($phones) > 0 ? 0 : $sent + $failed;
 
-        for ($i = $startIndex; $i < count($phones); $i++) {
+        for ($i = 0; $i < count($phones); $i++) {
             $phone = $phones[$i];
 
             $campaign->refresh();
@@ -162,8 +204,15 @@ class CampaignController extends Controller
                 $msg = $this->spintax->process($msg, $variables[$phone] ?? []);
             }
 
-            $result = $this->baileys->send($session->server, $session->session_id, $phone, $msg);
-            if ($result['ok'] ?? false) {
+            $to = preg_replace('/@.*$/', '', $phone);
+
+            $result = match ($channel) {
+                'meta' => $this->sendMetaMessage($campaign->metaAccount, $to, $msg),
+                'telegram' => $this->sendTelegramMessage($campaign->telegramAccount, $to, $msg),
+                default => $this->sendBaileysMessage($campaign->session, $to, $msg),
+            };
+
+            if ($result) {
                 $sent++;
             } else {
                 $failed++;
@@ -183,6 +232,24 @@ class CampaignController extends Controller
             'sent_count' => $sent,
             'failed_count' => $failed,
         ]);
+    }
+
+    protected function sendBaileysMessage($session, string $to, string $message): bool
+    {
+        $result = $this->baileys->send($session->server, $session->session_id, $to, $message);
+        return $result['ok'] ?? false;
+    }
+
+    protected function sendMetaMessage($metaAccount, string $to, string $message): bool
+    {
+        $result = $this->metaApi->sendText($metaAccount, $to, $message);
+        return !isset($result['error']);
+    }
+
+    protected function sendTelegramMessage($tgAccount, string $to, string $message): bool
+    {
+        $result = $this->telegram->sendMessage($tgAccount, $to, $message);
+        return $result['ok'] ?? false;
     }
 
     public function pause(WaCampaign $campaign)

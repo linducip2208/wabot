@@ -7,6 +7,14 @@
         <h1 class="text-xl font-extrabold text-gray-900">Sentiment Analysis</h1>
         <p class="text-sm text-gray-500 mt-0.5">{{ __('sentiment.description') }}</p>
     </div>
+    <div class="flex items-center gap-2">
+        <select id="channelFilter" class="text-sm rounded-xl border border-gray-300 px-3 py-2 bg-white text-gray-700 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" onchange="window.location.href='?channel='+this.value+'&period={{ $period }}'">
+            @php $chLabels = ['all'=>'All Channels','whatsapp'=>'WhatsApp','meta'=>'Meta','instagram'=>'Instagram','telegram'=>'Telegram']; @endphp
+            @foreach($chLabels as $val => $label)
+            <option value="{{ $val }}" {{ $channel === $val ? 'selected' : '' }}>{{ $label }}</option>
+            @endforeach
+        </select>
+    </div>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
@@ -39,7 +47,11 @@
         <h2 class="font-bold text-gray-900 mb-4">{{ __('sentiment.distribution') }}</h2>
         <canvas id="distChart" height="220"></canvas>
     </div>
-    <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h2 class="font-bold text-gray-900 mb-4">Per-Channel Breakdown</h2>
+        <canvas id="channelChart" height="220"></canvas>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-5 lg:col-span-1">
         <h2 class="font-bold text-gray-900 mb-4">{{ __('sentiment.trend_14_days') }}</h2>
         <canvas id="trendChart" height="120"></canvas>
     </div>
@@ -71,11 +83,25 @@
 document.addEventListener('DOMContentLoaded', function () {
     const cd = @json($chartData);
     const td = @json($trendChart);
+    const chd = @json($channelDistribution);
     if (window.Chart) {
         new Chart(document.getElementById('distChart'), {
             type: 'doughnut',
             data: { labels: cd.labels, datasets: [{ data: cd.values, backgroundColor: ['#10b981','#9ca3af','#ef4444'] }] },
             options: { plugins: { legend: { position: 'bottom' } } }
+        });
+        new Chart(document.getElementById('channelChart'), {
+            type: 'bar',
+            data: {
+                labels: ['WhatsApp','Meta','Instagram','Telegram'],
+                datasets: [{
+                    label: 'Messages',
+                    data: [chd.whatsapp||0, chd.meta||0, chd.instagram||0, chd.telegram||0],
+                    backgroundColor: ['#25d366','#1877f2','#e4405f','#0088cc'],
+                    borderRadius: 8,
+                }]
+            },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
         new Chart(document.getElementById('trendChart'), {
             type: 'line',

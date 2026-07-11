@@ -32,6 +32,8 @@ class AiAgentController extends Controller
             'role' => 'required|in:sales,support,billing,general',
             'personality_prompt' => 'nullable|string',
             'trigger_keywords' => 'nullable|string|max:500',
+            'channels' => 'nullable|array',
+            'channels.*' => 'string|in:whatsapp,meta,instagram,telegram',
         ]);
 
         $aiKey = WaAiKey::findOrFail($validated['ai_key_id']);
@@ -44,6 +46,7 @@ class AiAgentController extends Controller
             'role' => $validated['role'],
             'personality_prompt' => $validated['personality_prompt'] ?? '',
             'trigger_keywords' => $validated['trigger_keywords'] ?? '',
+            'channels' => $validated['channels'] ?? null,
             'is_active' => true,
             'is_default' => false,
         ]);
@@ -61,6 +64,8 @@ class AiAgentController extends Controller
             'role' => 'required|in:sales,support,billing,general',
             'personality_prompt' => 'nullable|string',
             'trigger_keywords' => 'nullable|string|max:500',
+            'channels' => 'nullable|array',
+            'channels.*' => 'string|in:whatsapp,meta,instagram,telegram',
         ]);
 
         $aiKey = WaAiKey::findOrFail($validated['ai_key_id']);
@@ -72,6 +77,7 @@ class AiAgentController extends Controller
             'role' => $validated['role'],
             'personality_prompt' => $validated['personality_prompt'] ?? '',
             'trigger_keywords' => $validated['trigger_keywords'] ?? '',
+            'channels' => $validated['channels'] ?? null,
         ]);
 
         return back()->with('success', __('messages.success.ai_agent_updated'));

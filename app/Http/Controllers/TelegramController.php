@@ -184,7 +184,7 @@ class TelegramController extends Controller
 
         // ── Intent detection ─────────────────────────────────────
         try {
-            $detectedIntent = $this->intent->detect($userId, $messageText);
+            $detectedIntent = $this->intent->detect($userId, $messageText, 'telegram');
         } catch (\Throwable) {
             $detectedIntent = null;
         }

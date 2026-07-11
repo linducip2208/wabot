@@ -9,12 +9,13 @@ class WaAiAgent extends Model
 {
     protected $fillable = [
         'user_id', 'ai_key_id', 'name', 'role', 'personality_prompt',
-        'trigger_keywords', 'is_active', 'is_default',
+        'trigger_keywords', 'channels', 'is_active', 'is_default',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'is_default' => 'boolean',
+        'channels' => 'json',
     ];
 
     public function user(): BelongsTo

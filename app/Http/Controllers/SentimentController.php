@@ -16,19 +16,30 @@ class SentimentController extends Controller
             $period = 'today';
         }
 
+        $channel = $request->get('channel', 'all');
+        $validChannels = ['all', 'whatsapp', 'meta', 'instagram', 'telegram'];
+        if (!in_array($channel, $validChannels)) {
+            $channel = 'all';
+        }
+
         $service = app(SentimentService::class);
 
-        $statsToday = $service->getStats(Auth::id(), 'today');
-        $statsWeek = $service->getStats(Auth::id(), 'week');
-        $statsMonth = $service->getStats(Auth::id(), 'month');
+        $statsToday = $service->getStats(Auth::id(), 'today', $channel);
+        $statsWeek = $service->getStats(Auth::id(), 'week', $channel);
+        $statsMonth = $service->getStats(Auth::id(), 'month', $channel);
 
-        $recentLogs = WaSentimentLog::where('user_id', Auth::id())
+        $logsQuery = WaSentimentLog::where('user_id', Auth::id());
+        if ($channel !== 'all') {
+            $logsQuery->where('channel', $channel);
+        }
+
+        $recentLogs = (clone $logsQuery)
             ->with(['contact', 'message'])
             ->latest()
             ->limit(50)
             ->get();
 
-        $distribution = WaSentimentLog::where('user_id', Auth::id())
+        $distribution = (clone $logsQuery)
             ->selectRaw('sentiment, COUNT(*) as count')
             ->groupBy('sentiment')
             ->pluck('count', 'sentiment')
@@ -43,7 +54,7 @@ class SentimentController extends Controller
             ],
         ];
 
-        $dailyData = WaSentimentLog::where('user_id', Auth::id())
+        $dailyData = (clone $logsQuery)
             ->where('created_at', '>=', now()->subDays(14))
             ->selectRaw("DATE(created_at) as date, sentiment, COUNT(*) as count")
             ->groupBy('date', 'sentiment')
@@ -70,6 +81,12 @@ class SentimentController extends Controller
             'negative' => $trendNegative,
         ];
 
+        $channelDistribution = WaSentimentLog::where('user_id', Auth::id())
+            ->selectRaw('channel, COUNT(*) as count')
+            ->groupBy('channel')
+            ->pluck('count', 'channel')
+            ->toArray();
+
         return view('sentiment.index', compact(
             'statsToday',
             'statsWeek',
@@ -77,7 +94,9 @@ class SentimentController extends Controller
             'recentLogs',
             'chartData',
             'trendChart',
-            'period'
+            'period',
+            'channel',
+            'channelDistribution'
         ));
     }
 }

@@ -21,7 +21,18 @@
 </div>
 
 {{-- Filter --}}
-<div class="flex gap-2 mb-4 flex-wrap">
+<div class="flex gap-2 mb-4 flex-wrap items-center">
+    <form method="GET" action="{{ route('messages.search') }}" class="flex gap-2 flex-1">
+        <input type="hidden" name="direction" value="out">
+        <input type="text" name="q" placeholder="Cari pesan, nomor, atau nama kontak..." value="{{ request('q') }}"
+            class="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+        <button type="submit" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-medium hover:bg-brand-700">
+            <i class="fas fa-search mr-1"></i> Cari
+        </button>
+        @if(request('q'))
+        <a href="{{ route('messages.sent') }}" class="text-xs text-gray-400 hover:text-gray-600 py-2">&times; Reset</a>
+        @endif
+    </form>
     <select onchange="window.location=this.value" class="rounded-xl border border-gray-300 px-3 py-2 text-xs">
         <option value="?">{{ __('common.all') }} {{ __('common.session') }}</option>
         @foreach($sessions as $s)

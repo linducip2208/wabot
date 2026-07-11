@@ -9,7 +9,11 @@ class WaMessage extends Model
 {
     protected $fillable = [
         'user_id', 'session_id', 'contact_id', 'direction', 'type',
-        'message', 'phone', 'status', 'external_id', 'channel', 'media_url',
+        'message', 'phone', 'status', 'external_id', 'channel', 'media_url', 'read_at',
+    ];
+
+    protected $casts = [
+        'read_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

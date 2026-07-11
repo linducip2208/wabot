@@ -34,6 +34,9 @@
                                 :class="{'bg-sky-500': node.type==='message','bg-amber-500': node.type==='condition','bg-violet-500': node.type==='ai','bg-gray-500': node.type==='wait'}"
                                 x-text="idx+1"></span>
                             <span class="text-xs font-semibold uppercase tracking-wide text-gray-500" x-text="typeLabel(node.type)"></span>
+                            <template x-if="node.type==='message' && node.channel">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded-md font-medium bg-indigo-50 text-indigo-700" x-text="node.channel"></span>
+                            </template>
                         </div>
                         <button type="button" @click="removeNode(idx)" class="text-gray-400 hover:text-red-600"><i class="fas fa-trash text-xs"></i></button>
                     </div>
@@ -47,6 +50,18 @@
                             <div>
                                 <label class="text-xs font-medium text-gray-500" x-text="node.type==='ai' ? '{{ __('flows.node_prompt_ai') }}' : '{{ __('flows.node_message_reply') }}'"></label>
                                 <textarea x-model="node.reply_message" rows="2" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"></textarea>
+                            </div>
+                        </template>
+                        <template x-if="node.type==='message'">
+                            <div>
+                                <label class="text-xs font-medium text-gray-500">Channel</label>
+                                <select x-model="node.channel" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+                                    <option value="">Auto (detect from contact)</option>
+                                    <option value="whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp / Baileys</option>
+                                    <option value="meta">Meta (Cloud API)</option>
+                                    <option value="instagram">Instagram</option>
+                                    <option value="telegram">Telegram</option>
+                                </select>
                             </div>
                         </template>
                         <template x-if="node.type==='ai'">
@@ -98,12 +113,12 @@ function flowBuilder() {
     return {
         nodes: @json($flow->nodes->map(fn($n) => [
             'id' => $n->id, 'type' => $n->type, 'label' => $n->label,
-            'reply_message' => $n->reply_message, 'ai_key_id' => $n->ai_key_id,
+            'reply_message' => $n->reply_message, 'channel' => $n->channel, 'ai_key_id' => $n->ai_key_id,
             'condition_field' => $n->condition_field, 'condition_operator' => $n->condition_operator,
             'condition_value' => $n->condition_value, 'wait_seconds' => $n->wait_seconds,
         ])->values()),
         typeLabel(t) { return {message:'{{ __('flows.node_type_message') }}',condition:'{{ __('flows.node_type_condition') }}',ai:'{{ __('flows.node_type_ai') }}',wait:'{{ __('flows.node_type_wait') }}'}[t] || t; },
-        addNode(type) { this.nodes.push({ id: null, type, label: '', reply_message: '', ai_key_id: '', condition_field: '', condition_operator: 'equals', condition_value: '', wait_seconds: 5 }); },
+        addNode(type) { this.nodes.push({ id: null, type, label: '', reply_message: '', channel: '', ai_key_id: '', condition_field: '', condition_operator: 'equals', condition_value: '', wait_seconds: 5 }); },
         removeNode(i) { this.nodes.splice(i, 1); },
         prepareSubmit() {
             const box = document.getElementById('nodesPayload'); box.innerHTML = '';

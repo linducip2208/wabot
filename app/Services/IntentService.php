@@ -11,15 +11,22 @@ class IntentService
     /**
      * Deteksi intent dari pesan masuk. Priority: AI agent trigger keywords > intent config keywords.
      */
-    public function detect(int $userId, string $message): ?array
+    public function detect(int $userId, string $message, ?string $channel = null): ?array
     {
         $msg = mb_strtolower($message);
 
-        // 1. Cek AI agent trigger keywords dulu
-        $agent = WaAiAgent::where('user_id', $userId)
+        $agentsQuery = WaAiAgent::where('user_id', $userId)
             ->where('is_active', true)
-            ->whereNotNull('trigger_keywords')
-            ->get()
+            ->whereNotNull('trigger_keywords');
+
+        if ($channel) {
+            $agentsQuery->where(function ($q) use ($channel) {
+                $q->whereNull('channels')
+                  ->orWhereJsonContains('channels', $channel);
+            });
+        }
+
+        $agent = $agentsQuery->get()
             ->first(function ($agent) use ($msg) {
                 $keywords = array_map('trim', explode(',', mb_strtolower($agent->trigger_keywords)));
                 foreach ($keywords as $kw) {

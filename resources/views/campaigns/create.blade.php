@@ -46,18 +46,50 @@
 
             <div class="grid grid-cols-2 gap-4 mb-5">
                 <div>
-                    <label class="text-xs font-medium text-gray-500">{{ __('common.session') }} WhatsApp</label>
-                    <select name="session_id" x-model="sessionId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                        <option value="">{{ __('common.select') }} {{ __('common.session') }}</option>
-                        @foreach($sessions as $s)
-                            <option value="{{ $s->id }}">{{ $s->name }} ({{ $s->phone ?? 'offline' }})</option>
-                        @endforeach
+                    <label class="text-xs font-medium text-gray-500">{{ __('campaigns.channel') }}</label>
+                    <select name="channel" x-model="channel" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                        <option value="whatsapp">WhatsApp (Baileys)</option>
+                        <option value="meta">WhatsApp Cloud (Meta)</option>
+                        <option value="telegram">Telegram</option>
                     </select>
                 </div>
                 <div>
                     <label class="text-xs font-medium text-gray-500">{{ __('campaigns.campaign_name') }}</label>
                     <input type="text" name="name" x-model="campaignName" placeholder="Promo Lebaran 2026" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
+            </div>
+
+            {{-- WhatsApp session selector --}}
+            <div x-show="channel === 'whatsapp'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">{{ __('common.session') }} WhatsApp</label>
+                <select name="session_id" x-model="sessionId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">{{ __('common.select') }} {{ __('common.session') }}</option>
+                    @foreach($sessions as $s)
+                        <option value="{{ $s->id }}">{{ $s->name }} ({{ $s->phone ?? 'offline' }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Meta account selector --}}
+            <div x-show="channel === 'meta'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">Meta Account</label>
+                <select name="meta_account_id" x-model="metaAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih Meta Account</option>
+                    @foreach($metaAccounts as $m)
+                        <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->phone_number ?? '-' }})</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Telegram account selector --}}
+            <div x-show="channel === 'telegram'" class="mb-5">
+                <label class="text-xs font-medium text-gray-500">Telegram Account</label>
+                <select name="telegram_account_id" x-model="telegramAccountId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">Pilih Telegram Account</option>
+                    @foreach($telegramAccounts as $t)
+                        <option value="{{ $t->id }}">{{ $t->name }} (@{{ $t->bot_username }})</option>
+                    @endforeach
+                </select>
             </div>
 
             <div class="flex items-center gap-2 mb-3">
@@ -170,7 +202,10 @@ document.addEventListener('alpine:init', () => {
         manualTab: false,
         messageText: '',
         delaySeconds: 3,
+        channel: 'whatsapp',
         sessionId: '',
+        metaAccountId: '',
+        telegramAccountId: '',
         campaignName: '',
         submitting: false,
 
@@ -187,8 +222,16 @@ document.addEventListener('alpine:init', () => {
 
         next() {
             if (this.current === 0) {
-                if (!this.sessionId) {
+                if (this.channel === 'whatsapp' && !this.sessionId) {
                     alert('{{ __('campaigns.alert_select_session') }}');
+                    return;
+                }
+                if (this.channel === 'meta' && !this.metaAccountId) {
+                    alert('{{ __('campaigns.alert_select_meta') }}');
+                    return;
+                }
+                if (this.channel === 'telegram' && !this.telegramAccountId) {
+                    alert('{{ __('campaigns.alert_select_telegram') }}');
                     return;
                 }
                 if (!this.campaignName.trim()) {

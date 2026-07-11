@@ -110,9 +110,10 @@ class SentimentService
         ]);
     }
 
-    public function getStats(int $userId, string $period = 'today'): array
+    public function getStats(int $userId, string $period = 'today', string $channel = 'all'): array
     {
         $query = WaSentimentLog::where('user_id', $userId);
+        if ($channel !== 'all') $query->where('channel', $channel);
         if ($period === 'today') $query->whereDate('created_at', today());
         elseif ($period === 'week') $query->where('created_at', '>=', now()->subWeek());
         elseif ($period === 'month') $query->where('created_at', '>=', now()->subMonth());

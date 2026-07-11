@@ -38,6 +38,17 @@
             </div>
         </div>
         <p class="text-xs text-gray-500 line-clamp-2 mb-2">{{ $a->personality_prompt ?: __('aiagents.no_persona') }}</p>
+        <div class="flex flex-wrap gap-1 mb-2">
+            @php $chMap = ['whatsapp'=>['WA','bg-green-100 text-green-700'],'meta'=>['Meta','bg-blue-100 text-blue-700'],'instagram'=>['IG','bg-pink-100 text-pink-700'],'telegram'=>['TG','bg-sky-100 text-sky-700']]; @endphp
+            @if($a->channels)
+                @foreach($a->channels as $ch)
+                    @php $b = $chMap[$ch] ?? [$ch,'bg-gray-100 text-gray-600']; @endphp
+                    <span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium {{ $b[1] }}">{{ $b[0] }}</span>
+                @endforeach
+            @else
+                <span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium bg-gray-100 text-gray-500">All</span>
+            @endif
+        </div>
         <div class="text-[10px] text-gray-400 mb-3"><i class="fas fa-key mr-1"></i> {{ $a->aiKey?->name ?? __('aiagents.no_ai_key') }}</div>
         <form method="POST" action="{{ route('ai-agents.test', $a) }}" class="flex gap-1">
             @csrf
@@ -89,6 +100,28 @@
                 <label class="text-xs font-medium text-gray-500">{{ __('aiagents.trigger_keywords') }} <span class="text-gray-400">({{ __('aiagents.separated_by_comma') }})</span></label>
                 <input type="text" name="trigger_keywords" placeholder="{{ __('aiagents.trigger_keywords_placeholder') }}" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm">
             </div>
+            <div>
+                <label class="text-xs font-medium text-gray-500">Channels</label>
+                <div class="grid grid-cols-2 gap-2 mt-1">
+                    <label class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" name="channels[]" value="whatsapp" class="rounded text-brand-600 focus:ring-brand-500 channel-check">
+                        <span class="text-xs text-gray-700"><i class="fab fa-whatsapp text-green-500 mr-1"></i> WhatsApp</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" name="channels[]" value="meta" class="rounded text-brand-600 focus:ring-brand-500 channel-check">
+                        <span class="text-xs text-gray-700"><i class="fab fa-facebook text-blue-500 mr-1"></i> Meta</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" name="channels[]" value="instagram" class="rounded text-brand-600 focus:ring-brand-500 channel-check">
+                        <span class="text-xs text-gray-700"><i class="fab fa-instagram text-pink-500 mr-1"></i> Instagram</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" name="channels[]" value="telegram" class="rounded text-brand-600 focus:ring-brand-500 channel-check">
+                        <span class="text-xs text-gray-700"><i class="fab fa-telegram-plane text-blue-400 mr-1"></i> Telegram</span>
+                    </label>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-1">Leave empty to activate on all channels</p>
+            </div>
             <div class="flex gap-2 pt-1">
                 <button type="button" onclick="document.getElementById('agentModal').classList.add('hidden')" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">{{ __('common.cancel') }}</button>
                 <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700">{{ __('common.save') }}</button>
@@ -113,6 +146,9 @@ function editAgent(a) {
     f.querySelector('[name="ai_key_id"]').value = a.ai_key_id;
     f.querySelector('[name="personality_prompt"]').value = a.personality_prompt || '';
     f.querySelector('[name="trigger_keywords"]').value = a.trigger_keywords || '';
+    f.querySelectorAll('.channel-check').forEach(cb => {
+        cb.checked = a.channels && a.channels.includes(cb.value);
+    });
     document.getElementById('agentMethod').innerHTML = '<input type="hidden" name="_method" value="PUT">';
 }
 </script>

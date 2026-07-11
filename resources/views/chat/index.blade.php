@@ -2,7 +2,7 @@
 @section('title', 'Chat — WABot')
 
 @section('chat_content')
-<div x-data="chatApp({{ $activeContact?->id ?? 'null' }}, {{ $activeContact?->phone ? "'{$activeContact->phone}'" : 'null' }})" class="flex h-full"
+<div x-data="chatApp({{ $activeContact?->id ?? 'null' }}, {{ $activeContact?->phone ? "'{$activeContact->phone}'" : 'null' }}, {{ $socketServerUrl ? "'{$socketServerUrl}'" : 'null' }}, {{ $socketApiKey ? "'{$socketApiKey}'" : 'null' }})" class="flex h-full"
     x-init="sessionsData = {{ json_encode($sessions->map(fn($s) => ['id' => $s->id, 'session_id' => $s->session_id, 'name' => $s->name, 'phone' => $s->phone, 'channel' => $s->channel ?? 'whatsapp', 'meta_account_id' => $s->meta_account_id])) }};
     contactsData = {{ json_encode($contacts->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone, 'display_phone' => $c->display_phone, 'is_lid' => str_contains($c->phone, '@lid'), 'last_message' => $c->last_message, 'last_time' => $c->last_time?->format('H:i'), 'last_direction' => $c->last_direction, 'last_session_id' => $c->last_session_id, 'channel' => $c->channel ?? 'whatsapp'])) }};
     instagramAccountsData = {{ json_encode($instagramAccounts->map(fn($a) => ['id' => 'ig_'.$a->id, 'name' => $a->name])) }};

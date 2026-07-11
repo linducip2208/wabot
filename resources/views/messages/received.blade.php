@@ -20,10 +20,24 @@
     </div>
 </div>
 
-<form id="bulkForm" method="POST" action="{{ route('messages.bulk-delete') }}" class="hidden">
-    @csrf
-    <input type="hidden" name="ids" id="bulkIds">
-</form>
+    <form id="bulkForm" method="POST" action="{{ route('messages.bulk-delete') }}" class="hidden">
+        @csrf
+        <input type="hidden" name="ids" id="bulkIds">
+    </form>
+
+    <div class="flex gap-2 mb-4 items-center">
+        <form method="GET" action="{{ route('messages.search') }}" class="flex-1 flex gap-2">
+            <input type="hidden" name="direction" value="in">
+            <input type="text" name="q" placeholder="Cari pesan, nomor, atau nama kontak..." value="{{ request('q') }}"
+                class="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+            <button type="submit" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-brand-700">
+                <i class="fas fa-search mr-1"></i> Cari
+            </button>
+            @if(request('q'))
+            <a href="{{ route('messages.received') }}" class="text-xs text-gray-400 hover:text-gray-600 py-2 px-1">&times; Reset</a>
+            @endif
+        </form>
+    </div>
 <div class="mb-4">
     <button onclick="bulkDelete()" class="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-xl hover:bg-red-100 transition font-medium">
         <i class="fas fa-trash mr-1"></i> {{ __('common.delete_selected') }}

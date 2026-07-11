@@ -2,6 +2,9 @@ import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaile
 import axios from 'axios';
 import { toDataURL } from 'qrcode';
 import express from 'express';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import cors from 'cors';
 import pino from 'pino';
 import fs from 'fs';
 import path from 'path';
@@ -14,6 +17,28 @@ if (!fs.existsSync(AUTH_DIR)) fs.mkdirSync(AUTH_DIR, { recursive: true });
 
 const app = express();
 app.use(express.json());
+app.use(cors());
+
+const httpServer = createServer(app);
+
+// Socket.io with auth
+const io = new SocketIOServer(httpServer, {
+    cors: { origin: '*', methods: ['GET', 'POST'] },
+    transports: ['websocket', 'polling'],
+});
+
+io.use((socket, next) => {
+    const key = socket.handshake.auth?.apiKey || socket.handshake.query?.apiKey;
+    if (key === API_KEY) return next();
+    next(new Error('Unauthorized'));
+});
+
+io.on('connection', (socket) => {
+    console.log(`Socket.io client connected: ${socket.id}`);
+    socket.on('disconnect', () => {
+        console.log(`Socket.io client disconnected: ${socket.id}`);
+    });
+});
 
 // Auth middleware
 function auth(req, res, next) {
@@ -71,6 +96,7 @@ async function createSocket(sessionId) {
                 phone: info.phone,
                 timestamp: Math.floor(Date.now() / 1000),
             });
+            io.emit('session.connected', { session_id: sessionId, phone: info.phone });
         }
         if (connection === 'close') {
             const reason = lastDisconnect?.error?.output?.statusCode;
@@ -83,6 +109,7 @@ async function createSocket(sessionId) {
                 reason: loggedOut ? 'logged_out' : (lastDisconnect?.error?.message || 'unknown'),
                 timestamp: Math.floor(Date.now() / 1000),
             });
+            io.emit('session.disconnected', { session_id: sessionId, reason: loggedOut ? 'logged_out' : 'disconnected' });
             if (!loggedOut) {
                 delete sessions[sessionId];
             }
@@ -213,6 +240,16 @@ async function createSocket(sessionId) {
                     timestamp,
                 });
             }
+
+            // Emit via Socket.io for real-time chat
+            io.emit('message.received', {
+                session_id: sessionId,
+                phone: sender,
+                message: messageType === 'text' ? (messageData.text || messageData.caption || '') : `[${messageType}]`,
+                message_type: messageType,
+                channel: 'whatsapp',
+                timestamp,
+            });
         }
     });
 
@@ -356,8 +393,8 @@ app.post('/sessions/:id/send-bulk', auth, async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`Baileys REST API running on port ${PORT}`);
+httpServer.listen(PORT, () => {
+    console.log(`Baileys REST API + WebSocket running on port ${PORT}`);
     // Auto-restore existing auth sessions
     if (fs.existsSync(AUTH_DIR)) {
         const dirs = fs.readdirSync(AUTH_DIR, { withFileTypes: true })

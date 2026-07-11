@@ -188,7 +188,7 @@ class MetaWebhookController extends Controller
 
         // ── Intent detection ─────────────────────────────────────
         try {
-            $detectedIntent = $this->intent->detect($userId, $text);
+            $detectedIntent = $this->intent->detect($userId, $text, 'meta');
         } catch (\Throwable) {
             $detectedIntent = null;
         }
