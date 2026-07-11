@@ -11,12 +11,13 @@ class WaAppointment extends Model
 
     protected $fillable = [
         'user_id', 'contact_id', 'service_id',
-        'start_at', 'end_at', 'status', 'notes',
+        'start_at', 'end_at', 'status', 'notes', 'reminded_at',
     ];
 
     protected $casts = [
         'start_at' => 'datetime',
         'end_at' => 'datetime',
+        'reminded_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

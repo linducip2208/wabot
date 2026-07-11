@@ -28,6 +28,9 @@ class FlowEngineService
     protected FacebookService $facebook;
     protected CreditService $credit;
 
+    protected ?WaSession $currentSession = null;
+    protected ?WaContact $currentContact = null;
+
     public function __construct(
         AiService $ai,
         BaileysService $baileys,
@@ -159,6 +162,9 @@ class FlowEngineService
      */
     public function execute(WaFlow $flow, WaSession $session, WaContact $contact, string $incomingMessage): bool
     {
+        $this->currentSession = $session;
+        $this->currentContact = $contact;
+
         $triggerNode = $flow->nodes()->where('type', 'trigger')->first();
         if (!$triggerNode) return false;
 
@@ -419,7 +425,6 @@ class FlowEngineService
             ]);
         }
 
-        $this->goNext($node, true);
         return true;
     }
 
@@ -427,6 +432,6 @@ class FlowEngineService
     {
         $next = $trueBranch ? $node->nextNodeTrue : $node->nextNodeFalse;
         if (!$next) return true;
-        return $this->processNode($next, session('flow_session'), session('flow_contact'), '');
+        return $this->processNode($next, $this->currentSession, $this->currentContact, '');
     }
 }

@@ -31,4 +31,9 @@ class WaContact extends Model
     {
         return $this->belongsToMany(ContactGroup::class, 'contact_group_pivot', 'contact_id', 'group_id');
     }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(WaAppointment::class, 'contact_id');
+    }
 }

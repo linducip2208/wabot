@@ -101,8 +101,11 @@ class FlowController extends Controller
         $aiKeys = WaAiKey::where('user_id', Auth::id())
             ->where('is_active', true)
             ->get();
+        $services = \App\Models\WaService::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->get();
 
-        return view('flows.nodes', compact('flow', 'aiKeys'));
+        return view('flows.nodes', compact('flow', 'aiKeys', 'services'));
     }
 
     public function nodesStore(Request $request, WaFlow $flow)
@@ -112,7 +115,7 @@ class FlowController extends Controller
         $validated = $request->validate([
             'nodes' => 'required|array',
             'nodes.*.id' => 'nullable|integer|exists:wa_flow_nodes,id',
-            'nodes.*.type' => 'required|string|in:message,condition,ai,wait',
+            'nodes.*.type' => 'required|string|in:message,condition,ai,wait,booking,image,button',
             'nodes.*.label' => 'required|string|max:255',
             'nodes.*.position_x' => 'nullable|integer',
             'nodes.*.position_y' => 'nullable|integer',

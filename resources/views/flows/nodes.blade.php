@@ -19,6 +19,7 @@
         <button type="button" @click="addNode('condition')" class="text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 px-3 py-1.5 rounded-lg font-medium"><i class="fas fa-code-branch mr-1"></i> {{ __('flows.node_type_condition') }}</button>
         <button type="button" @click="addNode('ai')" class="text-xs bg-violet-50 text-violet-700 hover:bg-violet-100 px-3 py-1.5 rounded-lg font-medium"><i class="fas fa-robot mr-1"></i> {{ __('flows.node_type_ai') }}</button>
         <button type="button" @click="addNode('wait')" class="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 px-3 py-1.5 rounded-lg font-medium"><i class="fas fa-hourglass-half mr-1"></i> {{ __('flows.node_type_wait') }}</button>
+        <button type="button" @click="addNode('booking')" class="text-xs bg-teal-50 text-teal-700 hover:bg-teal-100 px-3 py-1.5 rounded-lg font-medium"><i class="fas fa-calendar-alt mr-1"></i> Booking</button>
     </div>
 
     <form method="POST" action="{{ route('flows.nodes.store', $flow) }}" @submit="prepareSubmit">
@@ -31,7 +32,7 @@
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             <span class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-                                :class="{'bg-sky-500': node.type==='message','bg-amber-500': node.type==='condition','bg-violet-500': node.type==='ai','bg-gray-500': node.type==='wait'}"
+                                :class="{'bg-sky-500': node.type==='message','bg-amber-500': node.type==='condition','bg-violet-500': node.type==='ai','bg-gray-500': node.type==='wait','bg-teal-500': node.type==='booking'}"
                                 x-text="idx+1"></span>
                             <span class="text-xs font-semibold uppercase tracking-wide text-gray-500" x-text="typeLabel(node.type)"></span>
                             <template x-if="node.type==='message' && node.channel">
@@ -92,6 +93,17 @@
                                 <input type="number" x-model="node.wait_seconds" min="1" placeholder="5" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
                             </div>
                         </template>
+                        <template x-if="node.type==='booking'">
+                            <div>
+                                <label class="text-xs font-medium text-gray-500">{{ __('flows.booking_service') }}</label>
+                                <select x-model="node.config.service_id" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm">
+                                    <option value="">{{ __('flows.select_service') }}</option>
+                                    @foreach($services as $svc)
+                                        <option value="{{ $svc->id }}">{{ $svc->name }} ({{ $svc->duration_minutes }}m)</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </template>
@@ -116,20 +128,34 @@ function flowBuilder() {
             'reply_message' => $n->reply_message, 'channel' => $n->channel, 'ai_key_id' => $n->ai_key_id,
             'condition_field' => $n->condition_field, 'condition_operator' => $n->condition_operator,
             'condition_value' => $n->condition_value, 'wait_seconds' => $n->wait_seconds,
+            'config' => $n->config,
         ])->values()),
-        typeLabel(t) { return {message:'{{ __('flows.node_type_message') }}',condition:'{{ __('flows.node_type_condition') }}',ai:'{{ __('flows.node_type_ai') }}',wait:'{{ __('flows.node_type_wait') }}'}[t] || t; },
-        addNode(type) { this.nodes.push({ id: null, type, label: '', reply_message: '', channel: '', ai_key_id: '', condition_field: '', condition_operator: 'equals', condition_value: '', wait_seconds: 5 }); },
+        typeLabel(t) { return {message:'{{ __('flows.node_type_message') }}',condition:'{{ __('flows.node_type_condition') }}',ai:'{{ __('flows.node_type_ai') }}',wait:'{{ __('flows.node_type_wait') }}',booking:'Booking'}[t] || t; },
+        addNode(type) {
+            const node = { id: null, type, label: '', reply_message: '', channel: '', ai_key_id: '', condition_field: '', condition_operator: 'equals', condition_value: '', wait_seconds: 5, config: null };
+            if (type === 'booking') node.config = { service_id: '' };
+            this.nodes.push(node);
+        },
         removeNode(i) { this.nodes.splice(i, 1); },
         prepareSubmit() {
             const box = document.getElementById('nodesPayload'); box.innerHTML = '';
             this.nodes.forEach((n, i) => {
                 const fields = { ...n, sort_order: i };
+                delete fields.config;
                 Object.entries(fields).forEach(([k, v]) => {
                     if (v === null || v === '') return;
                     const inp = document.createElement('input');
                     inp.type = 'hidden'; inp.name = `nodes[${i}][${k}]`; inp.value = v;
                     box.appendChild(inp);
                 });
+                if (n.config && typeof n.config === 'object') {
+                    Object.entries(n.config).forEach(([ck, cv]) => {
+                        if (cv === null || cv === '') return;
+                        const inp = document.createElement('input');
+                        inp.type = 'hidden'; inp.name = `nodes[${i}][config][${ck}]`; inp.value = cv;
+                        box.appendChild(inp);
+                    });
+                }
             });
         }
     };

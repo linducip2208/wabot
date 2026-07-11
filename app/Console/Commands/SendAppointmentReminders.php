@@ -14,12 +14,12 @@ class SendAppointmentReminders extends Command
     public function handle(AppointmentService $appointmentService): int
     {
         $now = now();
-        $windowStart = $now->copy()->addMinutes(25);
-        $windowEnd = $now->copy()->addMinutes(35);
+        $windowEnd = $now->copy()->addMinutes(30);
 
-        $appointments = WaAppointment::whereIn('status', ['confirmed'])
-            ->where('start_at', '>=', $windowStart)
+        $appointments = WaAppointment::where('status', 'confirmed')
+            ->where('start_at', '>=', $now)
             ->where('start_at', '<=', $windowEnd)
+            ->whereNull('reminded_at')
             ->with(['contact', 'service'])
             ->get();
 
@@ -27,6 +27,7 @@ class SendAppointmentReminders extends Command
         foreach ($appointments as $appointment) {
             $result = $appointmentService->sendReminder($appointment);
             if ($result['ok'] ?? false) {
+                $appointment->update(['reminded_at' => now()]);
                 $count++;
             }
             $this->info("Reminder sent for appointment #{$appointment->id} - {$appointment->contact->name}");
