@@ -67,14 +67,58 @@ class InstagramService
         }
     }
 
-    public function sendDM(string $instagramId, string $accessToken, string $message): array
+    public function sendDM(string $instagramId, string $accessToken, string $message, ?string $recipientId = null): array
     {
         try {
             $res = $this->http->post("https://graph.facebook.com/v22.0/{$instagramId}/messages", [
                 'headers' => ['Authorization' => "Bearer {$accessToken}", 'Content-Type' => 'application/json'],
                 'json' => [
-                    'recipient' => ['id' => $instagramId],
+                    'recipient' => ['id' => $recipientId ?? $instagramId],
                     'message' => ['text' => $message],
+                ],
+            ]);
+
+            return json_decode($res->getBody()->getContents(), true) ?? [];
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function sendImage(string $instagramId, string $accessToken, string $imageUrl, ?string $recipientId = null): array
+    {
+        try {
+            $res = $this->http->post("https://graph.facebook.com/v22.0/{$instagramId}/messages", [
+                'headers' => ['Authorization' => "Bearer {$accessToken}", 'Content-Type' => 'application/json'],
+                'json' => [
+                    'recipient' => ['id' => $recipientId ?? $instagramId],
+                    'message' => [
+                        'attachment' => [
+                            'type' => 'image',
+                            'payload' => ['url' => $imageUrl],
+                        ],
+                    ],
+                ],
+            ]);
+
+            return json_decode($res->getBody()->getContents(), true) ?? [];
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function sendVideo(string $instagramId, string $accessToken, string $videoUrl, ?string $recipientId = null): array
+    {
+        try {
+            $res = $this->http->post("https://graph.facebook.com/v22.0/{$instagramId}/messages", [
+                'headers' => ['Authorization' => "Bearer {$accessToken}", 'Content-Type' => 'application/json'],
+                'json' => [
+                    'recipient' => ['id' => $recipientId ?? $instagramId],
+                    'message' => [
+                        'attachment' => [
+                            'type' => 'video',
+                            'payload' => ['url' => $videoUrl],
+                        ],
+                    ],
                 ],
             ]);
 

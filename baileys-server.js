@@ -1,4 +1,5 @@
-import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, delay } from 'baileys';
+import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, delay, downloadMediaMessage } from 'baileys';
+import axios from 'axios';
 import { toDataURL } from 'qrcode';
 import express from 'express';
 import pino from 'pino';
@@ -23,6 +24,15 @@ function auth(req, res, next) {
 
 // Session store
 const sessions = {};
+
+async function notifyWebhook(url, payload) {
+    if (!url) return;
+    try {
+        await axios.post(url, payload, { timeout: 10000 });
+    } catch (e) {
+        console.error(`Webhook ${payload.event} failed for session ${payload.session_id}: ${e.message}`);
+    }
+}
 
 async function createSocket(sessionId) {
     if (sessions[sessionId]?.sock) return sessions[sessionId];
@@ -55,14 +65,153 @@ async function createSocket(sessionId) {
             info.status = 'connected';
             info.qr = null;
             info.phone = sock.user?.id?.split(':')[0] || null;
+            notifyWebhook(info.webhook_url, {
+                event: 'session.connected',
+                session_id: sessionId,
+                phone: info.phone,
+                timestamp: Math.floor(Date.now() / 1000),
+            });
         }
         if (connection === 'close') {
             const reason = lastDisconnect?.error?.output?.statusCode;
-            const shouldReconnect = reason !== DisconnectReason.loggedOut;
-            info.status = reason === DisconnectReason.loggedOut ? 'logged_out' : 'disconnected';
+            const loggedOut = reason === DisconnectReason.loggedOut;
+            info.status = loggedOut ? 'logged_out' : 'disconnected';
             info.qr = null;
-            if (shouldReconnect) {
+            notifyWebhook(info.webhook_url, {
+                event: loggedOut ? 'session.logged_out' : 'session.disconnected',
+                session_id: sessionId,
+                reason: loggedOut ? 'logged_out' : (lastDisconnect?.error?.message || 'unknown'),
+                timestamp: Math.floor(Date.now() / 1000),
+            });
+            if (!loggedOut) {
                 delete sessions[sessionId];
+            }
+        }
+    });
+
+    sock.ev.on('messages.upsert', async (m) => {
+        if (m.type !== 'notify') return;
+
+        for (const msg of m.messages) {
+            if (msg.key.fromMe) continue;
+
+            const messageContent = msg.message;
+            if (!messageContent) continue;
+
+            const sender = msg.key.remoteJid;
+            let messageType = 'unknown';
+            let messageData = {};
+            const timestamp = msg.messageTimestamp || Math.floor(Date.now() / 1000);
+
+            try {
+                if (messageContent.conversation) {
+                    messageType = 'text';
+                    messageData = { text: messageContent.conversation };
+                } else if (messageContent.extendedTextMessage) {
+                    messageType = 'text';
+                    messageData = { text: messageContent.extendedTextMessage.text || '' };
+                } else if (messageContent.imageMessage) {
+                    messageType = 'image';
+                    const img = messageContent.imageMessage;
+                    messageData = {
+                        caption: img.caption || '',
+                        mimetype: img.mimetype,
+                    };
+                    try {
+                        const buffer = await downloadMediaMessage(msg, 'buffer', {});
+                        messageData.imageUrl = `data:${img.mimetype};base64,${buffer.toString('base64')}`;
+                    } catch (_) {
+                        messageData.imageUrl = null;
+                    }
+                } else if (messageContent.videoMessage) {
+                    messageType = 'video';
+                    const vid = messageContent.videoMessage;
+                    messageData = {
+                        caption: vid.caption || '',
+                        mimetype: vid.mimetype,
+                        seconds: vid.seconds || 0,
+                    };
+                    try {
+                        const buffer = await downloadMediaMessage(msg, 'buffer', {});
+                        messageData.mediaUrl = `data:${vid.mimetype};base64,${buffer.toString('base64')}`;
+                    } catch (_) {
+                        messageData.mediaUrl = null;
+                    }
+                } else if (messageContent.audioMessage) {
+                    messageType = 'audio';
+                    const aud = messageContent.audioMessage;
+                    messageData = {
+                        mimetype: aud.mimetype,
+                        seconds: aud.seconds || 0,
+                        ptt: aud.ptt || false,
+                    };
+                    try {
+                        const buffer = await downloadMediaMessage(msg, 'buffer', {});
+                        messageData.mediaUrl = `data:${aud.mimetype};base64,${buffer.toString('base64')}`;
+                    } catch (_) {
+                        messageData.mediaUrl = null;
+                    }
+                } else if (messageContent.documentMessage) {
+                    messageType = 'document';
+                    const doc = messageContent.documentMessage;
+                    messageData = {
+                        fileName: doc.fileName || 'document',
+                        mimetype: doc.mimetype,
+                        caption: doc.caption || '',
+                        fileLength: doc.fileLength || 0,
+                    };
+                    try {
+                        const buffer = await downloadMediaMessage(msg, 'buffer', {});
+                        messageData.mediaUrl = `data:${doc.mimetype};base64,${buffer.toString('base64')}`;
+                    } catch (_) {
+                        messageData.mediaUrl = null;
+                    }
+                } else if (messageContent.stickerMessage) {
+                    messageType = 'sticker';
+                    const stk = messageContent.stickerMessage;
+                    messageData = {
+                        mimetype: stk.mimetype,
+                        isAnimated: stk.isAnimated || false,
+                    };
+                } else if (messageContent.contactMessage) {
+                    messageType = 'contact';
+                    messageData = {
+                        displayName: messageContent.contactMessage.displayName || '',
+                        vcard: messageContent.contactMessage.vcard || '',
+                    };
+                } else if (messageContent.locationMessage) {
+                    messageType = 'location';
+                    const loc = messageContent.locationMessage;
+                    messageData = {
+                        degreesLatitude: loc.degreesLatitude,
+                        degreesLongitude: loc.degreesLongitude,
+                        name: loc.name || '',
+                        address: loc.address || '',
+                    };
+                } else if (messageContent.reactionMessage) {
+                    messageType = 'reaction';
+                    messageData = {
+                        text: messageContent.reactionMessage.text || '',
+                        sender: messageContent.reactionMessage.key?.remoteJid || '',
+                    };
+                } else {
+                    messageType = 'unknown';
+                    messageData = { raw: Object.keys(messageContent) };
+                }
+            } catch (e) {
+                messageType = 'error';
+                messageData = { error: e.message };
+            }
+
+            if (info.webhook_url) {
+                notifyWebhook(info.webhook_url, {
+                    event: 'message.received',
+                    session_id: sessionId,
+                    phone: sender,
+                    message: messageData,
+                    message_type: messageType,
+                    timestamp,
+                });
             }
         }
     });

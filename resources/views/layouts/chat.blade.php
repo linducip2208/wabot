@@ -102,6 +102,27 @@ document.addEventListener('alpine:init', () => {
         activeTab: 'all',
         sessionsData: [],
         contactsData: [],
+        instagramAccountsData: [],
+        telegramAccountsData: [],
+        metaAccountsData: [],
+        accounts: {},
+
+        get isSessionChannel() {
+            const ch = this.activeContact?.channel;
+            return !ch || ch === 'whatsapp' || ch === 'baileys' || ch === 'meta';
+        },
+
+        channelIcon(channel) {
+            if (channel === 'instagram') return '<i class="fab fa-instagram text-[10px] text-white"></i>';
+            if (channel === 'telegram') return '<i class="fab fa-telegram-plane text-[10px] text-white"></i>';
+            return '<i class="fab fa-whatsapp text-[10px] text-white"></i>';
+        },
+
+        channelDotClass(channel) {
+            if (channel === 'instagram') return 'bg-pink-500';
+            if (channel === 'telegram') return 'bg-blue-500';
+            return 'bg-green-500';
+        },
 
         get filteredContacts() {
             let list = this.contactsData.length ? this.contactsData : this.contacts;
@@ -122,6 +143,12 @@ document.addEventListener('alpine:init', () => {
                 this.contacts = this.contactsData;
             } else {
                 await this.loadContacts();
+            }
+            if (this.instagramAccountsData.length) {
+                this.accounts.instagram = this.instagramAccountsData;
+            }
+            if (this.telegramAccountsData.length) {
+                this.accounts.telegram = this.telegramAccountsData;
             }
             if (initialContactId) {
                 const c = this.contacts.find(x => x.id == initialContactId);
@@ -151,7 +178,14 @@ document.addEventListener('alpine:init', () => {
                 this.messages = data.messages || [];
                 this.sessions = data.sessions || [];
                 this.autoreplies = data.autoreplies || [];
-                if (this.sessions.length > 0) {
+                if (data.contact?.channel) {
+                    this.activeContact.channel = data.contact.channel;
+                }
+                if (data.accounts) {
+                    if (data.accounts.instagram) this.accounts.instagram = data.accounts.instagram;
+                    if (data.accounts.telegram) this.accounts.telegram = data.accounts.telegram;
+                }
+                if (this.isSessionChannel && this.sessions.length > 0) {
                     this.sessionId = this.sessions[0].session_id;
                     this.sessionName = this.sessions[0].name;
                 }
@@ -182,15 +216,18 @@ document.addEventListener('alpine:init', () => {
         },
 
         async sendMessage() {
-            if (!this.sessionId || !this.newMessage.trim() || this.sending) return;
+            if (!this.newMessage.trim() || this.sending) return;
+            if (this.isSessionChannel && !this.sessionId) return;
             this.sending = true;
             const text = this.newMessage.trim();
             this.newMessage = '';
             try {
+                const body = { message: text };
+                if (this.sessionId) body.session_id = this.sessionId;
                 const res = await fetch(`/chat/${this.activeContact.id}/send`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ message: text, session_id: this.sessionId }),
+                    body: JSON.stringify(body),
                 });
                 const data = await res.json();
                 if (data.ok) {

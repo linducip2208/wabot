@@ -4,10 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\WaContact;
 use App\Models\WaMessage;
+use App\Models\WaMetaAccount;
+use App\Models\WaInstagramAccount;
+use App\Models\WaTelegramAccount;
 use App\Models\WaSession;
 use App\Models\WaAutoreply;
 use App\Models\WaCampaign;
 use App\Services\BaileysService;
+use App\Services\InstagramService;
+use App\Services\TelegramService;
+use App\Services\MetaApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +22,9 @@ class ApiController extends Controller
 {
     public function __construct(
         protected BaileysService $baileys,
+        protected InstagramService $instagram,
+        protected TelegramService $telegram,
+        protected MetaApiService $metaApi,
     ) {}
 
     public function send(Request $request)
@@ -47,6 +56,7 @@ class ApiController extends Controller
                 'user_id' => Auth::id(),
                 'session_id' => $session->id,
                 'direction' => 'out',
+                'channel' => 'whatsapp',
                 'message' => $validated['message'],
                 'phone' => $validated['phone'],
                 'status' => 'sent',
@@ -178,6 +188,171 @@ class ApiController extends Controller
         ]);
     }
 
+    public function metaSend(Request $request)
+    {
+        $validated = $request->validate([
+            'account_id' => 'required|string',
+            'phone' => 'required|string',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $account = WaMetaAccount::where('user_id', Auth::id())
+            ->where('phone_number_id', $validated['account_id'])
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'Meta account not found or inactive'], 404);
+        }
+
+        $result = $this->metaApi->sendText($account, $validated['phone'], $validated['message']);
+
+        if (!empty($result['error'])) {
+            return response()->json(['ok' => false, 'error' => $result['error']], 422);
+        }
+
+        $session = WaSession::where('meta_account_id', $account->id)->first();
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'session_id' => $session?->id,
+            'direction' => 'out',
+            'type' => 'text',
+            'channel' => 'meta',
+            'message' => $validated['message'],
+            'phone' => $validated['phone'],
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function instagramSend(Request $request)
+    {
+        $validated = $request->validate([
+            'recipient_id' => 'required|string',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $account = WaInstagramAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'No active Instagram account'], 404);
+        }
+
+        $result = $this->instagram->sendDM(
+            $account->instagram_id,
+            $account->access_token,
+            $validated['message'],
+            $validated['recipient_id']
+        );
+
+        if (!empty($result['error'])) {
+            return response()->json(['ok' => false, 'error' => $result['error']], 422);
+        }
+
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => Auth::id(), 'phone' => 'ig:' . $validated['recipient_id']],
+            ['name' => 'IG: ' . $validated['recipient_id'], 'display_phone' => 'IG DM']
+        );
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'contact_id' => $contact->id,
+            'direction' => 'out',
+            'type' => 'instagram',
+            'channel' => 'instagram',
+            'message' => $validated['message'],
+            'phone' => 'ig:' . $validated['recipient_id'],
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function telegramSend(Request $request)
+    {
+        $validated = $request->validate([
+            'chat_id' => 'required|string',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $account = WaTelegramAccount::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->first();
+
+        if (!$account) {
+            return response()->json(['ok' => false, 'error' => 'No active Telegram account'], 404);
+        }
+
+        $result = $this->telegram->sendMessage($account, $validated['chat_id'], $validated['message']);
+
+        if (!($result['ok'] ?? false)) {
+            return response()->json(['ok' => false, 'error' => $result['description'] ?? 'Failed'], 422);
+        }
+
+        $senderId = 'tg:' . $validated['chat_id'];
+        $contact = WaContact::firstOrCreate(
+            ['user_id' => Auth::id(), 'phone' => $senderId],
+            ['name' => 'TG: ' . $validated['chat_id'], 'display_phone' => $senderId]
+        );
+
+        WaMessage::create([
+            'user_id' => Auth::id(),
+            'contact_id' => $contact->id,
+            'direction' => 'out',
+            'type' => 'telegram',
+            'channel' => 'telegram',
+            'message' => $validated['message'],
+            'phone' => $senderId,
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function channels()
+    {
+        $userId = Auth::id();
+
+        $baileys = WaSession::where('user_id', $userId)->get()->map(fn($s) => [
+            'type' => 'whatsapp',
+            'id' => $s->session_id,
+            'name' => $s->name,
+            'status' => $s->status,
+            'phone' => $s->phone,
+        ]);
+
+        $meta = WaMetaAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'meta',
+            'id' => $a->phone_number_id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+            'phone' => $a->phone_number,
+        ]);
+
+        $instagram = WaInstagramAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'instagram',
+            'id' => $a->instagram_id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+        ]);
+
+        $telegram = WaTelegramAccount::where('user_id', $userId)->get()->map(fn($a) => [
+            'type' => 'telegram',
+            'id' => $a->bot_id,
+            'name' => $a->name,
+            'status' => $a->is_active ? 'connected' : 'disconnected',
+            'username' => $a->bot_username,
+        ]);
+
+        return response()->json([
+            'data' => $baileys->concat($meta)->concat($instagram)->concat($telegram)->values(),
+        ]);
+    }
+
     public function webhookReceive(Request $request)
     {
         $data = $request->validate([
@@ -210,6 +385,7 @@ class ApiController extends Controller
             'session_id' => $session->id,
             'contact_id' => $contact->id,
             'direction' => 'in',
+            'channel' => 'whatsapp',
             'message' => $data['message'],
             'phone' => $normalizedPhone,
             'status' => 'delivered',
@@ -233,6 +409,7 @@ class ApiController extends Controller
                     'session_id' => $session->id,
                     'contact_id' => $contact->id,
                     'direction' => 'out',
+                    'channel' => 'whatsapp',
                     'message' => $autoReply->reply_message,
                     'phone' => $normalizedPhone,
                     'status' => 'sent',

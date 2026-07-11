@@ -17,6 +17,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('contacts', [ApiController::class, 'contacts']);
     Route::get('campaigns', [ApiController::class, 'campaigns']);
     Route::get('autoreplies', [ApiController::class, 'autoreplyRules']);
+
+    Route::post('meta/send', [ApiController::class, 'metaSend']);
+    Route::post('instagram/send', [ApiController::class, 'instagramSend']);
+    Route::post('telegram/send', [ApiController::class, 'telegramSend']);
+    Route::get('channels', [ApiController::class, 'channels']);
 });
 
 // Public webhook (no middleware, called by Node.js Baileys service)

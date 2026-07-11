@@ -3,8 +3,12 @@
 
 @section('chat_content')
 <div x-data="chatApp({{ $activeContact?->id ?? 'null' }}, {{ $activeContact?->phone ? "'{$activeContact->phone}'" : 'null' }})" class="flex h-full"
-    x-init="sessionsData = {{ json_encode($sessions->map(fn($s) => ['id' => $s->id, 'session_id' => $s->session_id, 'name' => $s->name, 'phone' => $s->phone])) }};
-    contactsData = {{ json_encode($contacts->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone, 'display_phone' => $c->display_phone, 'is_lid' => str_contains($c->phone, '@lid'), 'last_message' => $c->last_message, 'last_time' => $c->last_time?->format('H:i'), 'last_direction' => $c->last_direction, 'last_session_id' => $c->last_session_id])) }}">
+    x-init="sessionsData = {{ json_encode($sessions->map(fn($s) => ['id' => $s->id, 'session_id' => $s->session_id, 'name' => $s->name, 'phone' => $s->phone, 'channel' => $s->channel ?? 'whatsapp', 'meta_account_id' => $s->meta_account_id])) }};
+    contactsData = {{ json_encode($contacts->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone, 'display_phone' => $c->display_phone, 'is_lid' => str_contains($c->phone, '@lid'), 'last_message' => $c->last_message, 'last_time' => $c->last_time?->format('H:i'), 'last_direction' => $c->last_direction, 'last_session_id' => $c->last_session_id, 'channel' => $c->channel ?? 'whatsapp'])) }};
+    instagramAccountsData = {{ json_encode($instagramAccounts->map(fn($a) => ['id' => 'ig_'.$a->id, 'name' => $a->name])) }};
+    telegramAccountsData = {{ json_encode($telegramAccounts->map(fn($a) => ['id' => 'tg_'.$a->id, 'name' => $a->name])) }};
+    metaAccountsData = {{ json_encode($metaAccounts->map(fn($a) => ['id' => $a->id, 'name' => $a->name])) }};
+    ">
 
     {{-- Contact List Sidebar --}}
     <aside class="w-full md:w-80 lg:w-96 flex-shrink-0 bg-gray-900 flex flex-col border-r border-gray-800"
@@ -51,9 +55,13 @@
                     :class="activeContact && activeContact.id === c.id
                         ? 'bg-gray-800 border-brand-500'
                         : 'border-transparent hover:bg-gray-800/50'">
-                    <div class="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                    <div class="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm relative"
                         :style="'background-color: ' + avatarColor(c.name || c.phone)">
                         <span x-text="initials(c.name || c.phone)"></span>
+                        {{-- channel indicator --}}
+                        <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow"
+                            :class="channelDotClass(c.channel)"
+                            x-html="channelIcon(c.channel)"></span>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between">
@@ -62,7 +70,7 @@
                         </div>
                         <div class="flex items-center gap-1.5 mt-0.5">
                             <span class="text-[11px] text-gray-500" x-text="c.display_phone" x-show="c.display_phone"></span>
-                            <span @click.stop="openChat(c); $nextTick(() => showEditModal = true)" x-show="!c.display_phone && !c.is_lid" class="text-[11px] text-orange-400 cursor-pointer hover:underline">+ {{ __('chat.set_phone_number') }}</span>
+                            <span @click.stop="openChat(c); $nextTick(() => showEditModal = true)" x-show="!c.display_phone && !c.is_lid && c.channel !== 'instagram' && c.channel !== 'telegram'" class="text-[11px] text-orange-400 cursor-pointer hover:underline">+ {{ __('chat.set_phone_number') }}</span>
                         </div>
                         <div class="flex items-center gap-1.5">
                             <template x-if="c.last_direction === 'out'">
@@ -115,9 +123,12 @@
                     <button @click="activeContact = null" class="md:hidden p-1 rounded-lg hover:bg-gray-200 transition">
                         <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     </button>
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 relative"
                         :style="'background-color: ' + avatarColor(activeContact.name || activeContact.phone)">
                         <span x-text="initials(activeContact.name || activeContact.phone)"></span>
+                        <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center shadow"
+                            :class="channelDotClass(activeContact.channel)"
+                            x-html="channelIcon(activeContact.channel)"></span>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
@@ -127,10 +138,12 @@
                             </button>
                         </div>
                         <span class="text-xs text-gray-500" x-text="activeContact.display_phone" x-show="activeContact.display_phone"></span>
-                        <span x-show="!activeContact.display_phone && !activeContact.is_lid" @click="showEditModal = true" class="text-xs text-orange-500 cursor-pointer hover:underline">+ {{ __('chat.set_phone_number') }}</span>
+                        <span x-show="!activeContact.display_phone && !activeContact.is_lid && activeContact.channel !== 'instagram' && activeContact.channel !== 'telegram'" @click="showEditModal = true" class="text-xs text-orange-500 cursor-pointer hover:underline">+ {{ __('chat.set_phone_number') }}</span>
                         <div class="text-xs text-gray-500 flex items-center gap-2 flex-wrap">
-                            <span x-show="sessionId">{{ __('chat.online_via') }} <span x-text="sessionName"></span></span>
-                            <span x-show="!sessionId" class="text-red-500">{{ __('chat.no_session_connected') }}</span>
+                            <span x-show="sessionId && isSessionChannel">{{ __('chat.online_via') }} <span x-text="sessionName"></span></span>
+                            <span x-show="!sessionId && isSessionChannel" class="text-red-500">{{ __('chat.no_session_connected') }}</span>
+                            <span x-show="activeContact.channel === 'instagram'" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-pink-100 text-pink-700"><i class="fab fa-instagram"></i> Instagram</span>
+                            <span x-show="activeContact.channel === 'telegram'" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-blue-100 text-blue-700"><i class="fab fa-telegram-plane"></i> Telegram</span>
                             <template x-if="autoreplies.length > 0">
                                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-purple-100 text-purple-700">
                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-4 0H9v2h2V9z"/></svg>
@@ -139,7 +152,8 @@
                             </template>
                         </div>
                     </div>
-                    <select x-model="sessionId" class="text-xs border border-gray-300 rounded-lg py-1.5 px-2 bg-white text-gray-700 focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <select x-model="sessionId" class="text-xs border border-gray-300 rounded-lg py-1.5 px-2 bg-white text-gray-700 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        :class="!isSessionChannel ? 'hidden' : ''">
                         <option value="">{{ __('common.select') }} {{ __('common.session') }}</option>
                         <template x-for="s in sessions" :key="s.id">
                             <option :value="s.session_id" x-text="s.name"></option>
@@ -186,10 +200,10 @@
                         placeholder="{{ __('chat.type_message_placeholder') }}"
                         rows="1"
                         class="flex-1 resize-none bg-white rounded-xl py-2.5 px-4 text-sm border border-gray-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none placeholder-gray-400 max-h-32"
-                        :disabled="!sessionId || sending"
+                        :disabled="(isSessionChannel && !sessionId) || sending"
                         @input="$el.style.height = 'auto'; $el.style.height = Math.min($el.scrollHeight, 128) + 'px'"
                         style="min-height: 44px;"></textarea>
-                    <button @click="sendMessage()" :disabled="!sessionId || sending || !newMessage.trim()"
+                    <button @click="sendMessage()" :disabled="(isSessionChannel && !sessionId) || sending || !newMessage.trim()"
                         class="w-11 h-11 flex-shrink-0 bg-brand-500 hover:bg-brand-600 disabled:bg-gray-300 text-white rounded-full flex items-center justify-center transition">
                         <svg x-show="!sending" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>

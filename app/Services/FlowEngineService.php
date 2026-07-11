@@ -5,21 +5,76 @@ namespace App\Services;
 use App\Models\WaFlow;
 use App\Models\WaFlowNode;
 use App\Models\WaContact;
-use App\Models\WaSession;
+use App\Models\WaInstagramAccount;
+use App\Models\WaMetaAccount;
 use App\Models\WaMessage;
+use App\Models\WaSession;
+use App\Models\WaTelegramAccount;
 use Illuminate\Support\Facades\Log;
 
 class FlowEngineService
 {
     protected AiService $ai;
     protected BaileysService $baileys;
+    protected InstagramService $instagram;
+    protected TelegramService $telegram;
+    protected MetaApiService $metaApi;
     protected SpintaxService $spintax;
 
-    public function __construct(AiService $ai, BaileysService $baileys, SpintaxService $spintax)
-    {
+    public function __construct(
+        AiService $ai,
+        BaileysService $baileys,
+        InstagramService $instagram,
+        TelegramService $telegram,
+        MetaApiService $metaApi,
+        SpintaxService $spintax,
+    ) {
         $this->ai = $ai;
         $this->baileys = $baileys;
+        $this->instagram = $instagram;
+        $this->telegram = $telegram;
+        $this->metaApi = $metaApi;
         $this->spintax = $spintax;
+    }
+
+    protected function detectChannel(WaContact $contact): string
+    {
+        if (str_starts_with($contact->phone, 'ig:')) return 'instagram';
+        if (str_starts_with($contact->phone, 'tg:')) return 'telegram';
+        return 'baileys';
+    }
+
+    protected function sendViaChannel(WaSession $session, WaContact $contact, string $message): array
+    {
+        $channel = $this->detectChannel($contact);
+
+        switch ($channel) {
+            case 'instagram':
+                $account = WaInstagramAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if (!$account) return ['ok' => false, 'error' => 'No active Instagram account'];
+                $recipientId = str_replace('ig:', '', $contact->phone);
+                $result = $this->instagram->sendDM($account->instagram_id, $account->access_token, $message, $recipientId);
+                return ['ok' => empty($result['error']), 'error' => $result['error'] ?? null];
+
+            case 'telegram':
+                $account = WaTelegramAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if (!$account) return ['ok' => false, 'error' => 'No active Telegram account'];
+                $chatId = str_replace('tg:', '', $contact->phone);
+                $result = $this->telegram->sendMessage($account, $chatId, $message);
+                return ['ok' => $result['ok'] ?? false, 'error' => $result['description'] ?? null];
+
+            default:
+                if ($session->meta_account_id) {
+                    $metaAccount = WaMetaAccount::find($session->meta_account_id);
+                    if ($metaAccount && $metaAccount->is_active) {
+                        $result = $this->metaApi->sendText($metaAccount, $contact->phone, $message);
+                        return ['ok' => empty($result['error']), 'error' => $result['error'] ?? null];
+                    }
+                }
+                return $this->baileys->send($session->server, $session->session_id, $contact->phone, $message);
+        }
     }
 
     /**
@@ -70,7 +125,8 @@ class FlowEngineService
             'phone' => $contact->phone,
         ]);
 
-        $result = $this->baileys->send($session->server, $session->session_id, $contact->phone, $message);
+        $channel = $this->detectChannel($contact);
+        $result = $this->sendViaChannel($session, $contact, $message);
 
         if ($result['ok'] ?? false) {
             WaMessage::create([
@@ -78,6 +134,7 @@ class FlowEngineService
                 'session_id' => $session->id,
                 'contact_id' => $contact->id,
                 'direction' => 'out',
+                'channel' => $channel,
                 'message' => $message,
                 'phone' => $contact->phone,
                 'status' => 'sent',
@@ -92,12 +149,33 @@ class FlowEngineService
     {
         if (!$node->media_url) return $this->goNext($node, true);
 
-        // Send media with optional caption
         $caption = $this->spintax->process($node->reply_message ?: '', [
             'name' => $contact->name, 'phone' => $contact->phone,
         ]);
 
-        $this->baileys->sendMedia($session->server, $session->session_id, $contact->phone, $node->media_url, $caption);
+        $channel = $this->detectChannel($contact);
+
+        switch ($channel) {
+            case 'instagram':
+                $account = WaInstagramAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if ($account) {
+                    $recipientId = str_replace('ig:', '', $contact->phone);
+                    $this->instagram->sendImage($account->instagram_id, $account->access_token, $node->media_url, $recipientId);
+                }
+                break;
+            case 'telegram':
+                $account = WaTelegramAccount::where('user_id', $session->user_id)
+                    ->where('is_active', true)->first();
+                if ($account) {
+                    $chatId = str_replace('tg:', '', $contact->phone);
+                    $this->telegram->sendPhoto($account, $chatId, $node->media_url, $caption);
+                }
+                break;
+            default:
+                $this->baileys->sendMedia($session->server, $session->session_id, $contact->phone, $node->media_url, $caption);
+        }
+
         $this->goNext($node, true);
         return true;
     }
@@ -116,7 +194,8 @@ class FlowEngineService
         }
 
         $message = $bodyText . "\n\n" . implode("\n", $buttonList);
-        $result = $this->baileys->send($session->server, $session->session_id, $contact->phone, $message);
+        $channel = $this->detectChannel($contact);
+        $result = $this->sendViaChannel($session, $contact, $message);
 
         if ($result['ok'] ?? false) {
             WaMessage::create([
@@ -124,6 +203,7 @@ class FlowEngineService
                 'session_id' => $session->id,
                 'contact_id' => $contact->id,
                 'direction' => 'out',
+                'channel' => $channel,
                 'message' => $message,
                 'phone' => $contact->phone,
                 'status' => 'sent',
@@ -143,13 +223,15 @@ class FlowEngineService
         $reply = $aiService->send($node->aiKey, $context, $kb ?: null);
 
         if ($reply) {
-            $result = $this->baileys->send($session->server, $session->session_id, $contact->phone, $reply);
+            $channel = $this->detectChannel($contact);
+            $result = $this->sendViaChannel($session, $contact, $reply);
             if ($result['ok'] ?? false) {
                 WaMessage::create([
                     'user_id' => $session->user_id,
                     'session_id' => $session->id,
                     'contact_id' => $contact->id,
                     'direction' => 'out',
+                    'channel' => $channel,
                     'message' => $reply,
                     'phone' => $contact->phone,
                     'status' => 'sent',

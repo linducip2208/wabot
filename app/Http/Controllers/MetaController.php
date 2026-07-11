@@ -7,6 +7,7 @@ use App\Models\WaSession;
 use App\Services\MetaApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class MetaController extends Controller
 {
@@ -113,6 +114,19 @@ class MetaController extends Controller
                 'is_active' => true,
                 'last_active_at' => now(),
             ]);
+
+            if ($account->app_id && $account->app_secret && $account->webhook_verify_token) {
+                try {
+                    $this->meta->configureWebhook(
+                        $account->access_token,
+                        $account->app_id,
+                        route('webhook.meta', ['account' => $account->id]),
+                        $account->webhook_verify_token
+                    );
+                } catch (\Exception $e) {
+                    Log::warning('Meta webhook auto-config failed: ' . $e->getMessage());
+                }
+            }
 
             return back()->with('success', __('messages.success.meta_connected'));
         } catch (\Exception $e) {

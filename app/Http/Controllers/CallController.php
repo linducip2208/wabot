@@ -7,15 +7,18 @@ use App\Models\WaCallLog;
 use App\Models\WaContact;
 use App\Models\WaMetaAccount;
 use App\Services\ElevenLabsService;
+use App\Services\FfmpegService;
 use App\Services\MetaApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CallController extends Controller
 {
     public function __construct(
         protected MetaApiService $meta,
         protected ElevenLabsService $elevenlabs,
+        protected FfmpegService $ffmpeg,
     ) {}
 
     public function index()
@@ -149,13 +152,35 @@ class CallController extends Controller
 
             $message = __('messages.auto_reply.voice_call_prompt', ['name' => $broadcast->name]);
 
-            $result = $this->meta->sendText($account, $phone, $message);
+            $textResult = $this->meta->sendText($account, $phone, $message);
 
-            if (!empty($result['messages'])) {
+            if (!empty($textResult['messages'])) {
                 $sentCount++;
             } else {
                 $failedCount++;
-                $log->update(['status' => 'failed', 'notes' => $result['error']['message'] ?? 'Send failed']);
+                $log->update(['status' => 'failed', 'notes' => $textResult['error']['message'] ?? 'Send failed']);
+                usleep($broadcast->delay_seconds * 1000000);
+                continue;
+            }
+
+            if ($audioUrl) {
+                $localPath = storage_path("app/public/calls/" . basename($audioUrl));
+                $audioToSend = $audioUrl;
+
+                if ($this->ffmpeg->isAvailable() && str_ends_with($localPath, '.mp3')) {
+                    $oggPath = $this->ffmpeg->convertToOgg($localPath);
+                    if ($oggPath) {
+                        $oggFilename = basename($oggPath);
+                        $audioToSend = asset("storage/calls/{$oggFilename}");
+                        $log->update(['audio_url' => $audioToSend]);
+                    }
+                }
+
+                $audioResult = $this->meta->sendAudio($account, $phone, $audioToSend);
+
+                if (empty($audioResult['messages'])) {
+                    $log->update(['notes' => ($log->notes ? $log->notes . ' | ' : '') . 'Audio send: ' . ($audioResult['error']['message'] ?? 'failed')]);
+                }
             }
 
             usleep($broadcast->delay_seconds * 1000000);

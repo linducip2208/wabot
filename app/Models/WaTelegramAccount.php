@@ -26,4 +26,9 @@ class WaTelegramAccount extends Model
     {
         return "https://api.telegram.org/bot{$this->bot_token}";
     }
+
+    public function baseFileUrl(): string
+    {
+        return "https://api.telegram.org/file/bot{$this->bot_token}";
+    }
 }

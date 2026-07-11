@@ -90,9 +90,18 @@ class SentimentService
 
     protected function saveLog(int $userId, int $contactId, ?int $msgId, string $message, array $result): void
     {
+        $channel = 'unknown';
+        $contact = WaContact::find($contactId);
+        if ($contact) {
+            if (str_starts_with($contact->phone, 'ig:')) $channel = 'instagram';
+            elseif (str_starts_with($contact->phone, 'tg:')) $channel = 'telegram';
+            else $channel = 'whatsapp';
+        }
+
         WaSentimentLog::create([
             'user_id' => $userId,
             'contact_id' => $contactId,
+            'channel' => $channel,
             'message_id' => $msgId,
             'message_text' => mb_substr($message, 0, 500),
             'sentiment' => $result['sentiment'],

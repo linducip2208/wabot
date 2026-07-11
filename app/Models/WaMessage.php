@@ -9,7 +9,7 @@ class WaMessage extends Model
 {
     protected $fillable = [
         'user_id', 'session_id', 'contact_id', 'direction', 'type',
-        'message', 'phone', 'status', 'external_id',
+        'message', 'phone', 'status', 'external_id', 'channel', 'media_url',
     ];
 
     public function user(): BelongsTo

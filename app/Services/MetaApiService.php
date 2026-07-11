@@ -231,6 +231,12 @@ class MetaApiService
         ]);
     }
 
+    public function verifySignature(string $payload, string $signature, string $appSecret): bool
+    {
+        $expected = 'sha256=' . hash_hmac('sha256', $payload, $appSecret);
+        return hash_equals($expected, $signature);
+    }
+
     public function configureWebhook(string $accessToken, string $appId, string $callbackUrl, string $verifyToken): array
     {
         return $this->apiCall('POST', "/{$appId}/subscriptions", $accessToken, [

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class WaSentimentLog extends Model
 {
     protected $fillable = [
-        'user_id', 'contact_id', 'message_id', 'message_text',
+        'user_id', 'contact_id', 'channel', 'message_id', 'message_text',
         'sentiment', 'confidence', 'raw_response',
     ];
 
