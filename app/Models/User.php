@@ -223,7 +223,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(WaAiContentPlan::class);
     }
-}
 
     public function waSocialAccounts(): HasMany
     {
