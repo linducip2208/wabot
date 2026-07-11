@@ -93,9 +93,9 @@
                             </div>
                             <div class="flex items-center gap-1">
                                 <span :class="statusBadgeClass(appt.status)" class="text-[10px] px-2 py-0.5 rounded-full font-medium" x-text="appt.status"></span>
-                                <button @click="confirmAction('{{ route('appointments.confirm', '') }}/'+appt.id, 'POST')" x-show="appt.status === 'pending'" class="text-green-600 hover:text-green-800 p-1"><i class="fas fa-check text-xs"></i></button>
-                                <button @click="confirmAction('{{ route('appointments.complete', '') }}/'+appt.id, 'POST')" x-show="appt.status === 'confirmed'" class="text-blue-600 hover:text-blue-800 p-1"><i class="fas fa-check-double text-xs"></i></button>
-                                <button @click="confirmAction('{{ route('appointments.cancel', '') }}/'+appt.id, 'POST')" x-show="['pending','confirmed'].includes(appt.status)" class="text-red-400 hover:text-red-600 p-1"><i class="fas fa-times text-xs"></i></button>
+                                <button @click="confirmAction('/appointments/'+appt.id+'/confirm', 'POST')" x-show="appt.status === 'pending'" class="text-green-600 hover:text-green-800 p-1"><i class="fas fa-check text-xs"></i></button>
+                                <button @click="confirmAction('/appointments/'+appt.id+'/complete', 'POST')" x-show="appt.status === 'confirmed'" class="text-blue-600 hover:text-blue-800 p-1"><i class="fas fa-check-double text-xs"></i></button>
+                                <button @click="confirmAction('/appointments/'+appt.id+'/cancel', 'POST')" x-show="['pending','confirmed'].includes(appt.status)" class="text-red-400 hover:text-red-600 p-1"><i class="fas fa-times text-xs"></i></button>
                             </div>
                         </div>
                     </template>
