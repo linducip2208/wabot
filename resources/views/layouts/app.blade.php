@@ -72,7 +72,7 @@
         @php $langs = \App\Models\Language::active()->ordered()->get(); $cur = app()->getLocale(); @endphp
 
         {{-- OVERVIEW --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.overview') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -86,7 +86,7 @@
         </div>
 
         {{-- WHATSAPP --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>WhatsApp</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -97,7 +97,7 @@
         </div>
 
         {{-- APPOINTMENTS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.appointments') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -108,7 +108,7 @@
         </div>
 
         {{-- INBOX --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 open" x-data="{ open: true }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.inbox') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -134,7 +134,7 @@
         </div>
 
         {{-- MARKETING --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.marketing') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -163,7 +163,7 @@
         </div>
 
         {{-- AI STUDIO --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.ai_studio') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -183,7 +183,7 @@
         </div>
 
         {{-- AI AUTOMATION --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.ai_automation') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -206,7 +206,7 @@
         </div>
 
         {{-- COMMERCE --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.commerce') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -231,7 +231,7 @@
         </div>
 
         {{-- CRM --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.crm') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -251,7 +251,7 @@
         </div>
 
         {{-- SOCIAL MEDIA --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.social_media') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -277,7 +277,7 @@
         </div>
 
     {{-- CHANNELS --}}
-    <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+    <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
         <span>{{ __('sidebar.channels') }}</span>
         <i class="fas fa-chevron-right text-[9px] chevron"></i>
     </div>
@@ -329,7 +329,7 @@
         </div>
 
         {{-- TEAM --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.team') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -349,7 +349,7 @@
         </div>
 
         {{-- ANALYTICS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.analytics') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -369,7 +369,7 @@
         </div>
 
         {{-- INTEGRATIONS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.integrations') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -383,7 +383,7 @@
         </div>
 
         {{-- SETTINGS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.earn') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -397,7 +397,7 @@
         </div>
 
         {{-- SETTINGS --}}
-        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { setTimeout(() => $el.scrollIntoView({block: 'nearest', behavior: 'smooth'}), 100) }">
+        <div class="nav-group-header flex items-center justify-between px-3 py-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500" x-data="{ open: false }" @click="open = !open; $el.classList.toggle('open'); if(open) { let el = $el; setTimeout(() => { el.scrollIntoView({block: 'nearest', behavior: 'instant'}) }, 150) }">
             <span>{{ __('sidebar.settings') }}</span>
             <i class="fas fa-chevron-right text-[9px] chevron"></i>
         </div>
@@ -534,15 +534,30 @@
 @stack('scripts')
 <script>
 // Preserve sidebar scroll position
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
     var nav = document.querySelector('nav.overflow-y-auto');
     if (!nav) return;
+
+    // Scroll to active link
+    var active = nav.querySelector('.nav-link.active');
+    if (active) {
+        requestAnimationFrame(function() {
+            active.scrollIntoView({block: 'center', behavior: 'instant'});
+        });
+        return;
+    }
+
+    // Or restore last position
     var saved = sessionStorage.getItem('sidebar-scroll');
-    if (saved) nav.scrollTop = parseInt(saved);
+    if (saved) {
+        requestAnimationFrame(function() {
+            nav.scrollTop = parseInt(saved);
+        });
+    }
     nav.addEventListener('scroll', function() {
         sessionStorage.setItem('sidebar-scroll', nav.scrollTop);
     });
-});
+})();
 </script>
 </body>
 </html>
