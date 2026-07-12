@@ -4,7 +4,7 @@ const fs = require('fs');
 const BASE = 'http://127.0.0.1:8765';
 const EMAIL = 'admin@wabot.test';
 const PASSWORD = 'password';
-const OUT = 'public/docs/screens';
+const OUT = 'public/marketing/screens';
 
 if (!fs.existsSync(OUT)) fs.mkdirSync(OUT, { recursive: true });
 
