@@ -348,10 +348,30 @@ app.post('/sessions/restore-all', auth, async (req, res) => {
     res.json({ ok: true, restored, count: restored.length });
 });
 
+// Build Baileys message content (text or media)
+function buildContent(message, mediaUrl) {
+    if (!mediaUrl) return { text: message };
+    const ext = (mediaUrl.split('?')[0].split('.').pop() || '').toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+        return { image: { url: mediaUrl }, caption: message || undefined };
+    }
+    if (['mp4', 'mov', '3gp', 'mkv'].includes(ext)) {
+        return { video: { url: mediaUrl }, caption: message || undefined };
+    }
+    if (['mp3', 'ogg', 'opus', 'm4a', 'wav'].includes(ext)) {
+        return { audio: { url: mediaUrl }, mimetype: 'audio/mpeg' };
+    }
+    return {
+        document: { url: mediaUrl },
+        fileName: mediaUrl.split('/').pop().split('?')[0] || 'file',
+        caption: message || undefined,
+    };
+}
+
 // POST /sessions/:id/send
 app.post('/sessions/:id/send', auth, async (req, res) => {
-    const { phone, message } = req.body;
-    if (!phone || !message) return res.status(400).json({ ok: false, error: 'phone and message required' });
+    const { phone, message, media_url } = req.body;
+    if (!phone || (!message && !media_url)) return res.status(400).json({ ok: false, error: 'phone and message required' });
 
     const info = sessions[req.params.id];
     if (!info || info.status !== 'connected') {
@@ -360,7 +380,7 @@ app.post('/sessions/:id/send', auth, async (req, res) => {
 
     try {
         const jid = phone.includes('@s.whatsapp.net') ? phone : `${phone.replace(/[^0-9]/g, '')}@s.whatsapp.net`;
-        await info.sock.sendMessage(jid, { text: message });
+        await info.sock.sendMessage(jid, buildContent(message, media_url));
         res.json({ ok: true, phone, status: 'sent' });
     } catch (e) {
         res.json({ ok: false, error: e.message });

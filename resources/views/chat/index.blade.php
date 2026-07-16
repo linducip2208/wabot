@@ -196,6 +196,24 @@
 
                 {{-- Input Bar --}}
                 <div class="bg-[#f0f2f5] px-4 py-3 flex items-end gap-3 border-t border-gray-200">
+                    @if($templates->isNotEmpty())
+                    <div x-data="{ tplOpen: false }" class="relative flex-shrink-0">
+                        <button @click="tplOpen = !tplOpen" type="button" title="{{ __('chat.use_template') }}"
+                            class="w-11 h-11 bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 rounded-full flex items-center justify-center transition">
+                            <i class="far fa-file-alt"></i>
+                        </button>
+                        <div x-show="tplOpen" @click.outside="tplOpen = false" x-cloak
+                            class="absolute bottom-14 left-0 w-72 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto z-30">
+                            @foreach($templates as $tpl)
+                            <button type="button" @click="newMessage = {{ json_encode($tpl->message) }}; tplOpen = false"
+                                class="w-full text-left px-4 py-2.5 hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                                <div class="text-xs font-semibold text-gray-800">{{ $tpl->name }}</div>
+                                <div class="text-[11px] text-gray-500 truncate">{{ \Illuminate\Support\Str::limit($tpl->message, 60) }}</div>
+                            </button>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
                     <textarea x-model="newMessage" @keydown.enter.prevent="!$event.shiftKey && sendMessage()"
                         placeholder="{{ __('chat.type_message_placeholder') }}"
                         rows="1"

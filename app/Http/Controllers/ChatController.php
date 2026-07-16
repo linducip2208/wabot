@@ -130,12 +130,14 @@ class ChatController extends Controller
             $socketApiKey = $firstSession->server->api_key;
         }
 
+        $templates = \App\Models\WaMessageTemplate::where('user_id', $userId)->orderBy('name')->get();
+
         return view('chat.index', compact(
             'contacts', 'sessions', 'activeContact', 'messages',
             'instagramAccounts', 'telegramAccounts', 'metaAccounts',
             'gbmAccounts', 'discordAccounts', 'facebookAccounts',
             'tiktokAccounts', 'lineAccounts', 'twitterAccounts',
-            'socketServerUrl', 'socketApiKey'
+            'socketServerUrl', 'socketApiKey', 'templates'
         ));
     }
 

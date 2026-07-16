@@ -283,7 +283,26 @@ class InstanceManager {
         } catch (e) { /* ignore */ }
     }
 
-    async send(sessionId, to, message) {
+    buildContent(message, mediaUrl) {
+        if (!mediaUrl) return { text: message };
+        const ext = (mediaUrl.split('?')[0].split('.').pop() || '').toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+            return { image: { url: mediaUrl }, caption: message || undefined };
+        }
+        if (['mp4', 'mov', '3gp', 'mkv'].includes(ext)) {
+            return { video: { url: mediaUrl }, caption: message || undefined };
+        }
+        if (['mp3', 'ogg', 'opus', 'm4a', 'wav'].includes(ext)) {
+            return { audio: { url: mediaUrl }, mimetype: 'audio/mpeg' };
+        }
+        return {
+            document: { url: mediaUrl },
+            fileName: mediaUrl.split('/').pop().split('?')[0] || 'file',
+            caption: message || undefined,
+        };
+    }
+
+    async send(sessionId, to, message, mediaUrl = null) {
         const instanceData = this.instances.get(sessionId);
         if (!instanceData?.sock || instanceData.status.status !== 'connected') {
             return { ok: false, error: 'Session not connected' };
@@ -306,7 +325,7 @@ class InstanceManager {
                     }
                 }
             }
-            const result = await instanceData.sock.sendMessage(jid, { text: message });
+            const result = await instanceData.sock.sendMessage(jid, this.buildContent(message, mediaUrl));
             return { ok: true, messageId: result?.key?.id };
         } catch (e) {
             console.error(`[${sessionId}] send error:`, e.message);

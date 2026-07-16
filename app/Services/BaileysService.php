@@ -100,21 +100,27 @@ class BaileysService
         }
     }
 
-    public function send(WaServer $server, string $sessionId, string $phone, string $message): array
+    public function send(WaServer $server, string $sessionId, string $phone, string $message, ?string $mediaUrl = null): array
     {
         try {
             $res = $this->http->post($server->baseUrl() . "/sessions/{$sessionId}/send", [
                 'headers' => $this->headers($server),
-                'json' => [
+                'json' => array_filter([
                     'phone' => $phone,
                     'message' => $message,
-                ],
+                    'media_url' => $mediaUrl,
+                ], fn($v) => $v !== null),
             ]);
             return json_decode($res->getBody()->getContents(), true) ?? ['ok' => false, 'error' => 'Unknown error'];
         } catch (GuzzleException $e) {
             Log::error("BaileysService::send failed: {$e->getMessage()}");
             return ['ok' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    public function sendMedia(WaServer $server, string $sessionId, string $phone, string $mediaUrl, string $caption = ''): array
+    {
+        return $this->send($server, $sessionId, $phone, $caption, $mediaUrl);
     }
 
     public function sendBulk(WaServer $server, string $sessionId, array $recipients, string $message): array

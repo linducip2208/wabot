@@ -11,10 +11,14 @@ class ContactController extends Controller
     public function index()
     {
         $contacts = WaContact::where('user_id', Auth::id())
+            ->with('groups')
             ->latest()
             ->paginate(25);
 
-        return view('contacts.index', compact('contacts'));
+        $groups = \App\Models\ContactGroup::where('user_id', Auth::id())
+            ->orderBy('name')->get();
+
+        return view('contacts.index', compact('contacts', 'groups'));
     }
 
     public function store(Request $request)

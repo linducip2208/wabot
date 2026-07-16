@@ -53,11 +53,11 @@ app.post('/sessions/restore-all', auth, async (req, res) => {
 });
 
 app.post('/sessions/:id/send', auth, async (req, res) => {
-    const { phone, message } = req.body;
-    if (!phone || !message) {
+    const { phone, message, media_url } = req.body;
+    if (!phone || (!message && !media_url)) {
         return res.status(400).json({ error: 'phone and message are required' });
     }
-    const result = await instanceManager.send(req.params.id, phone, message);
+    const result = await instanceManager.send(req.params.id, phone, message, media_url || null);
     res.json(result);
 });
 

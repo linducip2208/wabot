@@ -34,7 +34,7 @@
             <tr class="hover:bg-gray-50/50">
                 <td class="px-5 py-3 font-medium">{{ $e->contact->name ?? 'N/A' }}</td>
                 <td class="px-5 py-3 text-gray-500 hidden md:table-cell truncate max-w-[300px]">{{ $e->link_url }}</td>
-                <td class="px-5 py-3 text-gray-500">{{ $e->clicked_at->format('d M Y H:i') }}</td>
+                <td class="px-5 py-3 text-gray-500">{{ $e->clicked_at?->format('d M Y H:i') ?? '—' }}</td>
             </tr>
             @empty
             <tr><td colspan="3" class="px-5 py-16 text-center text-gray-500">{{ __('clicktrack.empty') }}</td></tr>

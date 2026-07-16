@@ -18,6 +18,7 @@ class CampaignSenderService
         protected DiscordService $discord,
         protected TwilioService $twilio,
         protected SendGridService $sendgrid,
+        protected ClickTrackerService $clickTracker,
     ) {}
 
     public function send(WaCampaign $campaign, Collection $recipients): void
@@ -31,9 +32,11 @@ class CampaignSenderService
 
         $phones = $recipients->pluck('phone')->toArray();
         $variables = [];
+        $contactIds = [];
         foreach ($recipients as $r) {
             $phone = preg_replace('/@.*$/', '', $r->phone);
             $variables[$r->phone] = ['name' => $r->name, 'phone' => $phone];
+            $contactIds[$r->phone] = $r->id;
         }
 
         $sent = $campaign->sent_count ?? 0;
@@ -53,6 +56,12 @@ class CampaignSenderService
                 $msg = $this->spintax->process($msg, $variables[$phone] ?? []);
             }
 
+            if (preg_match('/https?:\/\//i', $msg)) {
+                $msg = $this->clickTracker->wrapMessage(
+                    $msg, $campaign->user_id, $campaign->id, $contactIds[$phone] ?? null
+                );
+            }
+
             $to = preg_replace('/@.*$/', '', $phone);
 
             $result = match ($channel) {
@@ -67,7 +76,7 @@ class CampaignSenderService
                 'twitter' => $this->sendTwitterMessage($campaign->twitterAccount, $to, $msg),
                 'sms' => $this->sendSmsMessage($campaign->twilioAccount, $to, $msg),
                 'email' => $this->sendEmailMessage($campaign->sendgridAccount, $to, $msg),
-                default => $this->sendBaileysMessage($campaign->session, $to, $msg),
+                default => $this->sendBaileysMessage($campaign->session, $to, $msg, $campaign->media_url),
             };
 
             if ($result) {
@@ -120,9 +129,9 @@ class CampaignSenderService
         };
     }
 
-    protected function sendBaileysMessage($session, string $to, string $message): bool
+    protected function sendBaileysMessage($session, string $to, string $message, ?string $mediaUrl = null): bool
     {
-        $result = $this->baileys->send($session->server, $session->session_id, $to, $message);
+        $result = $this->baileys->send($session->server, $session->session_id, $to, $message, $mediaUrl);
         return $result['ok'] ?? false;
     }
 

@@ -207,18 +207,37 @@
                 <button type="button" @click="deselectAll()" class="text-[11px] text-gray-500 hover:underline">{{ __('common.delete') }}</button>
             </div>
 
+            {{-- Filter: search + group + tag --}}
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+                <input type="text" x-model="search" placeholder="{{ __('campaigns.search_contact') }}" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                <select x-model="filterGroup" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">{{ __('campaigns.filter_all_groups') }}</option>
+                    @foreach($groups as $g)
+                        <option value="{{ $g->id }}">{{ $g->name }} ({{ $g->contacts_count }})</option>
+                    @endforeach
+                </select>
+                <select x-model="filterTag" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">{{ __('campaigns.filter_all_tags') }}</option>
+                    @foreach($tags as $t)
+                        <option value="{{ $t->id }}">{{ $t->name }} ({{ $t->contacts_count }})</option>
+                    @endforeach
+                </select>
+            </div>
+
             <div class="border border-gray-200 rounded-xl max-h-48 overflow-y-auto divide-y divide-gray-100 mb-4">
-                @forelse($contacts as $c)
-                <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition">
-                    <input type="checkbox" name="recipient_ids[]" value="{{ $c->id }}" x-model="selectedIds" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-gray-900">{{ $c->name !== $c->phone ? $c->name : preg_replace('/@.*$/', '', $c->phone) }}</div>
-                        <div class="text-xs text-gray-500">{{ preg_replace('/@.*$/', '', $c->phone) }}</div>
-                    </div>
-                </label>
-                @empty
+                <template x-for="c in filteredContacts" :key="c.id">
+                    <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition">
+                        <input type="checkbox" name="recipient_ids[]" :value="String(c.id)" x-model="selectedIds" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-gray-900" x-text="c.name"></div>
+                            <div class="text-xs text-gray-500" x-text="c.phone"></div>
+                        </div>
+                    </label>
+                </template>
+                <p x-show="filteredContacts.length === 0 && contactsData.length > 0" class="px-4 py-8 text-center text-sm text-gray-500">{{ __('campaigns.no_filter_match') }}</p>
+                @if($contacts->isEmpty())
                 <p class="px-4 py-8 text-center text-sm text-gray-500">{{ __('campaigns.empty_title') }}. <a href="{{ route('contacts.index') }}" class="text-brand-600 hover:underline">{{ __('common.create') }} {{ __('common.contact') }}</a></p>
-                @endforelse
+                @endif
             </div>
 
             <div class="border-t border-gray-100 pt-4">
@@ -237,6 +256,18 @@
         <div x-show="current === 1" class="p-6">
             <h2 class="text-lg font-bold text-gray-900 mb-1">{{ __('campaigns.write_message') }}</h2>
             <p class="text-sm text-gray-500 mb-5">{{ __('campaigns.spintax_hint') }}</p>
+
+            @if($templates->isNotEmpty())
+            <div class="mb-4">
+                <label class="text-xs font-medium text-gray-500">{{ __('campaigns.use_template') }}</label>
+                <select @change="if ($event.target.value !== '') { messageText = JSON.parse($event.target.value); $event.target.selectedIndex = 0 }" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">{{ __('campaigns.select_template') }}</option>
+                    @foreach($templates as $tpl)
+                        <option value="{{ json_encode($tpl->message) }}">{{ $tpl->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
 
             <div class="mb-4">
                 <label class="text-xs font-medium text-gray-500">{{ __('common.message') }} <span class="text-gray-400">({'{Halo|Hai|Pagi}'} = spintax, {'{name}'}, {'{phone}'})</span></label>
@@ -311,6 +342,16 @@ document.addEventListener('alpine:init', () => {
         current: 0,
         steps: ['{{ __('campaigns.step_audience') }}', '{{ __('common.message') }}', '{{ __('common.send') }}'],
         selectedIds: [],
+        contactsData: {!! $contacts->map(fn($c) => [
+            'id' => (string) $c->id,
+            'name' => $c->name !== $c->phone ? $c->name : preg_replace('/@.*$/', '', $c->phone),
+            'phone' => preg_replace('/@.*$/', '', $c->phone),
+            'groups' => $c->groups->pluck('id')->map(fn($i) => (string) $i)->values(),
+            'tags' => $c->contactTags->pluck('id')->map(fn($i) => (string) $i)->values(),
+        ])->values()->toJson() !!},
+        search: '',
+        filterGroup: '',
+        filterTag: '',
         manualNumbers: '',
         manualTab: false,
         messageText: '',
@@ -335,7 +376,20 @@ document.addEventListener('alpine:init', () => {
         get totalContacts() { return {{ $contacts->count() }}; },
         get selectedCount() { return this.selectedIds.length + this.parseManualCount(); },
 
-        selectAll() { this.selectedIds = Array.from(document.querySelectorAll('input[name="recipient_ids[]"]')).map(el => el.value); },
+        get filteredContacts() {
+            const q = this.search.trim().toLowerCase();
+            return this.contactsData.filter(c => {
+                if (this.filterGroup && !c.groups.includes(this.filterGroup)) return false;
+                if (this.filterTag && !c.tags.includes(this.filterTag)) return false;
+                if (q && !c.name.toLowerCase().includes(q) && !c.phone.includes(q)) return false;
+                return true;
+            });
+        },
+
+        selectAll() {
+            const ids = this.filteredContacts.map(c => c.id);
+            this.selectedIds = [...new Set([...this.selectedIds, ...ids])];
+        },
         deselectAll() { this.selectedIds = []; },
 
         parseManualCount() {

@@ -30,7 +30,18 @@ class CampaignController extends Controller
             ->where('is_active', true)
             ->get();
 
-        $contacts = WaContact::where('user_id', Auth::id())->get();
+        $contacts = WaContact::where('user_id', Auth::id())
+            ->with(['groups:contact_groups.id', 'contactTags:wa_contact_tags.id'])
+            ->get();
+
+        $groups = \App\Models\ContactGroup::where('user_id', Auth::id())
+            ->withCount('contacts')->orderBy('name')->get();
+
+        $tags = \App\Models\WaContactTag::where('user_id', Auth::id())
+            ->withCount('contacts')->orderBy('name')->get();
+
+        $templates = \App\Models\WaMessageTemplate::where('user_id', Auth::id())
+            ->orderBy('name')->get();
 
         $metaAccounts = WaMetaAccount::where('user_id', Auth::id())
             ->where('is_active', true)
@@ -60,7 +71,7 @@ class CampaignController extends Controller
             ->where('is_active', true)->get();
 
         return view('campaigns.create', compact(
-            'sessions', 'contacts', 'metaAccounts', 'telegramAccounts',
+            'sessions', 'contacts', 'groups', 'tags', 'templates', 'metaAccounts', 'telegramAccounts',
             'instagramAccounts', 'facebookAccounts', 'gbmAccounts', 'discordAccounts',
             'tiktokAccounts', 'lineAccounts', 'twitterAccounts', 'twilioAccounts', 'sendgridAccounts'
         ));

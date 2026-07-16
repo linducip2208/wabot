@@ -70,11 +70,15 @@ class DripCampaignController extends Controller
             'send_to_new_only' => 'boolean',
         ]);
 
+        $wasActive = $dripCampaign->is_active;
+        $nowActive = $request->boolean('is_active', false);
+
         $dripCampaign->update([
             'name' => $validated['name'],
             'session_id' => $validated['session_id'],
-            'is_active' => $request->boolean('is_active', false),
+            'is_active' => $nowActive,
             'send_to_new_only' => $request->boolean('send_to_new_only', true),
+            'activated_at' => (!$wasActive && $nowActive) ? now() : $dripCampaign->activated_at,
         ]);
 
         return back()->with('success', __('messages.success.drip_updated'));
