@@ -42,7 +42,7 @@
                             ][$channelLabel] ?? 'WhatsApp';
                         @endphp
                         <span class="text-[10px] px-1.5 py-0.5 rounded-full font-medium {{ $channelBadge }}">{{ $channelName }}</span>
-                        · {{ $c->session?->name ?? $c->metaAccount?->name ?? $c->telegramAccount?->name ?? '-' }} · {{ $c->delay_seconds ?? 3 }}s delay</div>
+                        · {{ $c->session?->name ?? $c->metaAccount?->name ?? $c->telegramAccount?->name ?? '-' }} · {{ $c->delay_min_seconds ?? $c->delay_seconds ?? 300 }}–{{ $c->delay_max_seconds ?? 400 }}s interval</div>
                 </div>
             </div>
             <span class="text-[11px] font-medium px-2 py-0.5 rounded-full

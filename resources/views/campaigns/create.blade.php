@@ -243,16 +243,21 @@
                 <textarea name="message" x-model="messageText" rows="5" required placeholder="Halo {'{name}'}! {'{Kami ada promo spesial|Jangan lewatkan diskon 50%|Ada penawaran menarik untuk Anda}'}" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"></textarea>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-2 gap-4 mb-2">
                 <div>
-                    <label class="text-xs font-medium text-gray-500">{{ __('campaigns.delay_between') }}</label>
-                    <input type="number" name="delay_seconds" x-model="delaySeconds" min="1" max="60" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                    <p class="text-[10px] text-gray-400 mt-0.5">{{ __('campaigns.delay_recommendation') }}</p>
+                    <label class="text-xs font-medium text-gray-500">{{ __('campaigns.interval_min') }}</label>
+                    <input type="number" name="delay_min_seconds" x-model="delayMin" min="1" max="3600" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
                 <div>
-                    <label class="text-xs font-medium text-gray-500">{{ __('campaigns.media_url_optional') }}</label>
-                    <input type="url" name="media_url" placeholder="https://example.com/image.jpg" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <label class="text-xs font-medium text-gray-500">{{ __('campaigns.interval_max') }}</label>
+                    <input type="number" name="delay_max_seconds" x-model="delayMax" min="1" max="3600" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                 </div>
+            </div>
+            <p class="text-[10px] text-gray-400 mb-4">{{ __('campaigns.delay_recommendation') }}</p>
+
+            <div class="mb-4">
+                <label class="text-xs font-medium text-gray-500">{{ __('campaigns.media_url_optional') }}</label>
+                <input type="url" name="media_url" placeholder="https://example.com/image.jpg" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
 
             {{-- Live Preview --}}
@@ -271,7 +276,7 @@
             <div class="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
                 <div class="flex justify-between"><span class="text-gray-500">{{ __('campaigns.campaign') }}</span><span class="font-medium" x-text="campaignName || '-'"></span></div>
                 <div class="flex justify-between"><span class="text-gray-500">{{ __('common.receiver') }}</span><span class="font-medium" x-text="selectedCount + ' {{ __('common.contact') }}'"></span></div>
-                <div class="flex justify-between"><span class="text-gray-500">{{ __('campaigns.delay') }}</span><span class="font-medium" x-text="delaySeconds + ' {{ __('common.second') }}'"></span></div>
+                <div class="flex justify-between"><span class="text-gray-500">{{ __('campaigns.delay') }}</span><span class="font-medium" x-text="delayMin + '–' + delayMax + ' {{ __('common.second') }}'"></span></div>
                 <div class="flex justify-between"><span class="text-gray-500">{{ __('campaigns.estimated') }} {{ __('common.completed') }}</span><span class="font-medium" x-text="estimateFinish()"></span></div>
                 <div class="border-t border-gray-200 pt-3 mt-3">
                     <div class="text-xs text-gray-500 mb-1">{{ __('common.message') }}:</div>
@@ -309,7 +314,8 @@ document.addEventListener('alpine:init', () => {
         manualNumbers: '',
         manualTab: false,
         messageText: '',
-        delaySeconds: 3,
+        delayMin: 300,
+        delayMax: 400,
         channel: 'whatsapp',
         sessionId: '',
         metaAccountId: '',
@@ -411,8 +417,10 @@ document.addEventListener('alpine:init', () => {
 
         estimateFinish() {
             const msgs = this.selectedCount;
-            const delay = parseInt(this.delaySeconds) || 3;
-            const totalSeconds = msgs * (delay + 0.5);
+            const min = parseInt(this.delayMin) || 300;
+            const max = parseInt(this.delayMax) || 400;
+            const avg = (min + Math.max(min, max)) / 2;
+            const totalSeconds = Math.max(0, msgs - 1) * avg;
             const mins = Math.ceil(totalSeconds / 60);
             if (mins < 1) return '{{ __('campaigns.less_than_minute') }}';
             if (mins < 60) return '{{ __('campaigns.est_minutes', ['mins' => '__MINS__']) }}'.replace('__MINS__', mins);

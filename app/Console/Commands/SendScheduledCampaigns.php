@@ -2,21 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\SendCampaignJob;
 use App\Models\WaCampaign;
-use App\Models\WaContact;
-use App\Services\BaileysService;
 use Illuminate\Console\Command;
 
 class SendScheduledCampaigns extends Command
 {
     protected $signature = 'wabot:send-scheduled';
     protected $description = 'Send scheduled campaigns that are due';
-
-    public function __construct(
-        protected BaileysService $baileys,
-    ) {
-        parent::__construct();
-    }
 
     public function handle()
     {
@@ -27,29 +20,18 @@ class SendScheduledCampaigns extends Command
             ->get();
 
         foreach ($campaigns as $campaign) {
-            $session = $campaign->session;
-            if (!$session || !$session->server || $session->status !== 'connected') {
-                $campaign->update(['status' => 'failed']);
-                continue;
+            if (($campaign->channel ?? 'whatsapp') === 'whatsapp') {
+                $session = $campaign->session;
+                if (!$session || !$session->server || $session->status !== 'connected') {
+                    $campaign->update(['status' => 'failed']);
+                    continue;
+                }
             }
 
-            $recipients = WaContact::whereIn('id', $campaign->recipient_ids ?? [])
-                ->pluck('phone')->toArray();
-
             $campaign->update(['status' => 'sending']);
+            SendCampaignJob::dispatch($campaign->id);
 
-            $result = $this->baileys->sendBulk(
-                $session->server, $session->session_id,
-                $recipients, $campaign->message
-            );
-
-            $campaign->update([
-                'status' => 'sent',
-                'sent_count' => $result['sent'] ?? 0,
-                'failed_count' => $result['failed'] ?? 0,
-            ]);
-
-            $this->info("Sent campaign #{$campaign->id}: {$result['sent']}/{$campaign->total_recipients}");
+            $this->info("Dispatched campaign #{$campaign->id} ({$campaign->total_recipients} recipients)");
         }
 
         $this->info("Processed {$campaigns->count()} scheduled campaigns.");

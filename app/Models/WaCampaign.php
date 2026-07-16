@@ -12,7 +12,7 @@ class WaCampaign extends Model
         'instagram_account_id', 'facebook_account_id', 'gbm_account_id', 'discord_account_id',
         'tiktok_account_id', 'line_account_id', 'twitter_account_id',
         'twilio_account_id', 'sendgrid_account_id',
-        'name', 'message', 'delay_seconds', 'media_url', 'message_type',
+        'name', 'message', 'delay_seconds', 'delay_min_seconds', 'delay_max_seconds', 'media_url', 'message_type',
         'recipient_ids', 'status', 'total_recipients', 'sent_count', 'failed_count',
         'scheduled_at',
     ];
