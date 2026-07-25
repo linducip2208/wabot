@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\WaCampaign;
+use App\Models\WaMessage;
 use Illuminate\Support\Collection;
 
 class CampaignSenderService
@@ -74,6 +75,7 @@ class CampaignSenderService
 
             $to = preg_replace('/@.*$/', '', $phone);
 
+            $activeSession = null;
             $result = match ($channel) {
                 'meta' => $this->sendMetaMessage($campaign->metaAccount, $to, $msg),
                 'telegram' => $this->sendTelegramMessage($campaign->telegramAccount, $to, $msg),
@@ -86,8 +88,22 @@ class CampaignSenderService
                 'twitter' => $this->sendTwitterMessage($campaign->twitterAccount, $to, $msg),
                 'sms' => $this->sendSmsMessage($campaign->twilioAccount, $to, $msg),
                 'email' => $this->sendEmailMessage($campaign->sendgridAccount, $to, $msg),
-                default => $this->sendBaileysMessage($this->pickSession($campaign, $sessions, $i), $to, $msg, $campaign->effectiveMediaUrl),
+                default => (function () use ($campaign, $sessions, $i, $to, $msg, &$activeSession) {
+                    $activeSession = $this->pickSession($campaign, $sessions, $i);
+                    return $this->sendBaileysMessage($activeSession, $to, $msg, $campaign->effectiveMediaUrl);
+                })(),
             };
+
+            WaMessage::create([
+                'user_id' => $campaign->user_id,
+                'session_id' => $activeSession?->id ?? $campaign->session_id,
+                'contact_id' => $contactIds[$phone] ?? null,
+                'direction' => 'out',
+                'channel' => $channel,
+                'message' => $msg,
+                'phone' => $to,
+                'status' => $result ? 'sent' : 'failed',
+            ]);
 
             if ($result) {
                 $sent++;
