@@ -89,13 +89,19 @@ class CampaignController extends Controller
             'delay_min_seconds' => 'nullable|integer|min:1|max:3600',
             'delay_max_seconds' => 'nullable|integer|min:1|max:3600|gte:delay_min_seconds',
             'media_url' => 'nullable|url|max:1000',
+            'media_file' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar|max:51200',
             'recipient_ids' => 'nullable|array|max:' . $maxRecipients,
             'recipient_ids.*' => 'exists:wa_contacts,id',
+            'group_ids' => 'nullable|array',
+            'group_ids.*' => 'exists:contact_groups,id',
+            'recipients_file' => 'nullable|file|mimes:csv,txt,xlsx|max:10240',
             'manual_numbers' => 'nullable|string',
             'scheduled_at' => 'nullable|date',
+            'session_strategy' => 'nullable|in:round_robin,random',
         ];
 
-        $rules['session_id'] = 'required_if:channel,whatsapp|nullable|exists:wa_sessions,id';
+        $rules['session_ids'] = 'required_if:channel,whatsapp|nullable|array';
+        $rules['session_ids.*'] = 'exists:wa_sessions,id';
         $rules['meta_account_id'] = 'required_if:channel,meta|nullable|exists:wa_meta_accounts,id';
         $rules['telegram_account_id'] = 'required_if:channel,telegram|nullable|exists:wa_telegram_accounts,id';
         $rules['instagram_account_id'] = 'required_if:channel,instagram|nullable|exists:wa_instagram_accounts,id';
@@ -110,7 +116,26 @@ class CampaignController extends Controller
 
         $validated = $request->validate($rules);
 
-        if (empty($validated['recipient_ids']) && empty(trim($validated['manual_numbers'] ?? ''))) {
+        $mediaFile = null;
+        if ($request->hasFile('media_file')) {
+            $mediaFile = $request->file('media_file')->store('campaign-media', 'public');
+        }
+
+        $sessionIds = [];
+        if ($validated['channel'] === 'whatsapp') {
+            $sessionIds = WaSession::where('user_id', Auth::id())
+                ->whereIn('id', $validated['session_ids'] ?? [])
+                ->pluck('id')->map(fn ($i) => (int) $i)->values()->all();
+
+            if (empty($sessionIds)) {
+                return back()->with('error', __('messages.error.select_session'))->withInput();
+            }
+        }
+
+        if (empty($validated['recipient_ids'])
+            && empty($validated['group_ids'])
+            && !$request->hasFile('recipients_file')
+            && empty(trim($validated['manual_numbers'] ?? ''))) {
             return back()->with('error', __('messages.error.select_contact_or_number'))->withInput();
         }
 
@@ -122,7 +147,50 @@ class CampaignController extends Controller
                 ->get();
         }
 
-        $manualPhones = [];
+        $groupIds = [];
+        if (!empty($validated['group_ids'])) {
+            $groups = \App\Models\ContactGroup::where('user_id', Auth::id())
+                ->whereIn('id', $validated['group_ids'])
+                ->with('contacts')
+                ->get();
+
+            $groupIds = $groups->pluck('id')->map(fn ($i) => (int) $i)->values()->all();
+
+            foreach ($groups as $group) {
+                $recipients = $recipients->merge($group->contacts);
+            }
+        }
+
+        if ($request->hasFile('recipients_file')) {
+            $rows = app(\App\Services\SpreadsheetImportService::class)->parse($request->file('recipients_file'));
+
+            foreach ($rows as $index => $row) {
+                if (empty($row) || count(array_filter($row)) === 0) continue;
+
+                $first = trim((string) ($row[0] ?? ''));
+                $second = trim((string) ($row[1] ?? ''));
+
+                if ($index === 0 && !preg_match('/[0-9]{6,}/', $first . $second)) continue; // skip header
+
+                if ($second !== '' && preg_match('/[0-9]{6,}/', $second)) {
+                    $name = $first !== '' ? $first : $second;
+                    $phone = $second;
+                } else {
+                    $name = $first;
+                    $phone = $first;
+                }
+
+                $phone = preg_replace('/[^0-9]/', '', $phone);
+                if (strlen($phone) < 6) continue;
+
+                $contact = WaContact::firstOrCreate(
+                    ['user_id' => Auth::id(), 'phone' => $phone],
+                    ['name' => $name !== '' ? $name : $phone]
+                );
+                $recipients->push($contact);
+            }
+        }
+
         if (!empty($validated['manual_numbers'])) {
             $lines = explode("\n", trim($validated['manual_numbers']));
             foreach ($lines as $line) {
@@ -142,16 +210,26 @@ class CampaignController extends Controller
                     ['name' => $name]
                 );
                 $recipients->push($contact);
-                $manualPhones[] = (string) $contact->id;
             }
         }
 
-        $allRecipientIds = array_merge($validated['recipient_ids'] ?? [], $manualPhones);
+        $allRecipientIds = $recipients->unique('id')->pluck('id')
+            ->map(fn ($i) => (string) $i)->values()->all();
+
+        if (empty($allRecipientIds)) {
+            return back()->with('error', __('messages.error.select_contact_or_number'))->withInput();
+        }
+
+        if (count($allRecipientIds) > $maxRecipients) {
+            return back()->with('error', __('messages.error.max_recipients_exceeded', ['max' => $maxRecipients]))->withInput();
+        }
 
         $campaign = WaCampaign::create([
             'user_id' => Auth::id(),
             'channel' => $validated['channel'],
-            'session_id' => $validated['session_id'] ?? null,
+            'session_id' => $sessionIds[0] ?? null,
+            'session_ids' => $sessionIds ?: null,
+            'session_strategy' => $validated['session_strategy'] ?? 'round_robin',
             'meta_account_id' => $validated['meta_account_id'] ?? null,
             'telegram_account_id' => $validated['telegram_account_id'] ?? null,
             'instagram_account_id' => $validated['instagram_account_id'] ?? null,
@@ -169,7 +247,9 @@ class CampaignController extends Controller
             'delay_min_seconds' => $validated['delay_min_seconds'] ?? 300,
             'delay_max_seconds' => $validated['delay_max_seconds'] ?? 400,
             'media_url' => $validated['media_url'] ?? null,
+            'media_file' => $mediaFile,
             'recipient_ids' => $allRecipientIds,
+            'group_ids' => $groupIds ?: null,
             'status' => ($validated['scheduled_at'] ?? null) ? 'draft' : 'sending',
             'total_recipients' => count($allRecipientIds),
             'scheduled_at' => $validated['scheduled_at'] ?? null,

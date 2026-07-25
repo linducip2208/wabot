@@ -25,7 +25,17 @@ class CampaignSenderService
     {
         $channel = $campaign->channel ?? 'whatsapp';
 
-        if (!$this->channelReady($campaign, $channel)) {
+        $sessions = collect();
+        if ($channel === 'whatsapp') {
+            $sessions = $campaign->sendingSessions()
+                ->filter(fn ($s) => $s->server)
+                ->values();
+
+            if ($sessions->isEmpty()) {
+                $campaign->update(['status' => 'failed']);
+                return;
+            }
+        } elseif (!$this->channelReady($campaign, $channel)) {
             $campaign->update(['status' => 'failed']);
             return;
         }
@@ -76,7 +86,7 @@ class CampaignSenderService
                 'twitter' => $this->sendTwitterMessage($campaign->twitterAccount, $to, $msg),
                 'sms' => $this->sendSmsMessage($campaign->twilioAccount, $to, $msg),
                 'email' => $this->sendEmailMessage($campaign->sendgridAccount, $to, $msg),
-                default => $this->sendBaileysMessage($campaign->session, $to, $msg, $campaign->media_url),
+                default => $this->sendBaileysMessage($this->pickSession($campaign, $sessions, $i), $to, $msg, $campaign->effectiveMediaUrl),
             };
 
             if ($result) {
@@ -100,6 +110,19 @@ class CampaignSenderService
             'sent_count' => $sent,
             'failed_count' => $failed,
         ]);
+    }
+
+    protected function pickSession(WaCampaign $campaign, Collection $sessions, int $index)
+    {
+        if ($sessions->count() <= 1) {
+            return $sessions->first();
+        }
+
+        if (($campaign->session_strategy ?? 'round_robin') === 'random') {
+            return $sessions->random();
+        }
+
+        return $sessions->get($index % $sessions->count());
     }
 
     protected function interval(WaCampaign $campaign): int

@@ -12,13 +12,25 @@ class WaCampaign extends Model
         'instagram_account_id', 'facebook_account_id', 'gbm_account_id', 'discord_account_id',
         'tiktok_account_id', 'line_account_id', 'twitter_account_id',
         'twilio_account_id', 'sendgrid_account_id',
-        'name', 'message', 'delay_seconds', 'delay_min_seconds', 'delay_max_seconds', 'media_url', 'message_type',
-        'recipient_ids', 'status', 'total_recipients', 'sent_count', 'failed_count',
+        'name', 'message', 'delay_seconds', 'delay_min_seconds', 'delay_max_seconds', 'media_url', 'media_file', 'message_type',
+        'recipient_ids', 'group_ids', 'session_ids', 'session_strategy',
+        'status', 'total_recipients', 'sent_count', 'failed_count',
         'scheduled_at',
     ];
 
+    public function getEffectiveMediaUrlAttribute(): ?string
+    {
+        if ($this->media_file) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->media_file);
+        }
+
+        return $this->media_url;
+    }
+
     protected $casts = [
         'recipient_ids' => 'json',
+        'group_ids' => 'json',
+        'session_ids' => 'json',
         'scheduled_at' => 'datetime',
     ];
 
@@ -30,6 +42,32 @@ class WaCampaign extends Model
     public function session(): BelongsTo
     {
         return $this->belongsTo(WaSession::class, 'session_id');
+    }
+
+    public function sendingSessions()
+    {
+        $ids = array_filter((array) ($this->session_ids ?? []));
+
+        if (empty($ids)) {
+            return $this->session ? collect([$this->session]) : collect();
+        }
+
+        return WaSession::with('server')
+            ->whereIn('id', $ids)
+            ->where('status', 'connected')
+            ->where('is_active', true)
+            ->get();
+    }
+
+    public function contactGroups()
+    {
+        $ids = array_filter((array) ($this->group_ids ?? []));
+
+        if (empty($ids)) {
+            return collect();
+        }
+
+        return ContactGroup::whereIn('id', $ids)->get();
     }
 
     public function metaAccount(): BelongsTo

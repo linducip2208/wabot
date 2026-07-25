@@ -14,6 +14,16 @@
 
         <div class="bg-white rounded-xl border border-gray-200 p-6">
             <h3 class="font-bold text-gray-900 mb-3">{{ __('common.receiver') }} ({{ $campaign->total_recipients }})</h3>
+            @php $campaignGroups = $campaign->contactGroups(); @endphp
+            @if($campaignGroups->isNotEmpty())
+            <div class="flex flex-wrap gap-1.5 mb-3">
+                @foreach($campaignGroups as $grp)
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700">
+                        <span class="w-2 h-2 rounded-full" style="background: {{ $grp->color ?? '#3b82f6' }}"></span>{{ $grp->name }}
+                    </span>
+                @endforeach
+            </div>
+            @endif
             <div class="max-h-64 overflow-y-auto space-y-1">
                 @foreach($campaign->recipient_ids as $rid)
                     @php $c = $contacts[$rid] ?? null @endphp
@@ -49,6 +59,18 @@
                 <div class="flex justify-between"><dt class="text-gray-500">{{ __('common.total') }}</dt><dd class="font-semibold text-gray-900">{{ $campaign->total_recipients }}</dd></div>
                 @if($campaign->scheduled_at)
                 <div class="flex justify-between"><dt class="text-gray-500">{{ __('campaigns.scheduled_at') }}</dt><dd class="font-semibold">{{ $campaign->scheduled_at->format('d M Y H:i') }}</dd></div>
+                @endif
+                @if($campaign->channel === 'whatsapp' || !$campaign->channel)
+                @php $senderSessions = $campaign->sendingSessions(); @endphp
+                <div class="flex justify-between">
+                    <dt class="text-gray-500">{{ __('campaigns.sender_numbers') }}</dt>
+                    <dd class="font-semibold text-right">
+                        {{ $senderSessions->count() }}
+                        @if($senderSessions->count() > 1)
+                            <span class="block text-[11px] font-medium text-gray-400">{{ $campaign->session_strategy === 'random' ? 'Random' : 'Round Robin' }}</span>
+                        @endif
+                    </dd>
+                </div>
                 @endif
                 <div class="flex justify-between"><dt class="text-gray-500">{{ __('common.created') }}</dt><dd class="font-semibold">{{ $campaign->created_at->format('d M Y H:i') }}</dd></div>
             </dl>

@@ -10,7 +10,7 @@
     <div class="flex gap-2">
         <button onclick="document.getElementById('importModal').classList.remove('hidden')"
             class="bg-white border border-gray-300 text-gray-700 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2">
-            <i class="fas fa-upload text-xs"></i> {{ __('contacts.import_csv') }}
+            <i class="fas fa-upload text-xs"></i> {{ __('contacts.import_title') }}
         </button>
         <button onclick="toggleAddModal()"
             class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition flex items-center gap-2">
@@ -142,14 +142,28 @@
 {{-- Import Modal --}}
 <div id="importModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl" onclick="event.stopPropagation()">
-        <h2 class="text-lg font-bold mb-4">{{ __('contacts.import_csv_title') }}</h2>
+        <h2 class="text-lg font-bold mb-4">{{ __('contacts.import_title') }}</h2>
         <form method="POST" action="{{ route('contacts.import') }}" enctype="multipart/form-data" class="space-y-3">
             @csrf
             <div class="bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
                 <p class="font-medium mb-2">{{ __('contacts.file_format') }}</p>
                 <code class="text-xs bg-white px-2 py-1 rounded border border-gray-200 block">{{ __('common.name') }}, nomor, tag1,tag2</code>
+                <p class="text-[11px] text-gray-400 mt-2">{{ __('contacts.import_format_hint') }}</p>
             </div>
-            <input type="file" name="file" accept=".csv,.txt" required class="w-full text-sm">
+            <input type="file" name="file" accept=".csv,.txt,.xlsx" required class="w-full text-sm">
+            <div>
+                <label class="text-xs font-medium text-gray-500">{{ __('contacts.import_to_group') }}</label>
+                <select name="group_id" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <option value="">{{ __('contacts.no_group') }}</option>
+                    @foreach($groups as $g)
+                        <option value="{{ $g->id }}">{{ $g->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-medium text-gray-500">{{ __('contacts.or_new_group') }}</label>
+                <input type="text" name="new_group_name" placeholder="{{ __('contacts.new_group_placeholder') }}" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+            </div>
             <div class="flex gap-2 pt-1">
                 <button type="button" onclick="document.getElementById('importModal').classList.add('hidden')" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm font-medium">{{ __('common.cancel') }}</button>
                 <button type="submit" class="flex-1 bg-brand-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-700"><i class="fas fa-upload mr-1"></i> {{ __('common.import') }}</button>

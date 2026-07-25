@@ -72,32 +72,52 @@ class ContactController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt',
+            'file' => 'required|file|mimes:csv,txt,xlsx|max:10240',
+            'group_id' => 'nullable|exists:contact_groups,id',
+            'new_group_name' => 'nullable|string|max:255',
         ]);
 
-        $file = $request->file('file');
-        $handle = fopen($file->getRealPath(), 'r');
+        $group = null;
+        if ($request->filled('new_group_name')) {
+            $group = \App\Models\ContactGroup::firstOrCreate(
+                ['user_id' => Auth::id(), 'name' => trim($request->input('new_group_name'))],
+                ['color' => '#3b82f6']
+            );
+        } elseif ($request->filled('group_id')) {
+            $group = \App\Models\ContactGroup::where('user_id', Auth::id())
+                ->findOrFail($request->input('group_id'));
+        }
+
+        $rows = app(\App\Services\SpreadsheetImportService::class)->parse($request->file('file'));
         $count = 0;
+        $contactIds = [];
 
-        fgetcsv($handle); // skip header
+        foreach ($rows as $index => $row) {
+            if (empty($row) || count(array_filter($row)) === 0) continue;
 
-        while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) < 2) continue;
+            $name = trim((string) ($row[0] ?? ''));
+            $rawPhone = trim((string) ($row[1] ?? ''));
 
-            $name = trim($row[0]);
-            $phone = preg_replace('/[^0-9]/', '', trim($row[1]));
-            $tags = isset($row[2]) ? array_map('trim', explode(',', $row[2])) : null;
+            if ($index === 0 && !preg_match('/[0-9]{6,}/', $name . $rawPhone)) continue; // skip header
 
-            if (empty($name) || empty($phone)) continue;
+            $phone = preg_replace('/[^0-9]/', '', $rawPhone);
+            $tags = isset($row[2]) && trim((string) $row[2]) !== ''
+                ? array_map('trim', explode(',', (string) $row[2]))
+                : null;
 
-            WaContact::updateOrCreate(
+            if (empty($name) || strlen($phone) < 6) continue;
+
+            $contact = WaContact::updateOrCreate(
                 ['user_id' => Auth::id(), 'phone' => $phone],
                 ['name' => $name, 'tags' => $tags]
             );
+            $contactIds[] = $contact->id;
             $count++;
         }
 
-        fclose($handle);
+        if ($group && !empty($contactIds)) {
+            $group->contacts()->syncWithoutDetaching($contactIds);
+        }
 
         return back()->with('success', __('messages.success.contact_imported', ['count' => $count]));
     }

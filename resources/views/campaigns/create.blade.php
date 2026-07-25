@@ -26,7 +26,7 @@
         </template>
     </div>
 
-    <form method="POST" action="{{ route('campaigns.store') }}" @submit="submitting = true" novalidate class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+    <form method="POST" action="{{ route('campaigns.store') }}" enctype="multipart/form-data" @submit="submitting = true" novalidate class="bg-white rounded-2xl border border-gray-200 shadow-sm">
         @csrf
 
         @if ($errors->any())
@@ -68,15 +68,46 @@
                 </div>
             </div>
 
-            {{-- WhatsApp session selector --}}
+            {{-- WhatsApp session selector (multi) --}}
             <div x-show="channel === 'whatsapp'" class="mb-5">
-                <label class="text-xs font-medium text-gray-500">{{ __('common.session') }} WhatsApp</label>
-                <select name="session_id" x-model="sessionId" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
-                    <option value="">{{ __('common.select') }} {{ __('common.session') }}</option>
-                    @foreach($sessions as $s)
-                        <option value="{{ $s->id }}">{{ $s->name }} ({{ $s->phone ?? 'offline' }})</option>
-                    @endforeach
-                </select>
+                <label class="text-xs font-medium text-gray-500">{{ __('common.session') }} WhatsApp <span class="text-gray-400">({{ __('campaigns.multi_session_hint') }})</span></label>
+                <div class="border border-gray-200 rounded-xl divide-y divide-gray-100 max-h-40 overflow-y-auto mt-1">
+                    @forelse($sessions as $s)
+                        <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition">
+                            <input type="checkbox" name="session_ids[]" value="{{ $s->id }}" x-model="sessionIds" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium text-gray-900">{{ $s->name }}</div>
+                                <div class="text-xs text-gray-500 font-mono">{{ $s->phone ?? 'offline' }}</div>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        </label>
+                    @empty
+                        <p class="px-4 py-6 text-center text-sm text-gray-500">{{ __('campaigns.no_session_connected') }}</p>
+                    @endforelse
+                </div>
+
+                {{-- Strategy: round robin / random (visible when 2+ sessions selected) --}}
+                <div x-show="sessionIds.length > 1" x-cloak class="mt-3 bg-brand-50 border border-brand-200 rounded-xl p-4">
+                    <div class="text-xs font-semibold text-brand-800 mb-2">
+                        <i class="fas fa-random mr-1"></i> {{ __('campaigns.session_strategy_label') }}
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <label class="flex items-start gap-2.5 bg-white border rounded-xl px-3 py-2.5 cursor-pointer transition" :class="sessionStrategy === 'round_robin' ? 'border-brand-500 ring-1 ring-brand-500' : 'border-gray-200'">
+                            <input type="radio" name="session_strategy" value="round_robin" x-model="sessionStrategy" class="mt-0.5 text-brand-600 focus:ring-brand-500">
+                            <span>
+                                <span class="block text-sm font-medium text-gray-900">Round Robin</span>
+                                <span class="block text-[11px] text-gray-500">{{ __('campaigns.strategy_round_robin_desc') }}</span>
+                            </span>
+                        </label>
+                        <label class="flex items-start gap-2.5 bg-white border rounded-xl px-3 py-2.5 cursor-pointer transition" :class="sessionStrategy === 'random' ? 'border-brand-500 ring-1 ring-brand-500' : 'border-gray-200'">
+                            <input type="radio" name="session_strategy" value="random" x-model="sessionStrategy" class="mt-0.5 text-brand-600 focus:ring-brand-500">
+                            <span>
+                                <span class="block text-sm font-medium text-gray-900">Random</span>
+                                <span class="block text-[11px] text-gray-500">{{ __('campaigns.strategy_random_desc') }}</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             {{-- Meta account selector --}}
@@ -200,6 +231,29 @@
                 </select>
             </div>
 
+            {{-- Send to groups (Zender-style phonebook) --}}
+            @if($groups->isNotEmpty())
+            <div class="mb-5">
+                <label class="text-xs font-medium text-gray-500">{{ __('campaigns.send_to_groups') }} <span class="text-gray-400">({{ __('campaigns.send_to_groups_hint') }})</span></label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                    @foreach($groups as $g)
+                        <label class="flex items-center gap-2.5 border rounded-xl px-3 py-2.5 cursor-pointer transition" :class="selectedGroups.includes('{{ $g->id }}') ? 'border-brand-500 ring-1 ring-brand-500 bg-brand-50/50' : 'border-gray-200 hover:bg-gray-50'">
+                            <input type="checkbox" name="group_ids[]" value="{{ $g->id }}" x-model="selectedGroups" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background: {{ $g->color ?? '#3b82f6' }}"></span>
+                            <span class="flex-1 min-w-0 text-sm font-medium text-gray-900 truncate">{{ $g->name }}</span>
+                            <span class="text-[11px] text-gray-500 shrink-0">{{ $g->contacts_count }} {{ __('common.contact') }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- Bulk import recipients from file --}}
+            <div class="mb-5">
+                <label class="text-xs font-medium text-gray-500">{{ __('campaigns.bulk_file_label') }} <span class="text-gray-400">({{ __('campaigns.bulk_file_hint') }})</span></label>
+                <input type="file" name="recipients_file" accept=".csv,.txt,.xlsx" @change="fileChosen = $event.target.files.length > 0" class="w-full text-sm mt-1 border border-dashed border-gray-300 rounded-xl px-3 py-3">
+            </div>
+
             <div class="flex items-center gap-2 mb-3">
                 <span class="text-xs font-medium text-gray-500">{{ __('common.select') }} {{ __('common.contact') }}</span>
                 <span class="text-[11px] text-gray-400" x-text="selectedCount + ' {{ __('campaigns.of_selected') }}'.replace(':selected', selectedCount).replace(':total', '{{ $contacts->count() }}')"></span>
@@ -291,6 +345,11 @@
                 <input type="url" name="media_url" placeholder="https://example.com/image.jpg" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
             </div>
 
+            <div class="mb-4">
+                <label class="text-xs font-medium text-gray-500">{{ __('campaigns.media_file_upload') }} <span class="text-gray-400">({{ __('campaigns.media_file_hint') }})</span></label>
+                <input type="file" name="media_file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar" @change="mediaFileChosen = $event.target.files.length > 0" class="w-full text-sm mt-1 border border-dashed border-gray-300 rounded-xl px-3 py-3">
+            </div>
+
             {{-- Live Preview --}}
             <div class="bg-[#efeae2] rounded-xl p-4">
                 <div class="text-[10px] text-gray-500 mb-2 font-medium uppercase tracking-wide">{{ __('common.preview') }} {{ __('common.message') }}</div>
@@ -306,7 +365,8 @@
 
             <div class="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
                 <div class="flex justify-between"><span class="text-gray-500">{{ __('campaigns.campaign') }}</span><span class="font-medium" x-text="campaignName || '-'"></span></div>
-                <div class="flex justify-between"><span class="text-gray-500">{{ __('common.receiver') }}</span><span class="font-medium" x-text="selectedCount + ' {{ __('common.contact') }}'"></span></div>
+                <div class="flex justify-between"><span class="text-gray-500">{{ __('common.receiver') }}</span><span class="font-medium" x-text="selectedCount + ' {{ __('common.contact') }}' + (fileChosen ? ' + file' : '')"></span></div>
+                <div class="flex justify-between" x-show="channel === 'whatsapp'"><span class="text-gray-500">{{ __('campaigns.sender_numbers') }}</span><span class="font-medium" x-text="sessionIds.length + (sessionIds.length > 1 ? ' (' + (sessionStrategy === 'random' ? 'Random' : 'Round Robin') + ')' : '')"></span></div>
                 <div class="flex justify-between"><span class="text-gray-500">{{ __('campaigns.delay') }}</span><span class="font-medium" x-text="delayMin + '–' + delayMax + ' {{ __('common.second') }}'"></span></div>
                 <div class="flex justify-between"><span class="text-gray-500">{{ __('campaigns.estimated') }} {{ __('common.completed') }}</span><span class="font-medium" x-text="estimateFinish()"></span></div>
                 <div class="border-t border-gray-200 pt-3 mt-3">
@@ -327,7 +387,7 @@
                 class="bg-brand-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-700 transition ml-auto">
                 {{ __('campaigns.next') }} <i class="fas fa-arrow-right ml-1"></i>
             </button>
-            <button type="submit" x-show="current === 2" :disabled="submitting || selectedCount === 0"
+            <button type="submit" x-show="current === 2" :disabled="submitting || (selectedCount === 0 && !fileChosen)"
                 class="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:bg-gray-300 transition ml-auto">
                 <span x-show="!submitting"><i class="fas fa-paper-plane mr-1"></i> {{ __('campaigns.send_campaign') }}</span>
                 <span x-show="submitting"><i class="fas fa-spinner fa-spin mr-1"></i> {{ __('campaigns.sending') }}</span>
@@ -352,13 +412,17 @@ document.addEventListener('alpine:init', () => {
         search: '',
         filterGroup: '',
         filterTag: '',
+        selectedGroups: [],
+        groupCounts: {!! $groups->mapWithKeys(fn($g) => [(string) $g->id => $g->contacts_count])->toJson() !!},
+        fileChosen: false,
         manualNumbers: '',
         manualTab: false,
         messageText: '',
         delayMin: 300,
         delayMax: 400,
         channel: 'whatsapp',
-        sessionId: '',
+        sessionIds: [],
+        sessionStrategy: 'round_robin',
         metaAccountId: '',
         telegramAccountId: '',
         instagramAccountId: '',
@@ -374,7 +438,10 @@ document.addEventListener('alpine:init', () => {
         submitting: false,
 
         get totalContacts() { return {{ $contacts->count() }}; },
-        get selectedCount() { return this.selectedIds.length + this.parseManualCount(); },
+        get groupTotal() {
+            return this.selectedGroups.reduce((sum, id) => sum + (this.groupCounts[id] || 0), 0);
+        },
+        get selectedCount() { return this.selectedIds.length + this.parseManualCount() + this.groupTotal; },
 
         get filteredContacts() {
             const q = this.search.trim().toLowerCase();
@@ -399,7 +466,7 @@ document.addEventListener('alpine:init', () => {
 
         next() {
             if (this.current === 0) {
-                if (this.channel === 'whatsapp' && !this.sessionId) {
+                if (this.channel === 'whatsapp' && this.sessionIds.length === 0) {
                     alert('{{ __('campaigns.alert_select_session') }}');
                     return;
                 }
@@ -451,7 +518,7 @@ document.addEventListener('alpine:init', () => {
                     alert('{{ __('campaigns.alert_enter_name') }}');
                     return;
                 }
-                if (this.selectedCount === 0) {
+                if (this.selectedCount === 0 && !this.fileChosen) {
                     alert('{{ __('campaigns.alert_select_contact') }}');
                     return;
                 }
