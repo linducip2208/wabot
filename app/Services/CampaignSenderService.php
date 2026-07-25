@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\WaCampaign;
 use App\Models\WaMessage;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class CampaignSenderService
 {
@@ -33,9 +34,17 @@ class CampaignSenderService
                 ->values();
 
             if ($sessions->isEmpty()) {
+                Log::warning("Campaign #{$campaign->id}: no connected sessions with server", [
+                    'session_ids' => $campaign->session_ids,
+                    'session_id' => $campaign->session_id,
+                ]);
                 $campaign->update(['status' => 'failed']);
                 return;
             }
+
+            Log::info("Campaign #{$campaign->id}: sending to " . count($recipients) . " recipients via sessions", [
+                'sessions' => $sessions->pluck('session_id')->toArray(),
+            ]);
         } elseif (!$this->channelReady($campaign, $channel)) {
             $campaign->update(['status' => 'failed']);
             return;
@@ -109,6 +118,10 @@ class CampaignSenderService
                 $sent++;
             } else {
                 $failed++;
+                Log::warning("Campaign #{$campaign->id}: failed to send to {$to} via {$channel}", [
+                    'session_id' => $activeSession?->session_id ?? $campaign->session_id,
+                    'contact_id' => $contactIds[$phone] ?? null,
+                ]);
             }
 
             $campaign->update([
@@ -171,7 +184,15 @@ class CampaignSenderService
     protected function sendBaileysMessage($session, string $to, string $message, ?string $mediaUrl = null): bool
     {
         $result = $this->baileys->send($session->server, $session->session_id, $to, $message, $mediaUrl);
-        return $result['ok'] ?? false;
+        $ok = $result['ok'] ?? false;
+        if (!$ok) {
+            Log::warning("Baileys send failed for session {$session->session_id}", [
+                'to' => $to,
+                'error' => $result['error'] ?? 'unknown',
+                'result' => $result,
+            ]);
+        }
+        return $ok;
     }
 
     protected function sendMetaMessage($metaAccount, string $to, string $message): bool
