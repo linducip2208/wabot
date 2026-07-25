@@ -156,7 +156,9 @@ Route::middleware('auth')->group(function () {
 
     // Campaigns
     Route::resource('campaigns', CampaignController::class)->except(['edit']);
+    Route::post('campaigns/{campaign}/play', [CampaignController::class, 'play'])->name('campaigns.play');
     Route::post('campaigns/{campaign}/pause', [CampaignController::class, 'pause'])->name('campaigns.pause');
+    Route::post('campaigns/{campaign}/stop', [CampaignController::class, 'stop'])->name('campaigns.stop');
     Route::post('campaigns/{campaign}/resume', [CampaignController::class, 'resume'])->name('campaigns.resume');
     Route::post('campaigns/{campaign}/resend', [CampaignController::class, 'resend'])->name('campaigns.resend');
 

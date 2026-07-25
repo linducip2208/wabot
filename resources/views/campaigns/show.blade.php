@@ -48,9 +48,11 @@
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                             {{ $campaign->status === 'sent' ? 'bg-green-100 text-green-800' : '' }}
                             {{ $campaign->status === 'sending' ? 'bg-blue-100 text-blue-800' : '' }}
+                            {{ $campaign->status === 'paused' ? 'bg-orange-100 text-orange-800' : '' }}
+                            {{ $campaign->status === 'stopped' ? 'bg-slate-100 text-slate-600' : '' }}
                             {{ $campaign->status === 'draft' ? 'bg-gray-100 text-gray-600' : '' }}
                             {{ $campaign->status === 'failed' ? 'bg-red-100 text-red-800' : '' }}">
-                            {{ $campaign->status }}
+                            {{ ['sent' => __('common.sent'), 'sending' => __('common.sending'), 'paused' => __('campaigns.paused'), 'stopped' => __('campaigns.stopped'), 'draft' => __('common.draft'), 'failed' => __('common.failed')][$campaign->status] ?? $campaign->status }}
                         </span>
                     </dd>
                 </div>
@@ -83,6 +85,36 @@
                 <div class="bg-brand-600 h-2.5 rounded-full" style="width: {{ $pct }}%"></div>
             </div>
             <div class="text-xs text-gray-500 mt-2 font-semibold">{{ $pct }}% {{ __('common.completed') }}</div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 class="font-bold text-gray-900 mb-3">{{ __('common.actions') }}</h3>
+            <div class="flex flex-wrap gap-2">
+                @if(in_array($campaign->status, ['draft','stopped','paused']))
+                <form method="POST" action="{{ route('campaigns.play', $campaign) }}">
+                    @csrf
+                    <button class="text-sm bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 transition"><i class="fas fa-play mr-1.5"></i> {{ __('campaigns.play') }}</button>
+                </form>
+                @endif
+                @if($campaign->status === 'sending')
+                <form method="POST" action="{{ route('campaigns.pause', $campaign) }}">
+                    @csrf
+                    <button class="text-sm bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-700 transition"><i class="fas fa-pause mr-1.5"></i> {{ __('campaigns.pause') }}</button>
+                </form>
+                @endif
+                @if(in_array($campaign->status, ['sending','paused']))
+                <form method="POST" action="{{ route('campaigns.stop', $campaign) }}" onsubmit="return confirm('{{ __('campaigns.confirm_stop') }}')">
+                    @csrf
+                    <button class="text-sm bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition"><i class="fas fa-stop mr-1.5"></i> {{ __('campaigns.stop') }}</button>
+                </form>
+                @endif
+                @if(in_array($campaign->status, ['sent','failed','stopped']))
+                <form method="POST" action="{{ route('campaigns.resend', $campaign) }}" onsubmit="return confirm('{{ __('campaigns.confirm_resend') }}')">
+                    @csrf
+                    <button class="text-sm bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-amber-700 transition"><i class="fas fa-redo mr-1.5"></i> {{ __('campaigns.resend') }}</button>
+                </form>
+                @endif
+            </div>
         </div>
     </div>
 </div>

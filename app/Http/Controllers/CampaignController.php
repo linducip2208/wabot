@@ -277,13 +277,44 @@ class CampaignController extends Controller
         return back()->with('success', __('messages.success.campaign_deleted'));
     }
 
+    public function play(WaCampaign $campaign)
+    {
+        abort_if($campaign->user_id !== Auth::id(), 403);
+
+        if (!in_array($campaign->status, ['draft', 'paused', 'stopped', 'sent', 'failed'])) {
+            return back()->with('error', __('messages.error.cannot_play'));
+        }
+
+        $reset = in_array($campaign->status, ['sent', 'failed', 'draft']);
+        $campaign->update([
+            'status' => 'sending',
+            'sent_count' => $reset ? 0 : ($campaign->sent_count ?? 0),
+            'failed_count' => $reset ? 0 : ($campaign->failed_count ?? 0),
+        ]);
+
+        SendCampaignJob::dispatch($campaign->id);
+
+        return back()->with('success', __('messages.success.campaign_played'));
+    }
+
     public function pause(WaCampaign $campaign)
     {
         abort_if($campaign->user_id !== Auth::id(), 403);
         if ($campaign->status === 'sending') {
             $campaign->update(['status' => 'paused']);
+            return back()->with('success', __('messages.success.campaign_paused'));
         }
-        return back()->with('success', __('messages.success.campaign_paused'));
+        return back()->with('error', __('messages.error.cannot_pause'));
+    }
+
+    public function stop(WaCampaign $campaign)
+    {
+        abort_if($campaign->user_id !== Auth::id(), 403);
+        if (in_array($campaign->status, ['sending', 'paused'])) {
+            $campaign->update(['status' => 'stopped']);
+            return back()->with('success', __('messages.success.campaign_stopped'));
+        }
+        return back()->with('error', __('messages.error.cannot_stop'));
     }
 
     public function resume(WaCampaign $campaign)
@@ -292,13 +323,19 @@ class CampaignController extends Controller
         if ($campaign->status === 'paused') {
             $campaign->update(['status' => 'sending']);
             SendCampaignJob::dispatch($campaign->id);
+            return back()->with('success', __('messages.success.campaign_resumed'));
         }
-        return back()->with('success', __('messages.success.campaign_resumed'));
+        return back()->with('error', __('messages.error.cannot_resume'));
     }
 
     public function resend(WaCampaign $campaign)
     {
         abort_if($campaign->user_id !== Auth::id(), 403);
+
+        if (!in_array($campaign->status, ['sent', 'failed', 'stopped'])) {
+            return back()->with('error', __('messages.error.cannot_resend'));
+        }
+
         $campaign->update(['status' => 'sending', 'sent_count' => 0, 'failed_count' => 0]);
         SendCampaignJob::dispatch($campaign->id);
         return back()->with('success', __('messages.success.campaign_resent'));

@@ -20,8 +20,8 @@ class RetryFailedCampaigns extends Command
 
         foreach ($campaigns as $campaign) {
             if (($campaign->channel ?? 'whatsapp') === 'whatsapp') {
-                $session = $campaign->session;
-                if (!$session || !$session->server || $session->status !== 'connected') {
+                $sessions = $campaign->sendingSessions()->filter(fn ($s) => $s->server);
+                if ($sessions->isEmpty()) {
                     continue;
                 }
             }

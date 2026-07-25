@@ -21,9 +21,16 @@
                     {{ $c->status === 'sent' ? 'bg-emerald-50' : '' }}
                     {{ $c->status === 'sending' ? 'bg-blue-50' : '' }}
                     {{ $c->status === 'paused' ? 'bg-orange-50' : '' }}
+                    {{ $c->status === 'stopped' ? 'bg-slate-50' : '' }}
                     {{ $c->status === 'draft' ? 'bg-amber-50' : '' }}
                     {{ $c->status === 'failed' ? 'bg-red-50' : '' }}">
-                    <i class="fas {{ $c->status === 'sent' ? 'fa-check-circle text-emerald-500' : ($c->status === 'sending' ? 'fa-spinner fa-spin text-blue-500' : ($c->status === 'paused' ? 'fa-pause-circle text-orange-500' : ($c->status === 'draft' ? 'fa-clock text-amber-500' : 'fa-exclamation-circle text-red-500'))) }}"></i>
+                    <i class="fas
+                        {{ $c->status === 'sent' ? 'fa-check-circle text-emerald-500' : '' }}
+                        {{ $c->status === 'sending' ? 'fa-spinner fa-spin text-blue-500' : '' }}
+                        {{ $c->status === 'paused' ? 'fa-pause-circle text-orange-500' : '' }}
+                        {{ $c->status === 'stopped' ? 'fa-stop-circle text-slate-500' : '' }}
+                        {{ $c->status === 'draft' ? 'fa-clock text-amber-500' : '' }}
+                        {{ $c->status === 'failed' ? 'fa-exclamation-circle text-red-500' : '' }}"></i>
                 </div>
                 <div>
                     <div class="font-semibold text-gray-900">{{ $c->name }}</div>
@@ -49,9 +56,10 @@
                 {{ $c->status === 'sent' ? 'bg-emerald-50 text-emerald-700' : '' }}
                 {{ $c->status === 'sending' ? 'bg-blue-50 text-blue-700' : '' }}
                 {{ $c->status === 'paused' ? 'bg-orange-50 text-orange-700' : '' }}
+                {{ $c->status === 'stopped' ? 'bg-slate-50 text-slate-600' : '' }}
                 {{ $c->status === 'draft' ? 'bg-amber-50 text-amber-700' : '' }}
                 {{ $c->status === 'failed' ? 'bg-red-50 text-red-700' : '' }}">
-                {{ ['sent' => __('common.sent'), 'sending' => __('common.sending'), 'paused' => __('campaigns.pause'), 'draft' => __('common.draft'), 'failed' => __('common.failed')][$c->status] ?? $c->status }}
+                {{ ['sent' => __('common.sent'), 'sending' => __('common.sending'), 'paused' => __('campaigns.paused'), 'stopped' => __('campaigns.stopped'), 'draft' => __('common.draft'), 'failed' => __('common.failed')][$c->status] ?? $c->status }}
             </span>
         </div>
         <p class="text-sm text-gray-500 mb-3 line-clamp-1">{{ Str::limit($c->message, 100) }}</p>
@@ -60,22 +68,28 @@
             @if($c->failed_count) <span class="text-red-500"><i class="fas fa-times mr-1"></i> {{ $c->failed_count }} {{ __('common.failed') }}</span> @endif
             <span>{{ $c->scheduled_at ? __('campaigns.scheduled', ['datetime' => $c->scheduled_at->format('d M H:i')]) : $c->created_at->format('d M Y H:i') }}</span>
             <div class="ml-auto flex gap-1" onclick="event.preventDefault(); event.stopPropagation();">
-                @if(in_array($c->status, ['sent','failed']))
-                <form method="POST" action="{{ route('campaigns.resend', $c) }}" class="inline">
+                @if(in_array($c->status, ['draft','stopped','paused']))
+                <form method="POST" action="{{ route('campaigns.play', $c) }}" class="inline">
                     @csrf
-                    <button class="text-[11px] bg-amber-50 text-amber-700 hover:bg-amber-100 px-2 py-1 rounded-lg font-medium">{{ __('campaigns.resend') }}</button>
+                    <button class="text-[11px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2 py-1 rounded-lg font-medium" title="{{ __('campaigns.play') }}"><i class="fas fa-play text-[9px] mr-0.5"></i> {{ __('campaigns.play') }}</button>
                 </form>
                 @endif
                 @if($c->status === 'sending')
                 <form method="POST" action="{{ route('campaigns.pause', $c) }}" class="inline">
                     @csrf
-                    <button class="text-[11px] bg-orange-50 text-orange-700 hover:bg-orange-100 px-2 py-1 rounded-lg font-medium">{{ __('campaigns.pause') }}</button>
+                    <button class="text-[11px] bg-orange-50 text-orange-700 hover:bg-orange-100 px-2 py-1 rounded-lg font-medium" title="{{ __('campaigns.pause') }}"><i class="fas fa-pause text-[9px] mr-0.5"></i> {{ __('campaigns.pause') }}</button>
                 </form>
                 @endif
-                @if($c->status === 'paused')
-                <form method="POST" action="{{ route('campaigns.resume', $c) }}" class="inline">
+                @if(in_array($c->status, ['sending','paused']))
+                <form method="POST" action="{{ route('campaigns.stop', $c) }}" class="inline">
                     @csrf
-                    <button class="text-[11px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2 py-1 rounded-lg font-medium">{{ __('campaigns.resume') }}</button>
+                    <button class="text-[11px] bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded-lg font-medium" title="{{ __('campaigns.stop') }}" onclick="return confirm('{{ __('campaigns.confirm_stop') }}')"><i class="fas fa-stop text-[9px] mr-0.5"></i> {{ __('campaigns.stop') }}</button>
+                </form>
+                @endif
+                @if(in_array($c->status, ['sent','failed']))
+                <form method="POST" action="{{ route('campaigns.play', $c) }}" class="inline">
+                    @csrf
+                    <button class="text-[11px] bg-amber-50 text-amber-700 hover:bg-amber-100 px-2 py-1 rounded-lg font-medium">{{ __('campaigns.resend') }}</button>
                 </form>
                 @endif
             </div>
